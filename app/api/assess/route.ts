@@ -1,11 +1,36 @@
 import { NextRequest, NextResponse } from 'next/server';
+import { createServerClient } from '@supabase/ssr';
+import { cookies } from 'next/headers';
 
 export async function POST(request: NextRequest) {
+  const cookieStore = cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() { return cookieStore.getAll(); },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch { /* read-only context */ }
+        },
+      },
+    }
+  );
+
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
+
   const key = process.env.AZURE_SPEECH_KEY;
   const region = process.env.AZURE_SPEECH_REGION;
 
   if (!key || !region) {
-    return NextResponse.json({ error: 'Azure credentials not configured' }, { status: 500 });
+    return NextResponse.json({ error: 'Service not available' }, { status: 503 });
   }
 
   try {
@@ -42,7 +67,8 @@ export async function POST(request: NextRequest) {
 
     const rawText = await speechRes.text();
     if (!speechRes.ok) {
-      throw new Error(`Azure STT error ${speechRes.status}: ${rawText}`);
+      console.error(`[assess] Azure STT error ${speechRes.status}:`, rawText);
+      return NextResponse.json({ error: 'Assessment service error' }, { status: 502 });
     }
 
     const speechJson = JSON.parse(rawText);
@@ -79,7 +105,7 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error('[assess] error:', error);
-    return NextResponse.json({ error: String(error) }, { status: 500 });
+    return NextResponse.json({ error: 'Assessment failed' }, { status: 500 });
   }
 }
 
