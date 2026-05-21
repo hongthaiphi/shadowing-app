@@ -12,6 +12,7 @@ import {
   LessonProgress,
 } from '@/lib/progress';
 import ProgressCard from '@/components/ProgressCard';
+import ActivityCalendar from '@/components/ActivityCalendar';
 import shadowingLessons from '@/data/shadowing-lessons.json';
 import dictationLessons from '@/data/dictation-lessons.json';
 
@@ -129,21 +130,21 @@ export default function ProgressPage() {
         </div>
       )}
 
-      {/* Progress chart placeholder */}
+      {/* Activity Calendar */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
-        <h2 className="text-lg font-bold text-gray-800 mb-4">Lesson Breakdown</h2>
-        <div className="grid grid-cols-2 gap-4">
+        <ActivityCalendar progress={progress} />
+        <div className="grid grid-cols-2 gap-4 mt-6 pt-5 border-t border-gray-100">
           <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
             <p className="text-2xl font-black text-blue-700">
               {progress.filter(p => getLessonType(p.lessonId) === 'shadowing').length}
             </p>
-            <p className="text-sm text-blue-600 font-medium mt-1">Shadowing lessons</p>
+            <p className="text-sm text-blue-600 font-medium mt-1">🎧 Shadowing lessons</p>
           </div>
           <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
             <p className="text-2xl font-black text-violet-700">
               {progress.filter(p => getLessonType(p.lessonId) === 'dictation').length}
             </p>
-            <p className="text-sm text-violet-600 font-medium mt-1">Dictation lessons</p>
+            <p className="text-sm text-violet-600 font-medium mt-1">✏️ Dictation lessons</p>
           </div>
         </div>
       </div>

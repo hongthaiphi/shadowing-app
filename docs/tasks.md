@@ -118,7 +118,7 @@
 - [x] T-10-5 🔴 Current streak — tính từ localStorage, reset nếu bỏ 1 ngày
 - [x] T-10-6 🟡 Thông điệp động viên theo streak
 - [x] T-10-7 🟡 Current level (hiển thị shadowing vs dictation count)
-- [ ] T-10-8 🟡 Chart/calendar hiển thị ngày có luyện tập
+- [x] T-10-8 🟡 Chart/calendar hiển thị ngày có luyện tập
 
 ---
 
