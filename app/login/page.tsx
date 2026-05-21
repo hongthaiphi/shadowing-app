@@ -32,12 +32,23 @@ export default function LoginPage() {
       setError('Please enter your email address.');
       return;
     }
+    if (!password.trim()) {
+      setError('Please enter your password.');
+      return;
+    }
     setLoading(true);
     try {
-      login(email.trim(), password);
+      await login(email.trim(), password);
       router.push(getRedirectTarget());
-    } catch {
-      setError('Something went wrong. Please try again.');
+    } catch (err) {
+      const msg = (err as Error).message;
+      if (msg.includes('Invalid login credentials')) {
+        setError('Email or password is incorrect.');
+      } else if (msg.includes('Email not confirmed')) {
+        setError('Please confirm your email first. Check your inbox.');
+      } else {
+        setError(msg || 'Something went wrong. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
@@ -56,11 +67,10 @@ export default function LoginPage() {
           </div>
 
           <div className="px-8 py-8">
-            {/* Demo hint */}
-            <div className="mb-6 p-3 bg-amber-50 border border-amber-200 rounded-xl text-sm text-amber-800">
-              <strong>Demo mode:</strong> Use any email to login as student.
-              <br />Try <code className="bg-amber-100 px-1 rounded">admin@test.com</code> or{' '}
-              <code className="bg-amber-100 px-1 rounded">teacher@test.com</code> for other roles.
+            {/* Info hint */}
+            <div className="mb-6 p-3 bg-blue-50 border border-blue-200 rounded-xl text-sm text-blue-800">
+              New here?{' '}
+              <Link href="/register" className="font-semibold underline">Create a free account</Link> to start practising.
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -92,7 +102,7 @@ export default function LoginPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Any password works in demo mode"
+                  placeholder="Your password"
                   className="w-full px-4 py-3 border border-gray-200 rounded-xl text-gray-800 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-300 focus:border-blue-400 transition-all"
                   autoComplete="current-password"
                 />

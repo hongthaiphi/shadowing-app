@@ -15,8 +15,8 @@ export default function Navbar() {
     setUser(getUser());
   }, [pathname]);
 
-  function handleLogout() {
-    logout();
+  async function handleLogout() {
+    await logout();
     setUser(null);
     setMenuOpen(false);
     router.push('/');

@@ -1,3 +1,5 @@
+import { getSupabase } from './supabase';
+
 export type Role = 'student' | 'teacher' | 'admin';
 
 export interface User {
@@ -6,40 +8,101 @@ export interface User {
   name: string;
 }
 
-const ADMIN_EMAILS = ['admin@test.com'];
-const TEACHER_EMAILS = ['teacher@test.com'];
-
-function getRoleForEmail(email: string): Role {
-  if (ADMIN_EMAILS.includes(email.toLowerCase())) return 'admin';
-  if (TEACHER_EMAILS.includes(email.toLowerCase())) return 'teacher';
-  return 'student';
+function cacheUser(user: User) {
+  localStorage.setItem('user', JSON.stringify(user));
+  document.cookie = `user_session=${encodeURIComponent(
+    JSON.stringify({ email: user.email, role: user.role })
+  )}; path=/; max-age=604800`;
 }
 
-function getNameFromEmail(email: string): string {
-  const parts = email.split('@')[0].split('.');
-  return parts.map((p) => p.charAt(0).toUpperCase() + p.slice(1)).join(' ');
+function clearCache() {
+  localStorage.removeItem('user');
+  localStorage.removeItem('shadowspeak_progress');
+  document.cookie = 'user_session=; path=/; max-age=0';
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function login(email: string, _password: string): User {
-  const role = getRoleForEmail(email);
-  const name = getNameFromEmail(email);
-  const user: User = { email: email.toLowerCase(), role, name };
-
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('user', JSON.stringify(user));
-    // Set a simple session cookie for middleware
-    document.cookie = `user_session=${encodeURIComponent(JSON.stringify({ email: user.email, role: user.role }))}; path=/; max-age=86400`;
+async function syncProgressFromSupabase(userId: string) {
+  const supabase = getSupabase();
+  const { data } = await supabase
+    .from('progress')
+    .select('*')
+    .eq('user_id', userId);
+  if (data && data.length > 0) {
+    const local = data.map((p) => ({
+      lessonId: p.lesson_id,
+      completedAt: p.completed_at,
+      timeSpent: p.time_spent,
+      score: p.score ?? undefined,
+      type: p.lesson_type ?? undefined,
+    }));
+    localStorage.setItem('shadowspeak_progress', JSON.stringify(local));
   }
+}
 
+export async function login(email: string, password: string): Promise<User> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw new Error(error.message);
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('name, role')
+    .eq('id', data.user.id)
+    .single();
+
+  const user: User = {
+    email: email.toLowerCase(),
+    role: (profile?.role as Role) || 'student',
+    name: profile?.name || email.split('@')[0],
+  };
+
+  cacheUser(user);
+  await syncProgressFromSupabase(data.user.id);
   return user;
 }
 
-export function logout(): void {
-  if (typeof window !== 'undefined') {
-    localStorage.removeItem('user');
-    document.cookie = 'user_session=; path=/; max-age=0';
+export async function register(
+  name: string,
+  email: string,
+  password: string
+): Promise<{ user: User; needsConfirmation: boolean }> {
+  const supabase = getSupabase();
+  const { data, error } = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { name } },
+  });
+  if (error) throw new Error(error.message);
+  if (!data.user) throw new Error('Registration failed. Please try again.');
+
+  if (!data.session) {
+    return {
+      user: { email: email.toLowerCase(), role: 'student', name },
+      needsConfirmation: true,
+    };
   }
+
+  await new Promise((r) => setTimeout(r, 600));
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('name, role')
+    .eq('id', data.user.id)
+    .single();
+
+  const user: User = {
+    email: email.toLowerCase(),
+    role: (profile?.role as Role) || 'student',
+    name: profile?.name || name,
+  };
+
+  cacheUser(user);
+  return { user, needsConfirmation: false };
+}
+
+export async function logout(): Promise<void> {
+  const supabase = getSupabase();
+  await supabase.auth.signOut();
+  clearCache();
 }
 
 export function getUser(): User | null {
@@ -55,17 +118,4 @@ export function getUser(): User | null {
 
 export function isLoggedIn(): boolean {
   return getUser() !== null;
-}
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function register(name: string, email: string, _password: string): User {
-  const role = getRoleForEmail(email);
-  const user: User = { email: email.toLowerCase(), role, name };
-
-  if (typeof window !== 'undefined') {
-    localStorage.setItem('user', JSON.stringify(user));
-    document.cookie = `user_session=${encodeURIComponent(JSON.stringify({ email: user.email, role: user.role }))}; path=/; max-age=86400`;
-  }
-
-  return user;
 }

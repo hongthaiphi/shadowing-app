@@ -3,7 +3,7 @@ export interface LessonProgress {
   completedAt: string; // ISO string
   timeSpent: number;   // seconds
   score?: number;      // 0-100
-  type?: 'shadowing' | 'dictation';
+  type?: 'shadowing' | 'dictation' | 'speaking';
 }
 
 const STORAGE_KEY = 'shadowspeak_progress';
@@ -28,7 +28,7 @@ export function markComplete(
   lessonId: string,
   timeSpent: number,
   score?: number,
-  type?: 'shadowing' | 'dictation'
+  type?: 'shadowing' | 'dictation' | 'speaking'
 ): void {
   const all = getAll();
   const existing = all.findIndex((p) => p.lessonId === lessonId);
@@ -45,6 +45,24 @@ export function markComplete(
     all.push(entry);
   }
   saveAll(all);
+
+  // Background sync to Supabase (fire and forget)
+  if (typeof window !== 'undefined') {
+    import('./supabase').then(({ getSupabase }) => {
+      const supabase = getSupabase();
+      supabase.auth.getUser().then(({ data }) => {
+        if (!data.user) return;
+        supabase.from('progress').upsert({
+          user_id: data.user.id,
+          lesson_id: lessonId,
+          lesson_type: type ?? null,
+          time_spent: timeSpent,
+          score: score ?? null,
+          completed_at: entry.completedAt,
+        }).then();
+      });
+    });
+  }
 }
 
 export function getProgress(): LessonProgress[] {

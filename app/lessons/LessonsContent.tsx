@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { getCompletedIds } from '@/lib/progress';
 import shadowingLessons from '@/data/shadowing-lessons.json';
 import dictationLessons from '@/data/dictation-lessons.json';
+import speakingLessons from '@/data/speaking-lessons.json';
 
 type Lesson = {
   id: string;
@@ -22,6 +23,7 @@ type Lesson = {
 const allLessons: Lesson[] = [
   ...(shadowingLessons as Lesson[]),
   ...(dictationLessons as Lesson[]),
+  ...(speakingLessons as Lesson[]),
 ];
 
 const LEVEL_COLORS: Record<string, string> = {
@@ -33,6 +35,7 @@ const LEVEL_COLORS: Record<string, string> = {
 const TYPE_COLORS: Record<string, string> = {
   shadowing: 'bg-cyan-100 text-cyan-700',
   dictation: 'bg-violet-100 text-violet-700',
+  speaking: 'bg-orange-100 text-orange-700',
 };
 
 const TOPIC_LABELS: Record<string, string> = {
@@ -43,6 +46,8 @@ const TOPIC_LABELS: Record<string, string> = {
   'daily routine': '⏰ Daily Routine',
 };
 
+const PAGE_SIZE = 12;
+
 export default function LessonsContent() {
   const searchParams = useSearchParams();
   const initialType = searchParams.get('type') || 'all';
@@ -52,10 +57,15 @@ export default function LessonsContent() {
   const [topicFilter, setTopicFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [completedIds, setCompletedIds] = useState<string[]>([]);
+  const [page, setPage] = useState(1);
 
   useEffect(() => {
     setCompletedIds(getCompletedIds());
   }, []);
+
+  useEffect(() => {
+    setPage(1);
+  }, [typeFilter, levelFilter, topicFilter, statusFilter]);
 
   const filtered = allLessons.filter((l) => {
     if (typeFilter !== 'all' && l.type !== typeFilter) return false;
@@ -66,7 +76,10 @@ export default function LessonsContent() {
     return true;
   });
 
-  const typeFilters = ['all', 'shadowing', 'dictation'];
+  const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+  const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
+
+  const typeFilters = ['all', 'shadowing', 'dictation', 'speaking'];
   const levelFilters = ['all', 'Starter', 'Level 1', 'Level 2'];
   const topicFilters = ['all', 'school', 'hobbies', 'family', 'food', 'daily routine'];
 
@@ -167,6 +180,9 @@ export default function LessonsContent() {
       {/* Results count */}
       <p className="text-sm text-gray-500 mb-4 font-medium">
         {filtered.length} lesson{filtered.length !== 1 ? 's' : ''} found
+        {totalPages > 1 && (
+          <span className="text-gray-400"> — page {page} of {totalPages}</span>
+        )}
       </p>
 
       {/* Lesson cards */}
@@ -178,10 +194,12 @@ export default function LessonsContent() {
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          {filtered.map((lesson) => {
+          {paginated.map((lesson) => {
             const completed = completedIds.includes(lesson.id);
             const href = lesson.type === 'shadowing'
               ? `/shadowing/${lesson.id}`
+              : lesson.type === 'speaking'
+              ? `/speaking/${lesson.id}`
               : `/dictation/${lesson.id}`;
 
             return (
@@ -217,7 +235,7 @@ export default function LessonsContent() {
                       {lesson.level}
                     </span>
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${TYPE_COLORS[lesson.type] || 'bg-gray-100 text-gray-600'}`}>
-                      {lesson.type === 'shadowing' ? '🎧 Shadowing' : '✏️ Dictation'}
+                      {lesson.type === 'shadowing' ? '🎧 Shadowing' : lesson.type === 'speaking' ? '🗣️ Speaking' : '✏️ Dictation'}
                     </span>
                     {lesson.subtype && (
                       <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 capitalize">
@@ -256,6 +274,61 @@ export default function LessonsContent() {
               </Link>
             );
           })}
+        </div>
+      )}
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 mt-8">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={page === 1}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+            </svg>
+            Prev
+          </button>
+
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => {
+              const isActive = p === page;
+              const showDot =
+                totalPages > 5 &&
+                p !== 1 &&
+                p !== totalPages &&
+                Math.abs(p - page) > 1;
+              if (showDot && (p === page - 2 || p === page + 2)) {
+                return <span key={p} className="px-1 text-gray-400 text-sm">…</span>;
+              }
+              if (showDot) return null;
+              return (
+                <button
+                  key={p}
+                  onClick={() => setPage(p)}
+                  className={`w-9 h-9 rounded-xl text-sm font-bold transition-all ${
+                    isActive
+                      ? 'bg-gradient-to-r from-blue-500 to-violet-500 text-white shadow-sm'
+                      : 'bg-white border border-gray-200 text-gray-700 hover:bg-gray-50'
+                  }`}
+                >
+                  {p}
+                </button>
+              );
+            })}
+          </div>
+
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={page === totalPages}
+            className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-sm font-semibold bg-white border border-gray-200 text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-sm"
+          >
+            Next
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+            </svg>
+          </button>
         </div>
       )}
     </div>

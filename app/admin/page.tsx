@@ -1,10 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getUser } from '@/lib/auth';
+import { getSupabase } from '@/lib/supabase';
 import shadowingLessonsRaw from '@/data/shadowing-lessons.json';
 import dictationLessonsRaw from '@/data/dictation-lessons.json';
+import speakingLessonsRaw from '@/data/speaking-lessons.json';
 
 type LessonEntry = {
   id: string;
@@ -12,13 +14,43 @@ type LessonEntry = {
   level: string;
   topic: string;
   type: string;
-  transcript: string;
+  transcript?: string;
   chunks?: string[];
   subtype?: string;
   durationMinutes: number;
+  // speaking-specific
+  prompt?: string;
+  exampleAnswer?: string;
+  hints?: string[];
 };
 
+type ParsedImport = LessonEntry & { _error?: string };
+
 type ModalMode = 'add' | 'edit' | null;
+
+type AdminTab = 'lessons' | 'stats';
+
+type StudentStat = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  completions: number;
+  totalMinutes: number;
+  avgAccuracy: number | null;
+  lastActive: string | null;
+};
+
+type RecentActivity = {
+  userId: string;
+  studentName: string;
+  lessonId: string;
+  lessonTitle: string;
+  lessonType: string;
+  completedAt: string;
+  score: number | null;
+  timeSpent: number;
+};
 
 const STORAGE_KEY = 'shadowspeak_custom_lessons';
 
@@ -40,6 +72,40 @@ const LEVEL_COLORS: Record<string, string> = {
   'Level 2': 'bg-indigo-100 text-indigo-700',
 };
 
+const VALID_TYPES = ['shadowing', 'dictation', 'speaking'];
+const VALID_LEVELS = ['Starter', 'Level 1', 'Level 2'];
+
+const TEMPLATE_JSON: Partial<LessonEntry>[] = [
+  {
+    title: 'My School Day',
+    level: 'Starter',
+    topic: 'school',
+    type: 'shadowing',
+    transcript: 'I go to school every morning. My class starts at seven.',
+    chunks: ['I go to school every morning.', 'My class starts at seven.'],
+    durationMinutes: 5,
+  },
+  {
+    title: 'Listen and Write',
+    level: 'Starter',
+    topic: 'school',
+    type: 'dictation',
+    subtype: 'sentence',
+    transcript: 'My class starts at seven o\'clock.',
+    durationMinutes: 5,
+  },
+  {
+    title: 'Talk About Your School',
+    level: 'Starter',
+    topic: 'school',
+    type: 'speaking',
+    prompt: 'Describe your school. What time do you go? What subjects do you study?',
+    exampleAnswer: 'I go to school at seven. I study English and Math.',
+    hints: ['classroom', 'subject', 'favorite'],
+    durationMinutes: 5,
+  },
+];
+
 const emptyForm: Omit<LessonEntry, 'id'> = {
   title: '',
   level: 'Starter',
@@ -51,15 +117,98 @@ const emptyForm: Omit<LessonEntry, 'id'> = {
   durationMinutes: 5,
 };
 
+function validateLesson(item: unknown, existingIds: Set<string>): ParsedImport {
+  const lesson = item as Record<string, unknown>;
+  const errors: string[] = [];
+
+  if (!lesson.title || typeof lesson.title !== 'string' || !lesson.title.trim()) {
+    errors.push('missing title');
+  }
+  if (!lesson.type || !VALID_TYPES.includes(lesson.type as string)) {
+    errors.push(`type must be one of: ${VALID_TYPES.join(', ')}`);
+  }
+  if (!lesson.level || !VALID_LEVELS.includes(lesson.level as string)) {
+    errors.push(`level must be one of: ${VALID_LEVELS.join(', ')}`);
+  }
+  if (!lesson.topic || typeof lesson.topic !== 'string') {
+    errors.push('missing topic');
+  }
+  if (lesson.type === 'speaking') {
+    if (!lesson.prompt && !lesson.exampleAnswer) {
+      errors.push('speaking lesson needs prompt or exampleAnswer');
+    }
+  } else {
+    if (!lesson.transcript || typeof lesson.transcript !== 'string') {
+      errors.push('missing transcript');
+    }
+  }
+
+  const id = typeof lesson.id === 'string' && lesson.id.trim()
+    ? lesson.id.trim()
+    : `import_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+
+  if (existingIds.has(id) && lesson.id) {
+    errors.push(`id "${id}" already exists — will get a new id`);
+  }
+
+  return {
+    id: existingIds.has(id) ? `import_${Date.now()}_${Math.random().toString(36).slice(2, 7)}` : id,
+    title: String(lesson.title || '').trim(),
+    level: String(lesson.level || 'Starter'),
+    topic: String(lesson.topic || 'school'),
+    type: String(lesson.type || 'shadowing'),
+    transcript: lesson.transcript ? String(lesson.transcript) : undefined,
+    chunks: Array.isArray(lesson.chunks) ? lesson.chunks.map(String) : undefined,
+    subtype: lesson.subtype ? String(lesson.subtype) : undefined,
+    durationMinutes: Number(lesson.durationMinutes) || 5,
+    prompt: lesson.prompt ? String(lesson.prompt) : undefined,
+    exampleAnswer: lesson.exampleAnswer ? String(lesson.exampleAnswer) : undefined,
+    hints: Array.isArray(lesson.hints) ? lesson.hints.map(String) : undefined,
+    _error: errors.length > 0 ? errors.join('; ') : undefined,
+  };
+}
+
+// Build lesson title lookup from all JSON data
+const ALL_JSON_LESSONS = [
+  ...(shadowingLessonsRaw as LessonEntry[]),
+  ...(dictationLessonsRaw as LessonEntry[]),
+  ...(speakingLessonsRaw as LessonEntry[]),
+];
+const JSON_LESSON_MAP: Record<string, string> = Object.fromEntries(
+  ALL_JSON_LESSONS.map((l) => [l.id, l.title])
+);
+
+function formatDate(iso: string) {
+  return new Date(iso).toLocaleDateString('en-GB', {
+    day: 'numeric', month: 'short', year: 'numeric',
+  });
+}
+
 export default function AdminPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState<AdminTab>('lessons');
   const [customLessons, setCustomLessons] = useState<LessonEntry[]>([]);
   const [modalMode, setModalMode] = useState<ModalMode>(null);
   const [editingLesson, setEditingLesson] = useState<LessonEntry | null>(null);
   const [form, setForm] = useState<Omit<LessonEntry, 'id'>>(emptyForm);
   const [chunksText, setChunksText] = useState('');
+  const [hintsText, setHintsText] = useState('');
   const [deleteId, setDeleteId] = useState<string | null>(null);
+
+  // Stats state
+  const [statsLoading, setStatsLoading] = useState(false);
+  const [statsError, setStatsError] = useState('');
+  const [studentStats, setStudentStats] = useState<StudentStat[]>([]);
+  const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
+  const [statsLoaded, setStatsLoaded] = useState(false);
+
+  // Import state
+  const [importOpen, setImportOpen] = useState(false);
+  const [importRaw, setImportRaw] = useState('');
+  const [importParsed, setImportParsed] = useState<ParsedImport[]>([]);
+  const [importParseError, setImportParseError] = useState('');
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     const user = getUser();
@@ -71,16 +220,93 @@ export default function AdminPage() {
     setLoading(false);
   }, [router]);
 
+  async function loadStats() {
+    if (statsLoaded) return;
+    setStatsLoading(true);
+    setStatsError('');
+    try {
+      const supabase = getSupabase();
+
+      const [{ data: profiles, error: profErr }, { data: progress, error: progErr }] =
+        await Promise.all([
+          supabase.from('profiles').select('*').order('created_at', { ascending: false }),
+          supabase.from('progress').select('*').order('completed_at', { ascending: false }),
+        ]);
+
+      if (profErr) throw new Error(profErr.message);
+      if (progErr) throw new Error(progErr.message);
+
+      const profileList = (profiles ?? []) as Array<{ id: string; name: string; email: string; role: string; created_at: string }>;
+      const progressList = (progress ?? []) as Array<{ user_id: string; lesson_id: string; lesson_type: string; completed_at: string; time_spent: number; score: number | null }>;
+
+      // Build custom lesson title map (may have been added since page loaded)
+      const customMap: Record<string, string> = Object.fromEntries(
+        loadCustomLessons().map((l) => [l.id, l.title])
+      );
+      const titleMap = { ...JSON_LESSON_MAP, ...customMap };
+
+      // Per-student aggregation
+      const stats: StudentStat[] = profileList
+        .filter((p) => p.role === 'student')
+        .map((profile) => {
+          const userProg = progressList.filter((p) => p.user_id === profile.id);
+          const dictProg = userProg.filter((p) => p.lesson_type === 'dictation' && p.score !== null);
+          return {
+            id: profile.id,
+            name: profile.name,
+            email: profile.email,
+            role: profile.role,
+            completions: userProg.length,
+            totalMinutes: Math.round(userProg.reduce((s, p) => s + (p.time_spent ?? 0), 0) / 60),
+            avgAccuracy: dictProg.length > 0
+              ? Math.round(dictProg.reduce((s, p) => s + (p.score ?? 0), 0) / dictProg.length)
+              : null,
+            lastActive: userProg[0]?.completed_at ?? null,
+          };
+        })
+        .sort((a, b) => b.completions - a.completions);
+
+      // Recent activity (last 20)
+      const profileMap = Object.fromEntries(profileList.map((p) => [p.id, p]));
+      const recent: RecentActivity[] = progressList.slice(0, 20).map((p) => ({
+        userId: p.user_id,
+        studentName: profileMap[p.user_id]?.name ?? 'Unknown',
+        lessonId: p.lesson_id,
+        lessonTitle: titleMap[p.lesson_id] ?? p.lesson_id,
+        lessonType: p.lesson_type ?? '',
+        completedAt: p.completed_at,
+        score: p.score,
+        timeSpent: p.time_spent,
+      }));
+
+      setStudentStats(stats);
+      setRecentActivity(recent);
+      setStatsLoaded(true);
+    } catch (err) {
+      setStatsError((err as Error).message);
+    } finally {
+      setStatsLoading(false);
+    }
+  }
+
+  function handleTabChange(tab: AdminTab) {
+    setActiveTab(tab);
+    if (tab === 'stats') loadStats();
+  }
+
   const builtInLessons: LessonEntry[] = [
     ...(shadowingLessonsRaw as LessonEntry[]),
     ...(dictationLessonsRaw as LessonEntry[]),
+    ...(speakingLessonsRaw as LessonEntry[]),
   ];
 
   const allLessons = [...builtInLessons, ...customLessons];
 
+  // ── Add/Edit modal ──────────────────────────────────
   function openAdd() {
     setForm(emptyForm);
     setChunksText('');
+    setHintsText('');
     setEditingLesson(null);
     setModalMode('add');
   }
@@ -88,6 +314,7 @@ export default function AdminPage() {
   function openEdit(lesson: LessonEntry) {
     setForm({ ...lesson });
     setChunksText(lesson.chunks?.join('\n') || '');
+    setHintsText(lesson.hints?.join(', ') || '');
     setEditingLesson(lesson);
     setModalMode('edit');
   }
@@ -97,18 +324,24 @@ export default function AdminPage() {
   }
 
   function handleSave() {
-    if (!form.title.trim() || !form.transcript.trim()) return;
+    if (!form.title.trim()) return;
+    if (form.type !== 'speaking' && !form.transcript?.trim()) return;
 
     const chunks = chunksText
       .split('\n')
       .map((l) => l.trim())
       .filter((l) => l.length > 0);
+    const hints = hintsText
+      .split(',')
+      .map((h) => h.trim())
+      .filter((h) => h.length > 0);
 
     if (modalMode === 'add') {
       const newLesson: LessonEntry = {
         ...form,
         id: `custom_${Date.now()}`,
         chunks: form.type === 'shadowing' ? chunks : undefined,
+        hints: form.type === 'speaking' ? hints : undefined,
       };
       const updated = [...customLessons, newLesson];
       setCustomLessons(updated);
@@ -116,13 +349,17 @@ export default function AdminPage() {
     } else if (modalMode === 'edit' && editingLesson) {
       const updated = customLessons.map((l) =>
         l.id === editingLesson.id
-          ? { ...form, id: l.id, chunks: form.type === 'shadowing' ? chunks : undefined }
+          ? {
+              ...form,
+              id: l.id,
+              chunks: form.type === 'shadowing' ? chunks : undefined,
+              hints: form.type === 'speaking' ? hints : undefined,
+            }
           : l
       );
       setCustomLessons(updated);
       saveCustomLessons(updated);
     }
-
     setModalMode(null);
   }
 
@@ -133,6 +370,68 @@ export default function AdminPage() {
     setDeleteId(null);
   }
 
+  // ── Import ──────────────────────────────────────────
+  function parseImportRaw(raw: string) {
+    setImportRaw(raw);
+    setImportParseError('');
+    setImportParsed([]);
+    if (!raw.trim()) return;
+
+    try {
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) {
+        setImportParseError('JSON must be an array [ { ... }, { ... } ]');
+        return;
+      }
+      const existingIds = new Set(allLessons.map((l) => l.id));
+      const validated = parsed.map((item) => validateLesson(item, existingIds));
+      setImportParsed(validated);
+    } catch {
+      setImportParseError('Invalid JSON — check for missing commas or brackets');
+    }
+  }
+
+  function handleFileUpload(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev) => {
+      const text = ev.target?.result as string;
+      parseImportRaw(text);
+    };
+    reader.readAsText(file);
+  }
+
+  function downloadTemplate() {
+    const blob = new Blob([JSON.stringify(TEMPLATE_JSON, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'shadowspeak-lessons-template.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function handleImportConfirm() {
+    const valid = importParsed.filter((l) => !l._error);
+    if (valid.length === 0) return;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const toImport: LessonEntry[] = valid.map(({ _error, ...rest }) => rest);
+    const updated = [...customLessons, ...toImport];
+    setCustomLessons(updated);
+    saveCustomLessons(updated);
+    setImportOpen(false);
+    setImportRaw('');
+    setImportParsed([]);
+  }
+
+  function closeImport() {
+    setImportOpen(false);
+    setImportRaw('');
+    setImportParsed([]);
+    setImportParseError('');
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -141,34 +440,84 @@ export default function AdminPage() {
     );
   }
 
+  const validCount = importParsed.filter((l) => !l._error).length;
+  const errorCount = importParsed.filter((l) => !!l._error).length;
+
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
       {/* Header */}
       <div className="bg-gradient-to-r from-gray-700 to-gray-900 rounded-2xl p-8 mb-8 text-white">
-        <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex items-start justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-black mb-2">Admin Panel</h1>
             <p className="text-gray-300">Manage lessons and content for ShadowSpeak</p>
           </div>
-          <button
-            onClick={openAdd}
-            className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-violet-500 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-md flex items-center gap-2"
-          >
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-            </svg>
-            Add Lesson
-          </button>
+          {activeTab === 'lessons' && (
+            <div className="flex items-center gap-3 flex-wrap">
+              <button
+                onClick={() => setImportOpen(true)}
+                className="px-5 py-2.5 bg-white/10 border border-white/30 text-white rounded-xl font-bold text-sm hover:bg-white/20 transition-all flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                </svg>
+                Import JSON
+              </button>
+              <button
+                onClick={openAdd}
+                className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-violet-500 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-md flex items-center gap-2"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add Lesson
+              </button>
+            </div>
+          )}
+          {activeTab === 'stats' && statsLoaded && (
+            <button
+              onClick={() => { setStatsLoaded(false); loadStats(); }}
+              className="px-4 py-2 bg-white/10 border border-white/30 text-white rounded-xl font-bold text-sm hover:bg-white/20 transition-all flex items-center gap-2"
+            >
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              Refresh
+            </button>
+          )}
+        </div>
+
+        {/* Tab switcher */}
+        <div className="flex gap-2 mt-6">
+          {([
+            { key: 'lessons', label: '📚 Lessons' },
+            { key: 'stats', label: '📊 Student Stats' },
+          ] as { key: AdminTab; label: string }[]).map((t) => (
+            <button
+              key={t.key}
+              onClick={() => handleTabChange(t.key)}
+              className={`px-5 py-2 rounded-xl text-sm font-bold transition-all ${
+                activeTab === t.key
+                  ? 'bg-white text-gray-800 shadow-sm'
+                  : 'bg-white/10 text-white/80 hover:bg-white/20'
+              }`}
+            >
+              {t.label}
+            </button>
+          ))}
         </div>
       </div>
 
-      {/* Stats */}
+      {/* ── LESSONS TAB ─────────────────────────────────── */}
+      {activeTab === 'lessons' && (<>
+
+      {/* Lesson counts */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
         {[
           { label: 'Total Lessons', value: allLessons.length, color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100' },
           { label: 'Shadowing', value: allLessons.filter(l => l.type === 'shadowing').length, color: 'text-cyan-600', bg: 'bg-cyan-50 border-cyan-100' },
           { label: 'Dictation', value: allLessons.filter(l => l.type === 'dictation').length, color: 'text-violet-600', bg: 'bg-violet-50 border-violet-100' },
-          { label: 'Custom (Yours)', value: customLessons.length, color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-100' },
+          { label: 'Speaking', value: allLessons.filter(l => l.type === 'speaking').length, color: 'text-orange-600', bg: 'bg-orange-50 border-orange-100' },
         ].map((s) => (
           <div key={s.label} className={`bg-white rounded-2xl border p-4 ${s.bg}`}>
             <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
@@ -179,9 +528,16 @@ export default function AdminPage() {
 
       {/* Table */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-        <div className="p-5 border-b border-gray-100">
-          <h2 className="text-lg font-bold text-gray-800">All Lessons</h2>
-          <p className="text-sm text-gray-500 mt-0.5">Built-in lessons are read-only. Custom lessons can be edited.</p>
+        <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+          <div>
+            <h2 className="text-lg font-bold text-gray-800">All Lessons</h2>
+            <p className="text-sm text-gray-500 mt-0.5">Built-in lessons are read-only. Custom lessons can be edited.</p>
+          </div>
+          {customLessons.length > 0 && (
+            <span className="text-sm font-semibold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-100">
+              {customLessons.length} custom
+            </span>
+          )}
         </div>
         <div className="overflow-x-auto">
           <table className="w-full">
@@ -218,9 +574,11 @@ export default function AdminPage() {
                     <td className="px-5 py-4 text-sm text-gray-600 capitalize">{lesson.topic}</td>
                     <td className="px-5 py-4">
                       <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
-                        lesson.type === 'shadowing' ? 'bg-cyan-100 text-cyan-700' : 'bg-violet-100 text-violet-700'
+                        lesson.type === 'shadowing' ? 'bg-cyan-100 text-cyan-700' :
+                        lesson.type === 'speaking' ? 'bg-orange-100 text-orange-700' :
+                        'bg-violet-100 text-violet-700'
                       }`}>
-                        {lesson.type === 'shadowing' ? '🎧 Shadowing' : '✏️ Dictation'}
+                        {lesson.type === 'shadowing' ? '🎧 Shadowing' : lesson.type === 'speaking' ? '🗣️ Speaking' : '✏️ Dictation'}
                       </span>
                     </td>
                     <td className="px-5 py-4 text-sm text-gray-500">{lesson.durationMinutes} min</td>
@@ -252,7 +610,309 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Add/Edit Modal */}
+      </>)}
+
+      {/* ── STATS TAB ───────────────────────────────────── */}
+      {activeTab === 'stats' && (
+        <div>
+          {statsLoading && (
+            <div className="flex flex-col items-center justify-center py-20 gap-3">
+              <div className="w-8 h-8 border-4 border-blue-200 border-t-blue-500 rounded-full animate-spin" />
+              <p className="text-gray-400 text-sm">Loading student data…</p>
+            </div>
+          )}
+
+          {statsError && (
+            <div className="bg-red-50 border border-red-200 rounded-2xl p-6 mb-6">
+              <p className="text-red-700 font-semibold mb-1">Could not load student stats</p>
+              <p className="text-red-600 text-sm">{statsError}</p>
+              <p className="text-red-500 text-xs mt-2">
+                Make sure you ran the RLS policy SQL in Supabase SQL Editor.
+              </p>
+            </div>
+          )}
+
+          {!statsLoading && !statsError && statsLoaded && (<>
+
+            {/* Summary cards */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              {[
+                {
+                  label: 'Students', icon: '👥',
+                  value: studentStats.length,
+                  sub: 'registered',
+                  color: 'text-blue-600', bg: 'bg-blue-50 border-blue-100',
+                },
+                {
+                  label: 'Completions', icon: '✅',
+                  value: studentStats.reduce((s, st) => s + st.completions, 0),
+                  sub: 'total lessons done',
+                  color: 'text-emerald-600', bg: 'bg-emerald-50 border-emerald-100',
+                },
+                {
+                  label: 'Avg Accuracy', icon: '🎯',
+                  value: (() => {
+                    const withScore = studentStats.filter(s => s.avgAccuracy !== null);
+                    if (!withScore.length) return '—';
+                    return Math.round(withScore.reduce((s, st) => s + (st.avgAccuracy ?? 0), 0) / withScore.length) + '%';
+                  })(),
+                  sub: 'dictation average',
+                  color: 'text-orange-600', bg: 'bg-orange-50 border-orange-100',
+                },
+                {
+                  label: 'Total Minutes', icon: '⏱️',
+                  value: studentStats.reduce((s, st) => s + st.totalMinutes, 0),
+                  sub: 'time practising',
+                  color: 'text-violet-600', bg: 'bg-violet-50 border-violet-100',
+                },
+              ].map((s) => (
+                <div key={s.label} className={`bg-white rounded-2xl border p-5 ${s.bg}`}>
+                  <div className="text-2xl mb-1">{s.icon}</div>
+                  <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
+                  <p className="text-sm font-semibold text-gray-700 mt-0.5">{s.label}</p>
+                  <p className="text-xs text-gray-400">{s.sub}</p>
+                </div>
+              ))}
+            </div>
+
+            {/* Student table */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mb-6">
+              <div className="p-5 border-b border-gray-100">
+                <h2 className="text-lg font-bold text-gray-800">Student Activity</h2>
+                <p className="text-sm text-gray-500 mt-0.5">{studentStats.length} student{studentStats.length !== 1 ? 's' : ''} registered</p>
+              </div>
+
+              {studentStats.length === 0 ? (
+                <div className="py-16 text-center">
+                  <div className="text-4xl mb-3">👤</div>
+                  <p className="text-gray-500 font-medium">No students yet</p>
+                  <p className="text-gray-400 text-sm mt-1">Students will appear here after they register</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-50 border-b border-gray-100">
+                      <tr>
+                        <th className="text-left px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Student</th>
+                        <th className="text-left px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Lessons</th>
+                        <th className="text-left px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Minutes</th>
+                        <th className="text-left px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Accuracy</th>
+                        <th className="text-left px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Last Active</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {studentStats.map((s) => (
+                        <tr key={s.id} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="px-5 py-4">
+                            <p className="font-semibold text-gray-800 text-sm">{s.name}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{s.email}</p>
+                          </td>
+                          <td className="px-5 py-4">
+                            <span className={`text-sm font-black ${s.completions > 0 ? 'text-emerald-600' : 'text-gray-400'}`}>
+                              {s.completions}
+                            </span>
+                          </td>
+                          <td className="px-5 py-4 text-sm text-gray-600">{s.totalMinutes} min</td>
+                          <td className="px-5 py-4">
+                            {s.avgAccuracy !== null ? (
+                              <span className={`text-sm font-bold ${
+                                s.avgAccuracy >= 80 ? 'text-emerald-600' :
+                                s.avgAccuracy >= 50 ? 'text-amber-600' : 'text-red-500'
+                              }`}>
+                                {s.avgAccuracy}%
+                              </span>
+                            ) : (
+                              <span className="text-xs text-gray-400 italic">no dictation</span>
+                            )}
+                          </td>
+                          <td className="px-5 py-4 text-sm text-gray-500">
+                            {s.lastActive ? formatDate(s.lastActive) : <span className="text-gray-300 italic">never</span>}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </div>
+
+            {/* Recent Activity */}
+            {recentActivity.length > 0 && (
+              <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
+                <div className="p-5 border-b border-gray-100">
+                  <h2 className="text-lg font-bold text-gray-800">Recent Activity</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">Last {recentActivity.length} completions across all students</p>
+                </div>
+                <div className="divide-y divide-gray-50">
+                  {recentActivity.map((a, i) => (
+                    <div key={i} className="px-5 py-3.5 flex items-center gap-4 hover:bg-gray-50/50 transition-colors">
+                      <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${
+                        a.lessonType === 'shadowing' ? 'bg-cyan-100' :
+                        a.lessonType === 'speaking' ? 'bg-orange-100' : 'bg-violet-100'
+                      }`}>
+                        {a.lessonType === 'shadowing' ? '🎧' : a.lessonType === 'speaking' ? '🗣️' : '✏️'}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-gray-800 truncate">{a.lessonTitle}</p>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          <span className="font-medium text-gray-600">{a.studentName}</span>
+                          {' · '}{formatDate(a.completedAt)}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-3 flex-shrink-0">
+                        {a.score !== null && (
+                          <span className={`text-sm font-bold ${
+                            a.score >= 80 ? 'text-emerald-600' :
+                            a.score >= 50 ? 'text-amber-600' : 'text-red-500'
+                          }`}>
+                            {a.score}%
+                          </span>
+                        )}
+                        <span className="text-xs text-gray-400">{Math.round(a.timeSpent / 60)} min</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+          </>)}
+        </div>
+      )}
+
+      {/* ── Import Modal ─────────────────────────────── */}
+      {importOpen && (
+        <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+              <div>
+                <h3 className="text-xl font-black text-gray-800">Import Lessons</h3>
+                <p className="text-sm text-gray-500 mt-0.5">Paste a JSON array of lesson objects</p>
+              </div>
+              <button
+                onClick={downloadTemplate}
+                className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold text-blue-600 bg-blue-50 border border-blue-200 rounded-xl hover:bg-blue-100 transition-colors"
+              >
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+                Download Template
+              </button>
+            </div>
+
+            <div className="p-6 space-y-4">
+              {/* Upload or paste */}
+              <div>
+                <div className="flex items-center justify-between mb-1.5">
+                  <label className="text-sm font-semibold text-gray-700">Paste JSON</label>
+                  <button
+                    onClick={() => fileInputRef.current?.click()}
+                    className="text-xs font-semibold text-gray-500 hover:text-blue-600 flex items-center gap-1 transition-colors"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
+                    </svg>
+                    Or upload .json file
+                  </button>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".json"
+                    onChange={handleFileUpload}
+                    className="hidden"
+                  />
+                </div>
+                <textarea
+                  value={importRaw}
+                  onChange={(e) => parseImportRaw(e.target.value)}
+                  placeholder={`[\n  {\n    "title": "My Lesson",\n    "type": "shadowing",\n    "level": "Starter",\n    "topic": "school",\n    "transcript": "...",\n    "durationMinutes": 5\n  }\n]`}
+                  rows={8}
+                  className="w-full px-4 py-3 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none"
+                />
+                {importParseError && (
+                  <p className="mt-1.5 text-xs text-red-600 font-medium flex items-center gap-1">
+                    <svg className="w-3.5 h-3.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                    </svg>
+                    {importParseError}
+                  </p>
+                )}
+              </div>
+
+              {/* Preview */}
+              {importParsed.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-3 mb-3">
+                    <p className="text-sm font-bold text-gray-700">
+                      Preview — {importParsed.length} lesson{importParsed.length !== 1 ? 's' : ''} found
+                    </p>
+                    {validCount > 0 && (
+                      <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                        {validCount} valid
+                      </span>
+                    )}
+                    {errorCount > 0 && (
+                      <span className="text-xs font-semibold text-red-700 bg-red-50 px-2 py-0.5 rounded-full border border-red-200">
+                        {errorCount} error{errorCount !== 1 ? 's' : ''}
+                      </span>
+                    )}
+                  </div>
+                  <div className="rounded-xl border border-gray-200 overflow-hidden">
+                    <table className="w-full text-sm">
+                      <thead className="bg-gray-50 border-b border-gray-200">
+                        <tr>
+                          <th className="text-left px-4 py-2 text-xs font-bold text-gray-500 uppercase">#</th>
+                          <th className="text-left px-4 py-2 text-xs font-bold text-gray-500 uppercase">Title</th>
+                          <th className="text-left px-4 py-2 text-xs font-bold text-gray-500 uppercase">Type</th>
+                          <th className="text-left px-4 py-2 text-xs font-bold text-gray-500 uppercase">Level</th>
+                          <th className="text-left px-4 py-2 text-xs font-bold text-gray-500 uppercase">Status</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-gray-100">
+                        {importParsed.map((item, i) => (
+                          <tr key={i} className={item._error ? 'bg-red-50/50' : 'bg-white'}>
+                            <td className="px-4 py-2.5 text-gray-400 text-xs">{i + 1}</td>
+                            <td className="px-4 py-2.5 font-medium text-gray-800 max-w-[180px] truncate">{item.title || '—'}</td>
+                            <td className="px-4 py-2.5 text-gray-600 capitalize">{item.type || '—'}</td>
+                            <td className="px-4 py-2.5 text-gray-600">{item.level || '—'}</td>
+                            <td className="px-4 py-2.5">
+                              {item._error ? (
+                                <span className="text-xs text-red-600 font-medium" title={item._error}>
+                                  ❌ {item._error.length > 30 ? item._error.slice(0, 30) + '…' : item._error}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-emerald-600 font-semibold">✅ Valid</span>
+                              )}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            <div className="p-6 border-t border-gray-100 flex gap-3 justify-end">
+              <button
+                onClick={closeImport}
+                className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleImportConfirm}
+                disabled={validCount === 0}
+                className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-violet-500 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+              >
+                Import {validCount > 0 ? `${validCount} lesson${validCount !== 1 ? 's' : ''}` : '…'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ── Add/Edit Modal ────────────────────────────── */}
       {modalMode && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
@@ -281,8 +941,9 @@ export default function AdminPage() {
                     onChange={(e) => handleFormChange('type', e.target.value)}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
                   >
-                    <option value="shadowing">Shadowing</option>
-                    <option value="dictation">Dictation</option>
+                    <option value="shadowing">🎧 Shadowing</option>
+                    <option value="dictation">✏️ Dictation</option>
+                    <option value="speaking">🗣️ Speaking</option>
                   </select>
                 </div>
                 <div>
@@ -342,31 +1003,68 @@ export default function AdminPage() {
                 </div>
               )}
 
-              <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1.5">Transcript *</label>
-                <textarea
-                  value={form.transcript}
-                  onChange={(e) => handleFormChange('transcript', e.target.value)}
-                  placeholder="Full transcript text..."
-                  rows={4}
-                  className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none"
-                />
-              </div>
-
-              {form.type === 'shadowing' && (
-                <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
-                    Chunks (one per line)
-                  </label>
-                  <textarea
-                    value={chunksText}
-                    onChange={(e) => setChunksText(e.target.value)}
-                    placeholder="First sentence.&#10;Second sentence.&#10;Third sentence."
-                    rows={5}
-                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none font-mono"
-                  />
-                  <p className="text-xs text-gray-400 mt-1">Each line will become one chunk</p>
-                </div>
+              {form.type === 'speaking' ? (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Speaking Prompt *</label>
+                    <textarea
+                      value={form.prompt || ''}
+                      onChange={(e) => handleFormChange('prompt', e.target.value)}
+                      placeholder="What question should students answer?"
+                      rows={3}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Example Answer</label>
+                    <textarea
+                      value={form.exampleAnswer || ''}
+                      onChange={(e) => handleFormChange('exampleAnswer', e.target.value)}
+                      placeholder="Model answer for students to listen to..."
+                      rows={3}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Vocabulary Hints</label>
+                    <input
+                      type="text"
+                      value={hintsText}
+                      onChange={(e) => setHintsText(e.target.value)}
+                      placeholder="word1, word2, word3"
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                    />
+                    <p className="text-xs text-gray-400 mt-1">Comma-separated list of vocabulary hints</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-1.5">Transcript *</label>
+                    <textarea
+                      value={form.transcript || ''}
+                      onChange={(e) => handleFormChange('transcript', e.target.value)}
+                      placeholder="Full transcript text..."
+                      rows={4}
+                      className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none"
+                    />
+                  </div>
+                  {form.type === 'shadowing' && (
+                    <div>
+                      <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                        Chunks (one per line)
+                      </label>
+                      <textarea
+                        value={chunksText}
+                        onChange={(e) => setChunksText(e.target.value)}
+                        placeholder={'First sentence.\nSecond sentence.\nThird sentence.'}
+                        rows={5}
+                        className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none font-mono"
+                      />
+                      <p className="text-xs text-gray-400 mt-1">Each line becomes one practice chunk</p>
+                    </div>
+                  )}
+                </>
               )}
             </div>
             <div className="p-6 border-t border-gray-100 flex gap-3 justify-end">
@@ -378,7 +1076,7 @@ export default function AdminPage() {
               </button>
               <button
                 onClick={handleSave}
-                disabled={!form.title.trim() || !form.transcript.trim()}
+                disabled={!form.title.trim() || (form.type !== 'speaking' && !form.transcript?.trim())}
                 className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-violet-500 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 {modalMode === 'add' ? 'Add Lesson' : 'Save Changes'}

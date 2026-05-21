@@ -15,8 +15,9 @@ import ProgressCard from '@/components/ProgressCard';
 import ActivityCalendar from '@/components/ActivityCalendar';
 import shadowingLessons from '@/data/shadowing-lessons.json';
 import dictationLessons from '@/data/dictation-lessons.json';
+import speakingLessons from '@/data/speaking-lessons.json';
 
-const allLessons = [...shadowingLessons, ...dictationLessons] as Array<{
+const allLessons = [...shadowingLessons, ...dictationLessons, ...speakingLessons] as Array<{
   id: string; title: string; type: string; level: string; topic: string;
 }>;
 
@@ -133,18 +134,24 @@ export default function ProgressPage() {
       {/* Activity Calendar */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-8">
         <ActivityCalendar progress={progress} />
-        <div className="grid grid-cols-2 gap-4 mt-6 pt-5 border-t border-gray-100">
+        <div className="grid grid-cols-3 gap-4 mt-6 pt-5 border-t border-gray-100">
           <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
             <p className="text-2xl font-black text-blue-700">
               {progress.filter(p => getLessonType(p.lessonId) === 'shadowing').length}
             </p>
-            <p className="text-sm text-blue-600 font-medium mt-1">🎧 Shadowing lessons</p>
+            <p className="text-sm text-blue-600 font-medium mt-1">🎧 Shadowing</p>
           </div>
           <div className="bg-violet-50 rounded-xl p-4 border border-violet-100">
             <p className="text-2xl font-black text-violet-700">
               {progress.filter(p => getLessonType(p.lessonId) === 'dictation').length}
             </p>
-            <p className="text-sm text-violet-600 font-medium mt-1">✏️ Dictation lessons</p>
+            <p className="text-sm text-violet-600 font-medium mt-1">✏️ Dictation</p>
+          </div>
+          <div className="bg-orange-50 rounded-xl p-4 border border-orange-100">
+            <p className="text-2xl font-black text-orange-600">
+              {progress.filter(p => getLessonType(p.lessonId) === 'speaking').length}
+            </p>
+            <p className="text-sm text-orange-600 font-medium mt-1">🗣️ Speaking</p>
           </div>
         </div>
       </div>
@@ -175,7 +182,11 @@ export default function ProgressPage() {
             {recentLessons.map((p, i) => {
               const type = getLessonType(p.lessonId);
               const title = getLessonTitle(p.lessonId);
-              const href = type === 'shadowing' ? `/shadowing/${p.lessonId}` : `/dictation/${p.lessonId}`;
+              const href = type === 'shadowing'
+                ? `/shadowing/${p.lessonId}`
+                : type === 'speaking'
+                ? `/speaking/${p.lessonId}`
+                : `/dictation/${p.lessonId}`;
 
               return (
                 <Link
@@ -185,9 +196,9 @@ export default function ProgressPage() {
                 >
                   <div className="flex items-center gap-3">
                     <div className={`w-9 h-9 rounded-xl flex items-center justify-center text-base flex-shrink-0 ${
-                      type === 'shadowing' ? 'bg-blue-100' : 'bg-violet-100'
+                      type === 'shadowing' ? 'bg-blue-100' : type === 'speaking' ? 'bg-orange-100' : 'bg-violet-100'
                     }`}>
-                      {type === 'shadowing' ? '🎧' : '✏️'}
+                      {type === 'shadowing' ? '🎧' : type === 'speaking' ? '🗣️' : '✏️'}
                     </div>
                     <div>
                       <p className="font-semibold text-gray-800 text-sm group-hover:text-blue-600 transition-colors">{title}</p>

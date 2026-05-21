@@ -9,18 +9,18 @@
 ### T-01 Khởi tạo dự án
 - [x] T-01-1 Tạo Next.js 14 + TypeScript + Tailwind CSS
 - [x] T-01-2 Cấu hình ESLint, Prettier, tsconfig
-- [x] T-01-3 Cài đặt Supabase client (`@supabase/supabase-js`) *(schema created, Supabase pending)*
-- [x] T-01-4 Cấu hình biến môi trường `.env.local` *(mock, Supabase pending)*
+- [x] T-01-3 Cài đặt Supabase client (`@supabase/supabase-js`) — *installed, connected*
+- [x] T-01-4 Cấu hình biến môi trường `.env.local` — *NEXT_PUBLIC_SUPABASE_URL + ANON_KEY set*
 - [x] T-01-5 Thiết lập cấu trúc thư mục (`app/`, `components/`, `lib/`, `data/`)
 - [x] T-01-6 Deploy skeleton lên Vercel
 
 ### T-02 Database Schema (Supabase)
-- [ ] T-02-1 Tạo bảng `users` *(schema created, Supabase pending)*
-- [ ] T-02-2 Tạo bảng `lessons` *(schema created, Supabase pending)*
-- [ ] T-02-3 Tạo bảng `progress` *(schema created, Supabase pending)*
-- [ ] T-02-4 Tạo bảng `dictation_attempts` *(schema created, Supabase pending)*
-- [ ] T-02-5 Tạo bảng `streaks` *(schema created, Supabase pending)*
-- [ ] T-02-6 Cấu hình Row Level Security (RLS) Supabase
+- [x] T-02-1 Tạo bảng `users` — *`profiles` table (id, email, name, role) + trigger auto-create on signup*
+- [ ] T-02-2 Tạo bảng `lessons` — *bài học vẫn dùng JSON file, chưa migrate lên Supabase*
+- [x] T-02-3 Tạo bảng `progress` — *(user_id, lesson_id, lesson_type, time_spent, score, completed_at)*
+- [x] T-02-4 Tạo bảng `dictation_attempts` — *merged vào bảng `progress` (score field)*
+- [ ] T-02-5 Tạo bảng `streaks` — *streak hiện tính từ progress data, chưa có bảng riêng*
+- [x] T-02-6 Cấu hình Row Level Security (RLS) Supabase — *profiles + progress có RLS*
 - [ ] T-02-7 Tạo Supabase Storage bucket cho audio và image
 
 ---
@@ -28,7 +28,7 @@
 ## PHASE 2 — Authentication (FR-01)
 
 - [x] T-03-1 🔴 Trang đăng ký `/register` — form email + password
-- [x] T-03-2 🔴 Trang đăng nhập `/login` — mock auth (Supabase pending)
+- [x] T-03-2 🔴 Trang đăng nhập `/login` — *Supabase Auth thật, error messages cụ thể*
 - [x] T-03-3 🔴 Đăng xuất + clear session
 - [x] T-03-4 🔴 Middleware bảo vệ route (redirect nếu chưa login)
 - [x] T-03-5 🔴 Phân quyền role: student / teacher / admin
@@ -64,7 +64,7 @@
 - [x] T-06-4 🔴 Filter theo **type** (shadowing / dictation)
 - [x] T-06-5 🟡 Filter theo **trạng thái** (New / Completed)
 - [x] T-06-6 🟡 Lesson card: thumbnail + tiêu đề + level + thời lượng + badge completed
-- [ ] T-06-7 🟡 Pagination hoặc infinite scroll
+- [x] T-06-7 🟡 Pagination hoặc infinite scroll — *12 bài/trang, reset khi đổi filter*
 
 ---
 
@@ -103,8 +103,8 @@
 
 ## PHASE 8 — Speaking Practice (FR-05) *(optional MVP)*
 
-- [ ] T-09-1 🟡 Trang `/speaking/[id]` — hiển thị prompt
-- [ ] T-09-2 🟡 Học sinh record câu trả lời và replay
+- [x] T-09-1 🟡 Trang `/speaking/[id]` — *prompt + vocab hints + model answer (TTS)*
+- [x] T-09-2 🟡 Học sinh record câu trả lời và replay — *Recorder component, unlock Mark Complete sau khi record*
 - [ ] T-09-3 🟢 AI phân tích phát âm (Azure Speech Assessment)
 
 ---
@@ -117,7 +117,7 @@
 - [x] T-10-4 🔴 Độ chính xác dictation trung bình (%)
 - [x] T-10-5 🔴 Current streak — tính từ localStorage, reset nếu bỏ 1 ngày
 - [x] T-10-6 🟡 Thông điệp động viên theo streak
-- [x] T-10-7 🟡 Current level (hiển thị shadowing vs dictation count)
+- [x] T-10-7 🟡 Current level (hiển thị shadowing vs dictation vs speaking count)
 - [x] T-10-8 🟡 Chart/calendar hiển thị ngày có luyện tập
 
 ---
@@ -126,24 +126,25 @@
 
 - [x] T-11-1 🔴 Route `/admin` — bảo vệ bằng role teacher/admin
 - [x] T-11-2 🔴 Danh sách bài học + tìm kiếm + filter
-- [x] T-11-3 🔴 Form tạo bài học mới: title, level, topic, type, transcript, chunking, notes
+- [x] T-11-3 🔴 Form tạo bài học mới: title, level, topic, type, transcript, chunking, notes — *hỗ trợ cả Speaking type (prompt, exampleAnswer, hints)*
 - [ ] T-11-4 🔴 Upload audio normal speed lên Supabase Storage *(Supabase pending)*
 - [ ] T-11-5 🔴 Upload audio slow speed lên Supabase Storage *(Supabase pending)*
 - [ ] T-11-6 🔴 Upload hình ảnh bài học *(Supabase pending)*
 - [x] T-11-7 🔴 Chỉnh sửa / xoá bài học (custom lessons in localStorage)
 - [x] T-11-8 🔴 Tổ chức content theo level / topic / unit
-- [ ] T-11-9 🟡 Dashboard thống kê học sinh: số bài, thời gian, accuracy, hoạt động
-- [ ] T-11-10 🟡 Bulk import lessons từ file CSV/JSON
+- [x] T-11-9 🟡 Dashboard thống kê học sinh: số bài, thời gian, accuracy, hoạt động — *tab "Student Stats" trong admin: summary cards + bảng per-student + recent activity feed, đọc từ Supabase profiles + progress*
+- [x] T-11-10 🟡 Bulk import lessons từ file CSV/JSON — *JSON import, preview table, validate, download template*
 
 ---
 
 ## PHASE 11 — Content (CR-01, CR-02)
 
 - [x] T-12-1 🔴 Soạn 10 Shadowing lessons (school / hobbies / family / food / daily routine) — *10 sample lessons created*
-- [ ] T-12-2 🔴 Ghi âm hoặc tạo TTS audio (normal + slow) — *using browser speechSynthesis as placeholder*
+- [ ] T-12-2 🔴 Ghi âm hoặc tạo TTS audio (normal + slow) — *dùng browser speechSynthesis tạm thời*
 - [x] T-12-3 🔴 Soạn 10 Dictation lessons (sentence / dialogue / paragraph) — *10 sample lessons created*
-- [ ] T-12-4 🔴 Ghi âm hoặc tạo TTS audio cho dictation lessons
-- [ ] T-12-5 🟡 Tìm / tạo hình ảnh minh họa cho từng bài *(shadowing uses picsum.photos)*
+- [ ] T-12-4 🔴 Ghi âm hoặc tạo TTS audio cho dictation lessons — *dùng browser speechSynthesis tạm thời*
+- [ ] T-12-5 🟡 Tìm / tạo hình ảnh minh họa cho từng bài — *shadowing + speaking dùng picsum.photos*
+- [x] T-12-7 🟡 Soạn 10 Speaking lessons (prompt + exampleAnswer + hints) — *5 Starter + 5 Level 1*
 - [x] T-12-6 🟡 Chia chunking cho 10 shadowing lessons — *4 chunks per lesson*
 
 ---
@@ -162,7 +163,7 @@
 
 ## PHASE 13 — Deploy Production
 
-- [ ] T-14-1 🔴 Cấu hình environment variables trên Vercel *(khi có Supabase)*
+- [x] T-14-1 🔴 Cấu hình environment variables trên Vercel — *NEXT_PUBLIC_SUPABASE_URL + ANON_KEY đã set*
 - [x] T-14-2 🔴 Deploy production lên Vercel — https://shadowing-app-eight.vercel.app
 - [ ] T-14-3 🔴 Cấu hình custom domain (nếu có)
 - [ ] T-14-4 🟡 Cấu hình Supabase connection pooling

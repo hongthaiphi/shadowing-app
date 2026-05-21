@@ -1,17 +1,23 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { register } from '@/lib/auth';
 
-export default function RegisterPage() {
+function RegisterContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [confirmed, setConfirmed] = useState(false);
+
+  useEffect(() => {
+    if (searchParams.get('confirmed') === 'pending') setConfirmed(true);
+  }, [searchParams]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -28,15 +34,51 @@ export default function RegisterPage() {
       setError('Please enter a password.');
       return;
     }
+    if (password.length < 6) {
+      setError('Password must be at least 6 characters.');
+      return;
+    }
     setLoading(true);
     try {
-      register(name.trim(), email.trim(), password);
-      router.push('/lessons');
-    } catch {
-      setError('Something went wrong. Please try again.');
+      const { needsConfirmation } = await register(name.trim(), email.trim(), password);
+      if (needsConfirmation) {
+        router.push('/register?confirmed=pending');
+      } else {
+        router.push('/lessons');
+      }
+    } catch (err) {
+      const msg = (err as Error).message;
+      if (msg.includes('already registered') || msg.includes('already been registered')) {
+        setError('An account with this email already exists. Try logging in.');
+      } else {
+        setError(msg || 'Something went wrong. Please try again.');
+      }
     } finally {
       setLoading(false);
     }
+  }
+
+  if (confirmed) {
+    return (
+      <div className="min-h-[calc(100vh-64px)] flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md text-center">
+          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 p-10">
+            <div className="text-5xl mb-4">📧</div>
+            <h2 className="text-2xl font-black text-gray-800 mb-3">Check your email</h2>
+            <p className="text-gray-500 mb-6">
+              We sent a confirmation link to <strong>{email || 'your email'}</strong>.
+              Click the link to activate your account, then come back to log in.
+            </p>
+            <Link
+              href="/login"
+              className="inline-block px-6 py-3 bg-gradient-to-r from-blue-500 to-violet-600 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-md"
+            >
+              Go to Login
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
   }
 
   return (
@@ -119,5 +161,13 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense>
+      <RegisterContent />
+    </Suspense>
   );
 }
