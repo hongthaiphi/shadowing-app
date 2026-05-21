@@ -1,9 +1,15 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { login } from '@/lib/auth';
+import { login, getUser } from '@/lib/auth';
+
+function getRedirectTarget(): string {
+  if (typeof window === 'undefined') return '/lessons';
+  const params = new URLSearchParams(window.location.search);
+  return params.get('redirect') || '/lessons';
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -11,6 +17,13 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  // Already logged in → redirect immediately
+  useEffect(() => {
+    if (getUser()) {
+      router.replace(getRedirectTarget());
+    }
+  }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -22,7 +35,7 @@ export default function LoginPage() {
     setLoading(true);
     try {
       login(email.trim(), password);
-      router.push('/lessons');
+      router.push(getRedirectTarget());
     } catch {
       setError('Something went wrong. Please try again.');
     } finally {
