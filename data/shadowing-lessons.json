@@ -1,0 +1,192 @@
+[
+  {
+    "id": "s1",
+    "title": "My School Day",
+    "level": "Starter",
+    "topic": "school",
+    "type": "shadowing",
+    "image": "https://picsum.photos/seed/school/800/400",
+    "audioUrl": "",
+    "audioSlowUrl": "",
+    "transcript": "I go to school every morning. My class starts at seven o'clock. I study English, Math, and Science. My favorite subject is English.",
+    "chunks": [
+      "I go to school every morning.",
+      "My class starts at seven o'clock.",
+      "I study English, Math, and Science.",
+      "My favorite subject is English."
+    ],
+    "durationMinutes": 5,
+    "notes": "Focus on rhythm and natural stress"
+  },
+  {
+    "id": "s2",
+    "title": "After School Activities",
+    "level": "Starter",
+    "topic": "school",
+    "type": "shadowing",
+    "image": "https://picsum.photos/seed/afterschool/800/400",
+    "audioUrl": "",
+    "audioSlowUrl": "",
+    "transcript": "After school, I usually play football with my friends. Sometimes we go to the library together. I always finish my homework before dinner. My teacher says I am a good student.",
+    "chunks": [
+      "After school, I usually play football with my friends.",
+      "Sometimes we go to the library together.",
+      "I always finish my homework before dinner.",
+      "My teacher says I am a good student."
+    ],
+    "durationMinutes": 5,
+    "notes": "Pay attention to linking sounds between words"
+  },
+  {
+    "id": "s3",
+    "title": "My Weekend Hobbies",
+    "level": "Starter",
+    "topic": "hobbies",
+    "type": "shadowing",
+    "image": "https://picsum.photos/seed/hobbies/800/400",
+    "audioUrl": "",
+    "audioSlowUrl": "",
+    "transcript": "On weekends, I enjoy painting and reading books. I also like listening to music in my free time. My sister and I sometimes bake cookies together. We love spending time at home.",
+    "chunks": [
+      "On weekends, I enjoy painting and reading books.",
+      "I also like listening to music in my free time.",
+      "My sister and I sometimes bake cookies together.",
+      "We love spending time at home."
+    ],
+    "durationMinutes": 6,
+    "notes": "Focus on the -ing endings and natural intonation"
+  },
+  {
+    "id": "s4",
+    "title": "Sports and Exercise",
+    "level": "Level 1",
+    "topic": "hobbies",
+    "type": "shadowing",
+    "image": "https://picsum.photos/seed/sports/800/400",
+    "audioUrl": "",
+    "audioSlowUrl": "",
+    "transcript": "I have been playing tennis since I was ten years old. It is a great way to stay fit and have fun at the same time. My coach always tells me to keep my eye on the ball. I practice three times a week at the local sports centre.",
+    "chunks": [
+      "I have been playing tennis since I was ten years old.",
+      "It is a great way to stay fit and have fun at the same time.",
+      "My coach always tells me to keep my eye on the ball.",
+      "I practice three times a week at the local sports centre."
+    ],
+    "durationMinutes": 7,
+    "notes": "Notice the present perfect tense rhythm"
+  },
+  {
+    "id": "s5",
+    "title": "My Family",
+    "level": "Starter",
+    "topic": "family",
+    "type": "shadowing",
+    "image": "https://picsum.photos/seed/family1/800/400",
+    "audioUrl": "",
+    "audioSlowUrl": "",
+    "transcript": "I have a small but happy family. My father works as an engineer and my mother is a nurse. I have one older brother and one younger sister. We eat dinner together every evening.",
+    "chunks": [
+      "I have a small but happy family.",
+      "My father works as an engineer and my mother is a nurse.",
+      "I have one older brother and one younger sister.",
+      "We eat dinner together every evening."
+    ],
+    "durationMinutes": 5,
+    "notes": "Practice the natural pauses within long sentences"
+  },
+  {
+    "id": "s6",
+    "title": "Family Traditions",
+    "level": "Level 1",
+    "topic": "family",
+    "type": "shadowing",
+    "image": "https://picsum.photos/seed/family2/800/400",
+    "audioUrl": "",
+    "audioSlowUrl": "",
+    "transcript": "Every Sunday, my whole family gets together for a big lunch. My grandmother cooks traditional dishes that everyone loves. After eating, we sit on the porch and tell stories. These moments are my favourite memories from childhood.",
+    "chunks": [
+      "Every Sunday, my whole family gets together for a big lunch.",
+      "My grandmother cooks traditional dishes that everyone loves.",
+      "After eating, we sit on the porch and tell stories.",
+      "These moments are my favourite memories from childhood."
+    ],
+    "durationMinutes": 7,
+    "notes": "Listen for the emotion and warmth in the speaker's voice"
+  },
+  {
+    "id": "s7",
+    "title": "Favourite Foods",
+    "level": "Starter",
+    "topic": "food",
+    "type": "shadowing",
+    "image": "https://picsum.photos/seed/food1/800/400",
+    "audioUrl": "",
+    "audioSlowUrl": "",
+    "transcript": "My favourite food is pizza with lots of cheese and vegetables. I also love eating fresh fruit in the morning. My mother makes delicious soup every winter. I try to eat healthy food most of the time.",
+    "chunks": [
+      "My favourite food is pizza with lots of cheese and vegetables.",
+      "I also love eating fresh fruit in the morning.",
+      "My mother makes delicious soup every winter.",
+      "I try to eat healthy food most of the time."
+    ],
+    "durationMinutes": 5,
+    "notes": "Focus on the stress pattern in adjectives before nouns"
+  },
+  {
+    "id": "s8",
+    "title": "Cooking a Meal",
+    "level": "Level 2",
+    "topic": "food",
+    "type": "shadowing",
+    "image": "https://picsum.photos/seed/cooking/800/400",
+    "audioUrl": "",
+    "audioSlowUrl": "",
+    "transcript": "Last weekend, I decided to cook a three-course meal for my family. I started with a tomato and basil soup, which took about thirty minutes to prepare. For the main course, I made pasta with a creamy mushroom sauce. Everyone was impressed by my cooking skills.",
+    "chunks": [
+      "Last weekend, I decided to cook a three-course meal for my family.",
+      "I started with a tomato and basil soup, which took about thirty minutes to prepare.",
+      "For the main course, I made pasta with a creamy mushroom sauce.",
+      "Everyone was impressed by my cooking skills."
+    ],
+    "durationMinutes": 8,
+    "notes": "Pay attention to the past tense verb endings"
+  },
+  {
+    "id": "s9",
+    "title": "Morning Routine",
+    "level": "Starter",
+    "topic": "daily routine",
+    "type": "shadowing",
+    "image": "https://picsum.photos/seed/morning/800/400",
+    "audioUrl": "",
+    "audioSlowUrl": "",
+    "transcript": "I wake up at six thirty every morning. First, I brush my teeth and wash my face. Then I get dressed and have a healthy breakfast. I leave the house at seven fifteen to catch the bus.",
+    "chunks": [
+      "I wake up at six thirty every morning.",
+      "First, I brush my teeth and wash my face.",
+      "Then I get dressed and have a healthy breakfast.",
+      "I leave the house at seven fifteen to catch the bus."
+    ],
+    "durationMinutes": 5,
+    "notes": "Practice the sequence words: first, then, after that"
+  },
+  {
+    "id": "s10",
+    "title": "A Busy Weekday",
+    "level": "Level 2",
+    "topic": "daily routine",
+    "type": "shadowing",
+    "image": "https://picsum.photos/seed/weekday/800/400",
+    "audioUrl": "",
+    "audioSlowUrl": "",
+    "transcript": "My weekdays are extremely busy with work, exercise, and personal commitments. I commute to the office by train, which gives me time to read or listen to podcasts. During lunch, I usually eat at my desk while checking emails. By the time I get home, I am completely exhausted.",
+    "chunks": [
+      "My weekdays are extremely busy with work, exercise, and personal commitments.",
+      "I commute to the office by train, which gives me time to read or listen to podcasts.",
+      "During lunch, I usually eat at my desk while checking emails.",
+      "By the time I get home, I am completely exhausted."
+    ],
+    "durationMinutes": 8,
+    "notes": "Focus on complex sentence rhythm and relative clauses"
+  }
+]
