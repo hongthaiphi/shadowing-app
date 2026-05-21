@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import HomeDemoSection from '@/components/HomeDemoSection';
 
 const features = [
   {
@@ -120,6 +121,9 @@ export default function Home() {
           ))}
         </div>
       </section>
+
+      {/* Demo Section */}
+      <HomeDemoSection />
 
       {/* CTA Section */}
       <section className="max-w-6xl mx-auto px-4 pb-20">

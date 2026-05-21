@@ -51,7 +51,7 @@
 
 - [x] T-05-1 🔴 Hero section: headline + subheadline + nút "Start Practising"
 - [x] T-05-2 🔴 4 Feature cards: Shadowing / Dictation / Speaking / Progress
-- [ ] T-05-3 🟡 Demo preview: audio player + record button + transcript + dictation box
+- [x] T-05-3 🟡 Demo preview: audio player + record button + transcript + dictation box
 - [x] T-05-4 🟡 Responsive layout (1 cột mobile / 2 cột desktop)
 
 ---
