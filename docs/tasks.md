@@ -21,7 +21,7 @@
 - [x] T-02-4 Tạo bảng `dictation_attempts` — *merged vào bảng `progress` (score field)*
 - [ ] T-02-5 Tạo bảng `streaks` — *streak hiện tính từ progress data, chưa có bảng riêng*
 - [x] T-02-6 Cấu hình Row Level Security (RLS) Supabase — *profiles + progress có RLS*
-- [ ] T-02-7 Tạo Supabase Storage bucket cho audio và image
+- [x] T-02-7 Tạo Supabase Storage bucket cho audio và image — *bucket `audio` (public) đã tạo, chứa shadowing + dictation MP3*
 
 ---
 
@@ -140,9 +140,9 @@
 ## PHASE 11 — Content (CR-01, CR-02)
 
 - [x] T-12-1 🔴 Soạn 10 Shadowing lessons (school / hobbies / family / food / daily routine) — *10 sample lessons created*
-- [ ] T-12-2 🔴 Ghi âm hoặc tạo TTS audio (normal + slow) — *dùng browser speechSynthesis tạm thời*
+- [x] T-12-2 🔴 Ghi âm hoặc tạo TTS audio (normal + slow) — *Azure TTS (en-US-JennyNeural), lưu MP3 lên Supabase Storage, script `npm run generate-audio`*
 - [x] T-12-3 🔴 Soạn 10 Dictation lessons (sentence / dialogue / paragraph) — *10 sample lessons created*
-- [ ] T-12-4 🔴 Ghi âm hoặc tạo TTS audio cho dictation lessons — *dùng browser speechSynthesis tạm thời*
+- [x] T-12-4 🔴 Ghi âm hoặc tạo TTS audio cho dictation lessons — *Azure TTS, cùng script generate-audio*
 - [ ] T-12-5 🟡 Tìm / tạo hình ảnh minh họa cho từng bài — *shadowing + speaking dùng picsum.photos*
 - [x] T-12-7 🟡 Soạn 10 Speaking lessons (prompt + exampleAnswer + hints) — *5 Starter + 5 Level 1*
 - [x] T-12-6 🟡 Chia chunking cho 10 shadowing lessons — *4 chunks per lesson*

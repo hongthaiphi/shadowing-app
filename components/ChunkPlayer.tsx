@@ -7,12 +7,13 @@ import Recorder from './Recorder';
 interface ChunkPlayerProps {
   chunks: string[];
   audioUrl: string;
+  chunkAudioUrls?: string[];
   onComplete: () => void;
 }
 
 type Phase = 'listen' | 'record' | 'review';
 
-export default function ChunkPlayer({ chunks, audioUrl, onComplete }: ChunkPlayerProps) {
+export default function ChunkPlayer({ chunks, audioUrl, chunkAudioUrls, onComplete }: ChunkPlayerProps) {
   const [currentChunk, setCurrentChunk] = useState(0);
   const [phase, setPhase] = useState<Phase>('listen');
   const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
@@ -216,7 +217,7 @@ export default function ChunkPlayer({ chunks, audioUrl, onComplete }: ChunkPlaye
           {phase === 'listen' && (
             <div className="space-y-3">
               <AudioPlayer
-                src={audioUrl}
+                src={chunkAudioUrls?.[currentChunk] ?? ''}
                 text={chunks[currentChunk]}
                 label="Listen to this chunk"
                 onEnded={handleListenDone}
@@ -249,7 +250,7 @@ export default function ChunkPlayer({ chunks, audioUrl, onComplete }: ChunkPlaye
                   <div>
                     <p className="text-xs text-gray-500 font-medium mb-1">Original:</p>
                     <AudioPlayer
-                      src={audioUrl}
+                      src={chunkAudioUrls?.[currentChunk] ?? ''}
                       text={chunks[currentChunk]}
                       label="Original audio"
                       compact

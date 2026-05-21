@@ -15,6 +15,8 @@ type Lesson = {
   type: string;
   image: string;
   audioUrl: string;
+  audioSlowUrl: string;
+  chunkAudioUrls: string[];
   transcript: string;
   chunks: string[];
   durationMinutes: number;
@@ -135,6 +137,7 @@ export default function ShadowingPage({ params }: { params: { id: string } }) {
         <ChunkPlayer
           chunks={lesson.chunks}
           audioUrl={lesson.audioUrl}
+          chunkAudioUrls={lesson.chunkAudioUrls}
           onComplete={handleChunksComplete}
         />
       </div>

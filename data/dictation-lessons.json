@@ -6,7 +6,7 @@
     "topic": "food",
     "type": "dictation",
     "subtype": "sentence",
-    "audioUrl": "",
+    "audioUrl": "https://cykksxxcjduehsgtppet.supabase.co/storage/v1/object/public/audio/dictation/d1.mp3",
     "transcript": "I would like a cup of coffee, please.",
     "durationMinutes": 3
   },
@@ -17,7 +17,7 @@
     "topic": "food",
     "type": "dictation",
     "subtype": "sentence",
-    "audioUrl": "",
+    "audioUrl": "https://cykksxxcjduehsgtppet.supabase.co/storage/v1/object/public/audio/dictation/d2.mp3",
     "transcript": "She ordered a sandwich and a glass of orange juice for lunch.",
     "durationMinutes": 3
   },
@@ -28,7 +28,7 @@
     "topic": "school",
     "type": "dictation",
     "subtype": "sentence",
-    "audioUrl": "",
+    "audioUrl": "https://cykksxxcjduehsgtppet.supabase.co/storage/v1/object/public/audio/dictation/d3.mp3",
     "transcript": "Our English class starts at nine o'clock on Monday and Wednesday.",
     "durationMinutes": 3
   },
@@ -39,7 +39,7 @@
     "topic": "hobbies",
     "type": "dictation",
     "subtype": "sentence",
-    "audioUrl": "",
+    "audioUrl": "https://cykksxxcjduehsgtppet.supabase.co/storage/v1/object/public/audio/dictation/d4.mp3",
     "transcript": "This weekend, we are planning to visit the new art gallery in the city centre.",
     "durationMinutes": 4
   },
@@ -50,7 +50,7 @@
     "topic": "school",
     "type": "dictation",
     "subtype": "dialogue",
-    "audioUrl": "",
+    "audioUrl": "https://cykksxxcjduehsgtppet.supabase.co/storage/v1/object/public/audio/dictation/d5.mp3",
     "transcript": "Hey, did you finish the homework? Yes, I did it last night. It was really difficult. I know, but I think we did okay.",
     "durationMinutes": 4
   },
@@ -61,7 +61,7 @@
     "topic": "hobbies",
     "type": "dictation",
     "subtype": "dialogue",
-    "audioUrl": "",
+    "audioUrl": "https://cykksxxcjduehsgtppet.supabase.co/storage/v1/object/public/audio/dictation/d6.mp3",
     "transcript": "Are you coming to my birthday party on Saturday? Of course, I wouldn't miss it! What time does it start? It starts at seven in the evening. Great, I'll bring some snacks.",
     "durationMinutes": 5
   },
@@ -72,7 +72,7 @@
     "topic": "food",
     "type": "dictation",
     "subtype": "dialogue",
-    "audioUrl": "",
+    "audioUrl": "https://cykksxxcjduehsgtppet.supabase.co/storage/v1/object/public/audio/dictation/d7.mp3",
     "transcript": "Good evening, do you have a reservation? Yes, we booked a table for four under the name Johnson. Perfect, follow me please. Would you like to see the menu? Yes please, and could we also have some water?",
     "durationMinutes": 6
   },
@@ -83,7 +83,7 @@
     "topic": "family",
     "type": "dictation",
     "subtype": "paragraph",
-    "audioUrl": "",
+    "audioUrl": "https://cykksxxcjduehsgtppet.supabase.co/storage/v1/object/public/audio/dictation/d8.mp3",
     "transcript": "My grandfather was born in a small village in the countryside. He moved to the city when he was twenty years old to find work. He met my grandmother at a local dance, and they fell in love immediately. They have been married for over fifty years and still live in the same neighbourhood.",
     "durationMinutes": 7
   },
@@ -94,7 +94,7 @@
     "topic": "daily routine",
     "type": "dictation",
     "subtype": "paragraph",
-    "audioUrl": "",
+    "audioUrl": "https://cykksxxcjduehsgtppet.supabase.co/storage/v1/object/public/audio/dictation/d9.mp3",
     "transcript": "Every morning, I wake up early and spend thirty minutes doing yoga before breakfast. After eating, I cycle to work through the park, which takes about twenty minutes. During the day, I attend meetings and work on various projects. In the evenings, I enjoy cooking new recipes and reading before bed.",
     "durationMinutes": 8
   },
@@ -105,7 +105,7 @@
     "topic": "family",
     "type": "dictation",
     "subtype": "paragraph",
-    "audioUrl": "",
+    "audioUrl": "https://cykksxxcjduehsgtppet.supabase.co/storage/v1/object/public/audio/dictation/d10.mp3",
     "transcript": "Last summer, we had our first family reunion in over ten years. More than forty relatives travelled from different parts of the country to be together. We spent three days at a beautiful lakeside resort, sharing meals, playing games, and catching up on each other's lives. It was one of the most memorable experiences I have ever had.",
     "durationMinutes": 8
   }
