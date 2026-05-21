@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import AudioPlayer from '@/components/AudioPlayer';
 import Recorder from '@/components/Recorder';
 import { checkDictation, WordResult } from '@/lib/dictation';
+import { isLoggedIn } from '@/lib/auth';
 
 const SHADOWING_CHUNK = "I go to school every morning.";
 const DICTATION_TEXT = "My class starts at seven o'clock.";
@@ -19,7 +20,16 @@ const STATUS_COLORS: Record<WordResult['status'], string> = {
 type Tab = 'shadowing' | 'dictation';
 
 export default function HomeDemoSection() {
+  const [loggedIn, setLoggedIn] = useState(false);
+  const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<Tab>('dictation');
+
+  useEffect(() => {
+    setLoggedIn(isLoggedIn());
+    setMounted(true);
+  }, []);
+
+  if (!mounted || loggedIn) return null;
 
   const [input, setInput] = useState('');
   const [submitted, setSubmitted] = useState(false);
