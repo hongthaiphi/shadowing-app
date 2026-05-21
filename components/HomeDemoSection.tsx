@@ -23,6 +23,10 @@ export default function HomeDemoSection() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [tab, setTab] = useState<Tab>('dictation');
+  const [input, setInput] = useState('');
+  const [submitted, setSubmitted] = useState(false);
+  const [results, setResults] = useState<WordResult[]>([]);
+  const [accuracy, setAccuracy] = useState(0);
 
   useEffect(() => {
     setLoggedIn(isLoggedIn());
@@ -30,11 +34,6 @@ export default function HomeDemoSection() {
   }, []);
 
   if (!mounted || loggedIn) return null;
-
-  const [input, setInput] = useState('');
-  const [submitted, setSubmitted] = useState(false);
-  const [results, setResults] = useState<WordResult[]>([]);
-  const [accuracy, setAccuracy] = useState(0);
 
   function handleCheck() {
     if (!input.trim()) return;
