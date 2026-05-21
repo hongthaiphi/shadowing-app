@@ -8,7 +8,10 @@ import { checkDictation, WordResult } from '@/lib/dictation';
 import { isLoggedIn } from '@/lib/auth';
 
 const SHADOWING_CHUNK = "I go to school every morning.";
+const SHADOWING_AUDIO = "https://cykksxxcjduehsgtppet.supabase.co/storage/v1/object/public/audio/shadowing/s1-chunk-0.mp3";
+
 const DICTATION_TEXT = "My class starts at seven o'clock.";
+const DICTATION_AUDIO = "https://cykksxxcjduehsgtppet.supabase.co/storage/v1/object/public/audio/shadowing/s1-chunk-1.mp3";
 
 const STATUS_COLORS: Record<WordResult['status'], string> = {
   correct: 'bg-emerald-100 text-emerald-800 border-emerald-200',
@@ -108,7 +111,7 @@ export default function HomeDemoSection() {
                   <span className="w-6 h-6 rounded-full bg-violet-100 text-violet-700 text-xs font-black flex items-center justify-center flex-shrink-0">1</span>
                   <p className="text-sm font-bold text-gray-700">Press play and listen</p>
                 </div>
-                <AudioPlayer src="" text={DICTATION_TEXT} label="Listen carefully" />
+                <AudioPlayer src={DICTATION_AUDIO} label="Listen carefully" />
               </div>
 
               {/* Step 2 */}
@@ -238,7 +241,7 @@ export default function HomeDemoSection() {
                     &ldquo;{SHADOWING_CHUNK}&rdquo;
                   </p>
                 </div>
-                <AudioPlayer src="" text={SHADOWING_CHUNK} label="Tap play to hear it" />
+                <AudioPlayer src={SHADOWING_AUDIO} label="Tap play to hear it" />
               </div>
 
               {/* Step 2 */}

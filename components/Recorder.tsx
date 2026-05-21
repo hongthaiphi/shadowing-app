@@ -64,7 +64,12 @@ export default function Recorder({ onRecordingComplete, label }: RecorderProps) 
       streamRef.current = stream;
       startVolumeMonitor(stream);
 
-      const mr = new MediaRecorder(stream);
+      // Pick the first MIME type the browser actually supports.
+      // iOS Safari only supports audio/mp4; Chrome prefers audio/webm.
+      const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4']
+        .find((t) => MediaRecorder.isTypeSupported(t)) ?? '';
+
+      const mr = new MediaRecorder(stream, mimeType ? { mimeType } : {});
       mediaRecorderRef.current = mr;
 
       mr.ondataavailable = (e) => {
@@ -72,7 +77,8 @@ export default function Recorder({ onRecordingComplete, label }: RecorderProps) 
       };
 
       mr.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: 'audio/webm' });
+        // Use the recorder's actual mimeType so the blob is playable on all browsers
+        const blob = new Blob(chunksRef.current, { type: mr.mimeType || mimeType || 'audio/webm' });
         const url = URL.createObjectURL(blob);
         setAudioUrl(url);
         onRecordingComplete?.(blob);

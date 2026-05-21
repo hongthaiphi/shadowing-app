@@ -25,7 +25,6 @@ interface AssessResult {
 export default function ChunkPlayer({ chunks, audioUrl, chunkAudioUrls, onComplete }: ChunkPlayerProps) {
   const [currentChunk, setCurrentChunk] = useState(0);
   const [phase, setPhase] = useState<Phase>('listen');
-  const [recordingBlob, setRecordingBlob] = useState<Blob | null>(null);
   const [fullPractice, setFullPractice] = useState(false);
   const [fullRecordingBlob, setFullRecordingBlob] = useState<Blob | null>(null);
   const [done, setDone] = useState(false);
@@ -33,12 +32,8 @@ export default function ChunkPlayer({ chunks, audioUrl, chunkAudioUrls, onComple
   const [countdown, setCountdown] = useState(0);
   const [assessing, setAssessing] = useState(false);
   const [assessResult, setAssessResult] = useState<AssessResult | null>(null);
-  const audioUrlRef = useRef<string | null>(null);
+  const [recordingUrl, setRecordingUrl] = useState<string | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
-
-  if (audioUrlRef.current && recordingBlob) {
-    // cleanup handled elsewhere
-  }
 
   // Auto-advance countdown
   useEffect(() => {
@@ -67,7 +62,7 @@ export default function ChunkPlayer({ chunks, audioUrl, chunkAudioUrls, onComple
   }
 
   async function handleRecordingComplete(blob: Blob) {
-    setRecordingBlob(blob);
+    setRecordingUrl(URL.createObjectURL(blob)); // create once, stable across re-renders
     setPhase('review');
     if (autoAdvance) setCountdown(3);
 
@@ -88,16 +83,21 @@ export default function ChunkPlayer({ chunks, audioUrl, chunkAudioUrls, onComple
     }
   }
 
+  function clearRecording() {
+    if (recordingUrl) URL.revokeObjectURL(recordingUrl);
+    setRecordingUrl(null);
+    setAssessResult(null);
+  }
+
   function handleNextChunk() {
     setCountdown(0);
     if (countdownRef.current) clearInterval(countdownRef.current);
-    setAssessResult(null);
+    clearRecording();
     if (isLastChunk) {
       setFullPractice(true);
     } else {
       setCurrentChunk((c) => c + 1);
       setPhase('listen');
-      setRecordingBlob(null);
     }
   }
 
@@ -284,10 +284,10 @@ export default function ChunkPlayer({ chunks, audioUrl, chunkAudioUrls, onComple
                       compact
                     />
                   </div>
-                  {recordingBlob && (
+                  {recordingUrl && (
                     <div>
                       <p className="text-xs text-gray-500 font-medium mb-1">Your recording:</p>
-                      <audio controls src={URL.createObjectURL(recordingBlob)} className="w-full h-9" />
+                      <audio controls src={recordingUrl} className="w-full h-9" />
                     </div>
                   )}
                 </div>
@@ -320,7 +320,7 @@ export default function ChunkPlayer({ chunks, audioUrl, chunkAudioUrls, onComple
 
               <div className="flex gap-3">
                 <button
-                  onClick={() => { setPhase('record'); setRecordingBlob(null); setAssessResult(null); setCountdown(0); if (countdownRef.current) clearInterval(countdownRef.current); }}
+                  onClick={() => { clearRecording(); setPhase('record'); setCountdown(0); if (countdownRef.current) clearInterval(countdownRef.current); }}
                   className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all"
                 >
                   Try Again
