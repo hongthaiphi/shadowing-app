@@ -10,6 +10,7 @@
     "generate-audio": "npx tsx scripts/generate-audio.ts"
   },
   "dependencies": {
+    "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.1",
     "next": "14.2.35",
     "react": "^18",

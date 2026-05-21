@@ -10,15 +10,11 @@ export interface User {
 
 function cacheUser(user: User) {
   localStorage.setItem('user', JSON.stringify(user));
-  document.cookie = `user_session=${encodeURIComponent(
-    JSON.stringify({ email: user.email, role: user.role })
-  )}; path=/; max-age=604800`;
 }
 
 function clearCache() {
   localStorage.removeItem('user');
   localStorage.removeItem('shadowspeak_progress');
-  document.cookie = 'user_session=; path=/; max-age=0';
 }
 
 async function syncProgressFromSupabase(userId: string) {
