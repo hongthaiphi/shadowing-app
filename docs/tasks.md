@@ -32,7 +32,7 @@
 - [x] T-03-3 🔴 Đăng xuất + clear session
 - [x] T-03-4 🔴 Middleware bảo vệ route (redirect nếu chưa login)
 - [x] T-03-5 🔴 Phân quyền role: student / teacher / admin
-- [ ] T-03-6 🟡 Forgot password — gửi email reset
+- [x] T-03-6 🟡 Forgot password — gửi email reset — */forgot-password + /reset-password, Supabase resetPasswordForEmail, onAuthStateChange PASSWORD_RECOVERY*
 - [ ] T-03-7 🟢 Đăng nhập Google OAuth
 
 ---
@@ -81,7 +81,7 @@
 - [x] T-07-9 🔴 Nút Mark Complete — lưu progress vào localStorage
 - [x] T-07-10 🟡 Auto-advance: tự chuyển chunk tiếp theo sau khi ghi xong
 - [x] T-07-11 🟡 Progress bar trong bài (chunk x/y)
-- [ ] T-07-12 🟢 AI pronunciation assessment (Azure Speech) sau khi ghi âm
+- [x] T-07-12 🟢 AI pronunciation assessment (Azure Speech) sau khi ghi âm — *auto-assess sau record: overall score + per-word color-coded + fluency/completeness bars, `PronunciationResult` component*
 
 ---
 

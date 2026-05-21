@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import AudioPlayer from './AudioPlayer';
 import Recorder from './Recorder';
+import PronunciationResult from './PronunciationResult';
+import { audioToWav } from '@/lib/audio';
 
 interface ChunkPlayerProps {
   chunks: string[];
@@ -13,6 +15,13 @@ interface ChunkPlayerProps {
 
 type Phase = 'listen' | 'record' | 'review';
 
+interface AssessResult {
+  accuracyScore: number;
+  fluencyScore: number;
+  completenessScore: number;
+  words: { word: string; accuracyScore: number; errorType: string }[];
+}
+
 export default function ChunkPlayer({ chunks, audioUrl, chunkAudioUrls, onComplete }: ChunkPlayerProps) {
   const [currentChunk, setCurrentChunk] = useState(0);
   const [phase, setPhase] = useState<Phase>('listen');
@@ -22,6 +31,8 @@ export default function ChunkPlayer({ chunks, audioUrl, chunkAudioUrls, onComple
   const [done, setDone] = useState(false);
   const [autoAdvance, setAutoAdvance] = useState(false);
   const [countdown, setCountdown] = useState(0);
+  const [assessing, setAssessing] = useState(false);
+  const [assessResult, setAssessResult] = useState<AssessResult | null>(null);
   const audioUrlRef = useRef<string | null>(null);
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -55,15 +66,32 @@ export default function ChunkPlayer({ chunks, audioUrl, chunkAudioUrls, onComple
     setPhase('record');
   }
 
-  function handleRecordingComplete(blob: Blob) {
+  async function handleRecordingComplete(blob: Blob) {
     setRecordingBlob(blob);
     setPhase('review');
     if (autoAdvance) setCountdown(3);
+
+    // Assess pronunciation in background
+    setAssessResult(null);
+    setAssessing(true);
+    try {
+      const wavBuffer = await audioToWav(blob);
+      const formData = new FormData();
+      formData.append('audio', new Blob([wavBuffer], { type: 'audio/wav' }));
+      formData.append('referenceText', chunks[currentChunk]);
+      const res = await fetch('/api/assess', { method: 'POST', body: formData });
+      if (res.ok) setAssessResult(await res.json());
+    } catch {
+      // Assessment failure is non-critical — user can still review recording
+    } finally {
+      setAssessing(false);
+    }
   }
 
   function handleNextChunk() {
     setCountdown(0);
     if (countdownRef.current) clearInterval(countdownRef.current);
+    setAssessResult(null);
     if (isLastChunk) {
       setFullPractice(true);
     } else {
@@ -272,9 +300,27 @@ export default function ChunkPlayer({ chunks, audioUrl, chunkAudioUrls, onComple
                 </div>
               )}
 
+              {/* Pronunciation assessment result */}
+              {assessing && (
+                <div className="flex items-center gap-2 px-4 py-3 bg-violet-50 border border-violet-100 rounded-2xl text-sm text-violet-700">
+                  <svg className="w-4 h-4 animate-spin flex-shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4" strokeLinecap="round"/>
+                  </svg>
+                  Analysing your pronunciation…
+                </div>
+              )}
+              {!assessing && assessResult && (
+                <PronunciationResult
+                  accuracyScore={assessResult.accuracyScore}
+                  fluencyScore={assessResult.fluencyScore}
+                  completenessScore={assessResult.completenessScore}
+                  words={assessResult.words}
+                />
+              )}
+
               <div className="flex gap-3">
                 <button
-                  onClick={() => { setPhase('record'); setRecordingBlob(null); setCountdown(0); if (countdownRef.current) clearInterval(countdownRef.current); }}
+                  onClick={() => { setPhase('record'); setRecordingBlob(null); setAssessResult(null); setCountdown(0); if (countdownRef.current) clearInterval(countdownRef.current); }}
                   className="flex-1 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-bold text-sm hover:bg-gray-200 transition-all"
                 >
                   Try Again

@@ -99,6 +99,19 @@ export async function register(
   return { user, needsConfirmation: false };
 }
 
+export async function requestPasswordReset(email: string): Promise<void> {
+  const supabase = getSupabase();
+  const redirectTo = `${window.location.origin}/reset-password`;
+  const { error } = await supabase.auth.resetPasswordForEmail(email, { redirectTo });
+  if (error) throw new Error(error.message);
+}
+
+export async function updatePassword(newPassword: string): Promise<void> {
+  const supabase = getSupabase();
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw new Error(error.message);
+}
+
 export async function logout(): Promise<void> {
   const supabase = getSupabase();
   await supabase.auth.signOut();
