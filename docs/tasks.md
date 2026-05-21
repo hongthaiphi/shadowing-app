@@ -155,8 +155,8 @@
 - [ ] T-13-3 🔴 Test audio playback trên các browser (Chrome, Safari, Firefox)
 - [ ] T-13-4 🔴 Test MediaRecorder trên iOS Safari (cần polyfill)
 - [ ] T-13-5 🟡 Kiểm tra performance (Lighthouse score > 80)
-- [ ] T-13-6 🟡 Error handling: audio lỗi, microphone bị từ chối, network lỗi
-- [ ] T-13-7 🟡 Loading states và skeleton UI
+- [x] T-13-6 🟡 Error handling: audio lỗi, microphone bị từ chối, network lỗi
+- [x] T-13-7 🟡 Loading states và skeleton UI
 
 ---
 

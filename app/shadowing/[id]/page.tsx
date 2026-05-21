@@ -36,6 +36,7 @@ export default function ShadowingPage({ params }: { params: { id: string } }) {
   const [chunksDone, setChunksDone] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [startTime] = useState(Date.now());
+  const [imageLoaded, setImageLoaded] = useState(false);
 
   useEffect(() => {
     const ids = getCompletedIds();
@@ -100,9 +101,18 @@ export default function ShadowingPage({ params }: { params: { id: string } }) {
 
       {/* Lesson image */}
       {lesson.image && (
-        <div className="rounded-2xl overflow-hidden mb-6 h-48 bg-gray-100">
+        <div className="rounded-2xl overflow-hidden mb-6 h-48 bg-gray-200 relative">
+          {!imageLoaded && (
+            <div className="absolute inset-0 animate-pulse bg-gray-200" />
+          )}
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={lesson.image} alt={lesson.title} className="w-full h-full object-cover" />
+          <img
+            src={lesson.image}
+            alt={lesson.title}
+            className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            onLoad={() => setImageLoaded(true)}
+            onError={() => setImageLoaded(true)}
+          />
         </div>
       )}
 

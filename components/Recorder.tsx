@@ -84,7 +84,18 @@ export default function Recorder({ onRecordingComplete, label }: RecorderProps) 
       mr.start(100);
       setState('recording');
     } catch (err) {
-      setError('Could not access microphone. Please allow microphone access.');
+      const e = err as Error;
+      if (e.name === 'NotAllowedError' || e.name === 'PermissionDeniedError') {
+        setError('Microphone access denied. Click the lock icon in your browser\'s address bar to allow microphone access, then refresh the page.');
+      } else if (e.name === 'NotFoundError' || e.name === 'DevicesNotFoundError') {
+        setError('No microphone found. Please connect a microphone and try again.');
+      } else if (e.name === 'NotReadableError' || e.name === 'TrackStartError') {
+        setError('Microphone is already in use by another app. Please close other apps using the microphone and try again.');
+      } else if (e.name === 'NotSupportedError') {
+        setError('Audio recording is not supported in this browser. Please use Chrome or Firefox.');
+      } else {
+        setError('Could not start recording. Please check your microphone and try again.');
+      }
       console.error(err);
     }
   }
@@ -106,8 +117,14 @@ export default function Recorder({ onRecordingComplete, label }: RecorderProps) 
       )}
 
       {error && (
-        <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
-          {error}
+        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl flex items-start gap-3">
+          <svg className="w-5 h-5 text-red-500 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+          </svg>
+          <div>
+            <p className="text-sm font-semibold text-red-800">Microphone Error</p>
+            <p className="text-sm text-red-700 mt-0.5">{error}</p>
+          </div>
         </div>
       )}
 
