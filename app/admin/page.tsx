@@ -202,6 +202,9 @@ export default function AdminPage() {
   const [studentStats, setStudentStats] = useState<StudentStat[]>([]);
   const [recentActivity, setRecentActivity] = useState<RecentActivity[]>([]);
   const [statsLoaded, setStatsLoaded] = useState(false);
+  const [allProfiles, setAllProfiles] = useState<Array<{ id: string; name: string; email: string; role: string }>>([]);
+  const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
+  const [currentUserRole, setCurrentUserRole] = useState<string>('');
 
   // Import state
   const [importOpen, setImportOpen] = useState(false);
@@ -216,6 +219,7 @@ export default function AdminPage() {
       router.push('/login');
       return;
     }
+    setCurrentUserRole(user.role);
     setCustomLessons(loadCustomLessons());
     setLoading(false);
   }, [router]);
@@ -281,6 +285,7 @@ export default function AdminPage() {
 
       setStudentStats(stats);
       setRecentActivity(recent);
+      setAllProfiles(profileList);
       setStatsLoaded(true);
     } catch (err) {
       setStatsError((err as Error).message);
@@ -292,6 +297,28 @@ export default function AdminPage() {
   function handleTabChange(tab: AdminTab) {
     setActiveTab(tab);
     if (tab === 'stats') loadStats();
+  }
+
+  async function handleRoleChange(userId: string, newRole: string) {
+    setUpdatingRoleId(userId);
+    try {
+      const supabase = getSupabase();
+      const { error } = await supabase
+        .from('profiles')
+        .update({ role: newRole })
+        .eq('id', userId);
+      if (error) throw new Error(error.message);
+      setAllProfiles((prev) =>
+        prev.map((p) => (p.id === userId ? { ...p, role: newRole } : p))
+      );
+      setStudentStats((prev) =>
+        newRole !== 'student' ? prev.filter((s) => s.id !== userId) : prev
+      );
+    } catch (err) {
+      alert((err as Error).message);
+    } finally {
+      setUpdatingRoleId(null);
+    }
   }
 
   const builtInLessons: LessonEntry[] = [
@@ -775,6 +802,81 @@ export default function AdminPage() {
                 </div>
               </div>
             )}
+
+            {/* ── All Users / Role Management ─────────── */}
+            <div className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden mt-6">
+              <div className="p-5 border-b border-gray-100 flex items-center justify-between">
+                <div>
+                  <h2 className="text-lg font-bold text-gray-800">All Users</h2>
+                  <p className="text-sm text-gray-500 mt-0.5">
+                    {currentUserRole === 'admin'
+                      ? 'Click the role badge to promote or demote a user.'
+                      : 'User list — role editing requires admin access.'}
+                  </p>
+                </div>
+                <span className="text-sm font-semibold text-gray-500 bg-gray-100 px-3 py-1 rounded-full">
+                  {allProfiles.length} total
+                </span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-50 border-b border-gray-100">
+                    <tr>
+                      <th className="text-left px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">User</th>
+                      <th className="text-left px-5 py-3 text-xs font-bold text-gray-500 uppercase tracking-wide">Role</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-50">
+                    {allProfiles.map((profile) => {
+                      const isUpdating = updatingRoleId === profile.id;
+                      return (
+                        <tr key={profile.id} className="hover:bg-gray-50/50 transition-colors">
+                          <td className="px-5 py-4">
+                            <p className="font-semibold text-gray-800 text-sm">{profile.name}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{profile.email}</p>
+                          </td>
+                          <td className="px-5 py-4">
+                            {currentUserRole === 'admin' ? (
+                              <div className="flex items-center gap-2">
+                                <select
+                                  value={profile.role}
+                                  disabled={isUpdating}
+                                  onChange={(e) => handleRoleChange(profile.id, e.target.value)}
+                                  className={`text-xs font-bold px-3 py-1.5 rounded-full border focus:outline-none focus:ring-2 focus:ring-blue-300 transition-all cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ${
+                                    profile.role === 'admin'
+                                      ? 'bg-red-50 text-red-700 border-red-200'
+                                      : profile.role === 'teacher'
+                                      ? 'bg-violet-50 text-violet-700 border-violet-200'
+                                      : 'bg-blue-50 text-blue-700 border-blue-200'
+                                  }`}
+                                >
+                                  <option value="student">Student</option>
+                                  <option value="teacher">Teacher</option>
+                                  <option value="admin">Admin</option>
+                                </select>
+                                {isUpdating && (
+                                  <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
+                                )}
+                              </div>
+                            ) : (
+                              <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${
+                                profile.role === 'admin'
+                                  ? 'bg-red-50 text-red-700'
+                                  : profile.role === 'teacher'
+                                  ? 'bg-violet-50 text-violet-700'
+                                  : 'bg-blue-50 text-blue-700'
+                              }`}>
+                                {profile.role}
+                              </span>
+                            )}
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
 
           </>)}
         </div>
