@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { login, getUser } from '@/lib/auth';
+import { login, refreshSession } from '@/lib/auth';
 
 function getRedirectTarget(): string {
   if (typeof window === 'undefined') return '/lessons';
@@ -21,11 +21,11 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  // Already logged in → redirect immediately
+  // Already logged in → verify real session then redirect (avoids stale-localStorage loops)
   useEffect(() => {
-    if (getUser()) {
-      router.replace(getRedirectTarget());
-    }
+    refreshSession().then((user) => {
+      if (user) router.replace(getRedirectTarget());
+    });
   }, [router]);
 
   async function handleSubmit(e: React.FormEvent) {

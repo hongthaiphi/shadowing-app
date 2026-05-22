@@ -128,3 +128,30 @@ export function getUser(): User | null {
 export function isLoggedIn(): boolean {
   return getUser() !== null;
 }
+
+// Verifies the real Supabase session and syncs localStorage.
+// Returns the User if session is valid, null if the session has expired/is missing.
+// Call this in the login page useEffect to avoid stale-localStorage redirect loops.
+export async function refreshSession(): Promise<User | null> {
+  const supabase = getSupabase();
+  const { data: { user: supaUser } } = await supabase.auth.getUser();
+  if (!supaUser) {
+    clearCache();
+    return null;
+  }
+  const cached = getUser();
+  if (cached) return cached;
+  // localStorage was cleared but session is still valid — re-build from profile
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('name, role')
+    .eq('id', supaUser.id)
+    .single();
+  const user: User = {
+    email: supaUser.email!.toLowerCase(),
+    role: (profile?.role as Role) || 'student',
+    name: profile?.name || supaUser.email!.split('@')[0],
+  };
+  cacheUser(user);
+  return user;
+}
