@@ -8,7 +8,10 @@ import { login, getUser } from '@/lib/auth';
 function getRedirectTarget(): string {
   if (typeof window === 'undefined') return '/lessons';
   const params = new URLSearchParams(window.location.search);
-  return params.get('redirect') || '/lessons';
+  const redirect = params.get('redirect') || '/lessons';
+  // Only allow same-origin relative paths — block open redirect to external URLs
+  if (!redirect.startsWith('/') || redirect.startsWith('//')) return '/lessons';
+  return redirect;
 }
 
 export default function LoginPage() {

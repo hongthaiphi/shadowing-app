@@ -42,6 +42,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Missing audio or referenceText' }, { status: 400 });
     }
 
+    const MAX_AUDIO_BYTES = 10 * 1024 * 1024; // 10 MB
+    if (audio.size > MAX_AUDIO_BYTES) {
+      return NextResponse.json({ error: 'Audio file too large' }, { status: 413 });
+    }
+
     const audioBuffer = Buffer.from(await audio.arrayBuffer());
 
     const pronunciationConfig = JSON.stringify({
