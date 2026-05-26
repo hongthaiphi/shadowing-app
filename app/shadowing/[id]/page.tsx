@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import ChunkPlayer from '@/components/ChunkPlayer';
 import { markComplete, getCompletedIds } from '@/lib/progress';
 import shadowingLessons from '@/data/shadowing-lessons.json';
+import { getTopicLabel } from '@/lib/topics';
 
 type Lesson = {
   id: string;
@@ -21,14 +22,6 @@ type Lesson = {
   chunks: string[];
   durationMinutes: number;
   notes: string;
-};
-
-const TOPIC_LABELS: Record<string, string> = {
-  school: '🏫 School',
-  hobbies: '🎨 Hobbies',
-  family: '👨‍👩‍👧 Family',
-  food: '🍽️ Food',
-  'daily routine': '⏰ Daily Routine',
 };
 
 export default function ShadowingPage({ params }: { params: { id: string } }) {
@@ -84,7 +77,7 @@ export default function ShadowingPage({ params }: { params: { id: string } }) {
                 {lesson.level}
               </span>
               <span className="bg-white/20 text-white text-xs font-bold px-2.5 py-1 rounded-full">
-                {TOPIC_LABELS[lesson.topic] || lesson.topic}
+                {getTopicLabel(lesson.topic)}
               </span>
             </div>
             <h1 className="text-2xl font-black mb-2">{lesson.title}</h1>

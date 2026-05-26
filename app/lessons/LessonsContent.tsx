@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getCompletedIds } from '@/lib/progress';
+import { getTopicLabel, loadTopics } from '@/lib/topics';
 import shadowingLessons from '@/data/shadowing-lessons.json';
 import dictationLessons from '@/data/dictation-lessons.json';
 import speakingLessons from '@/data/speaking-lessons.json';
@@ -36,14 +37,6 @@ const TYPE_COLORS: Record<string, string> = {
   shadowing: 'bg-cyan-100 text-cyan-700',
   dictation: 'bg-violet-100 text-violet-700',
   speaking: 'bg-orange-100 text-orange-700',
-};
-
-const TOPIC_LABELS: Record<string, string> = {
-  school: '🏫 School',
-  hobbies: '🎨 Hobbies',
-  family: '👨‍👩‍👧 Family',
-  food: '🍽️ Food',
-  'daily routine': '⏰ Daily Routine',
 };
 
 const PAGE_SIZE = 12;
@@ -81,7 +74,7 @@ export default function LessonsContent() {
 
   const typeFilters = ['all', 'shadowing', 'dictation', 'speaking'];
   const levelFilters = ['all', 'Starter', 'Level 1', 'Level 2'];
-  const topicFilters = ['all', 'school', 'hobbies', 'family', 'food', 'daily routine'];
+  const topicFilters = ['all', ...loadTopics().map((t) => t.id)];
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8">
@@ -150,7 +143,7 @@ export default function LessonsContent() {
                     : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                 }`}
               >
-                {f === 'all' ? 'All Topics' : TOPIC_LABELS[f] || f}
+                {f === 'all' ? 'All Topics' : getTopicLabel(f)}
               </button>
             ))}
           </div>
@@ -256,7 +249,7 @@ export default function LessonsContent() {
                     {lesson.title}
                   </h3>
                   <p className="text-sm text-gray-500 mb-3">
-                    {TOPIC_LABELS[lesson.topic] || lesson.topic}
+                    {getTopicLabel(lesson.topic)}
                   </p>
 
                   <div className="flex items-center justify-between">

@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getUser } from '@/lib/auth';
 import { getSupabase } from '@/lib/supabase';
+import { loadTopics, saveTopics, type Topic } from '@/lib/topics';
 import shadowingLessonsRaw from '@/data/shadowing-lessons.json';
 import dictationLessonsRaw from '@/data/dictation-lessons.json';
 import speakingLessonsRaw from '@/data/speaking-lessons.json';
@@ -28,7 +29,7 @@ type ParsedImport = LessonEntry & { _error?: string };
 
 type ModalMode = 'add' | 'edit' | null;
 
-type AdminTab = 'lessons' | 'stats';
+type AdminTab = 'lessons' | 'topics' | 'stats';
 
 type StudentStat = {
   id: string;
@@ -206,6 +207,14 @@ export default function AdminPage() {
   const [updatingRoleId, setUpdatingRoleId] = useState<string | null>(null);
   const [currentUserRole, setCurrentUserRole] = useState<string>('');
 
+  // Topics state
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [topicFormOpen, setTopicFormOpen] = useState(false);
+  const [editingTopic, setEditingTopic] = useState<Topic | null>(null);
+  const [topicForm, setTopicForm] = useState<Topic>({ id: '', label: '', emoji: '' });
+  const [deleteTopicId, setDeleteTopicId] = useState<string | null>(null);
+  const [topicFormError, setTopicFormError] = useState('');
+
   // Import state
   const [importOpen, setImportOpen] = useState(false);
   const [importRaw, setImportRaw] = useState('');
@@ -221,6 +230,7 @@ export default function AdminPage() {
     }
     setCurrentUserRole(user.role);
     setCustomLessons(loadCustomLessons());
+    setTopics(loadTopics());
     setLoading(false);
   }, [router]);
 
@@ -331,7 +341,8 @@ export default function AdminPage() {
 
   // ── Add/Edit modal ──────────────────────────────────
   function openAdd() {
-    setForm(emptyForm);
+    const currentTopics = loadTopics();
+    setForm({ ...emptyForm, topic: currentTopics[0]?.id || '' });
     setChunksText('');
     setHintsText('');
     setEditingLesson(null);
@@ -395,6 +406,59 @@ export default function AdminPage() {
     setCustomLessons(updated);
     saveCustomLessons(updated);
     setDeleteId(null);
+  }
+
+  // ── Topic CRUD ──────────────────────────────────────
+  function openTopicAdd() {
+    setTopicForm({ id: '', label: '', emoji: '📚' });
+    setEditingTopic(null);
+    setTopicFormError('');
+    setTopicFormOpen(true);
+  }
+
+  function openTopicEdit(topic: Topic) {
+    setTopicForm({ ...topic });
+    setEditingTopic(topic);
+    setTopicFormError('');
+    setTopicFormOpen(true);
+  }
+
+  function handleTopicSave() {
+    const id = topicForm.id.trim().toLowerCase().replace(/\s+/g, ' ');
+    const label = topicForm.label.trim();
+    if (!id || !label) {
+      setTopicFormError('ID and label are required');
+      return;
+    }
+    // Check for duplicate ID
+    const duplicate = topics.find(
+      (t) => t.id === id && (!editingTopic || t.id !== editingTopic.id)
+    );
+    if (duplicate) {
+      setTopicFormError(`Topic ID "${id}" already exists`);
+      return;
+    }
+    const entry: Topic = { id, label, emoji: topicForm.emoji || '📚' };
+    let updated: Topic[];
+    if (editingTopic) {
+      updated = topics.map((t) => (t.id === editingTopic.id ? entry : t));
+    } else {
+      updated = [...topics, entry];
+    }
+    setTopics(updated);
+    saveTopics(updated);
+    setTopicFormOpen(false);
+  }
+
+  function handleTopicDelete(id: string) {
+    const updated = topics.filter((t) => t.id !== id);
+    setTopics(updated);
+    saveTopics(updated);
+    setDeleteTopicId(null);
+  }
+
+  function getLessonsUsingTopic(topicId: string): LessonEntry[] {
+    return allLessons.filter((l) => l.topic === topicId);
   }
 
   // ── Import ──────────────────────────────────────────
@@ -518,6 +582,7 @@ export default function AdminPage() {
         <div className="flex gap-2 mt-6">
           {([
             { key: 'lessons', label: '📚 Lessons' },
+            { key: 'topics', label: '🏷️ Topics' },
             { key: 'stats', label: '📊 Student Stats' },
           ] as { key: AdminTab; label: string }[]).map((t) => (
             <button
@@ -637,6 +702,178 @@ export default function AdminPage() {
         </div>
       </div>
 
+      </>)}
+
+      {/* ── TOPICS TAB ──────────────────────────────────── */}
+      {activeTab === 'topics' && (<>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-gray-800">Manage Topics</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {topics.length} topic{topics.length !== 1 ? 's' : ''} defined. Topics are used to categorize lessons.
+            </p>
+          </div>
+          <button
+            onClick={openTopicAdd}
+            className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-violet-500 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-md flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add Topic
+          </button>
+        </div>
+
+        {topics.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+            <div className="text-5xl mb-4">🏷️</div>
+            <h3 className="text-lg font-bold text-gray-700 mb-2">No topics yet</h3>
+            <p className="text-gray-400">Click &ldquo;Add Topic&rdquo; to create your first topic</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {topics.map((topic) => (
+              <div
+                key={topic.id}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div className="w-12 h-12 rounded-xl bg-gray-100 flex items-center justify-center text-2xl">
+                    {topic.emoji}
+                  </div>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => openTopicEdit(topic)}
+                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Edit topic"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => setDeleteTopicId(topic.id)}
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete topic"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <h3 className="font-bold text-gray-800 text-lg">{topic.label}</h3>
+                <p className="text-xs text-gray-400 mt-1 font-mono">id: {topic.id}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Topic Add/Edit Modal */}
+        {topicFormOpen && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+              <div className="p-6 border-b border-gray-100">
+                <h3 className="text-xl font-black text-gray-800">
+                  {editingTopic ? 'Edit Topic' : 'Add Topic'}
+                </h3>
+              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Emoji</label>
+                  <input
+                    type="text"
+                    value={topicForm.emoji}
+                    onChange={(e) => setTopicForm((p) => ({ ...p, emoji: e.target.value }))}
+                    placeholder="📚"
+                    maxLength={4}
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 text-2xl text-center"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Label *</label>
+                  <input
+                    type="text"
+                    value={topicForm.label}
+                    onChange={(e) => setTopicForm((p) => ({ ...p, label: e.target.value }))}
+                    placeholder="e.g. Travel"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    ID (slug) *
+                    {editingTopic && (
+                      <span className="text-xs text-amber-600 font-normal ml-1">— changing ID will not update existing lessons</span>
+                    )}
+                  </label>
+                  <input
+                    type="text"
+                    value={topicForm.id}
+                    onChange={(e) => setTopicForm((p) => ({ ...p, id: e.target.value }))}
+                    placeholder="e.g. travel"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  />
+                </div>
+                {topicFormError && (
+                  <p className="text-sm text-red-600 font-medium">{topicFormError}</p>
+                )}
+              </div>
+              <div className="p-6 border-t border-gray-100 flex gap-3 justify-end">
+                <button
+                  onClick={() => setTopicFormOpen(false)}
+                  className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleTopicSave}
+                  disabled={!topicForm.id.trim() || !topicForm.label.trim()}
+                  className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-violet-500 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {editingTopic ? 'Save Changes' : 'Add Topic'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Topic Delete Confirmation */}
+        {deleteTopicId && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Delete Topic?</h3>
+              <p className="text-gray-500 text-sm mb-1">
+                This will remove the topic from the list. Lessons using this topic will still show the topic ID as plain text.
+              </p>
+              {(() => {
+                const affected = getLessonsUsingTopic(deleteTopicId);
+                if (affected.length > 0) {
+                  return (
+                    <p className="text-amber-600 text-xs font-medium mt-2 mb-4 bg-amber-50 px-3 py-2 rounded-lg">
+                      {affected.length} lesson{affected.length !== 1 ? 's' : ''} currently use this topic.
+                    </p>
+                  );
+                }
+                return <div className="mb-4" />;
+              })()}
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setDeleteTopicId(null)}
+                  className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleTopicDelete(deleteTopicId)}
+                  className="px-5 py-2.5 bg-red-500 text-white rounded-xl font-bold text-sm hover:bg-red-600 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </>)}
 
       {/* ── STATS TAB ───────────────────────────────────── */}
@@ -1070,11 +1307,12 @@ export default function AdminPage() {
                     onChange={(e) => handleFormChange('topic', e.target.value)}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
                   >
-                    <option value="school">School</option>
-                    <option value="hobbies">Hobbies</option>
-                    <option value="family">Family</option>
-                    <option value="food">Food</option>
-                    <option value="daily routine">Daily Routine</option>
+                    {topics.map((t) => (
+                      <option key={t.id} value={t.id}>{t.emoji} {t.label}</option>
+                    ))}
+                    {!topics.some((t) => t.id === form.topic) && form.topic && (
+                      <option value={form.topic}>{form.topic}</option>
+                    )}
                   </select>
                 </div>
                 <div>

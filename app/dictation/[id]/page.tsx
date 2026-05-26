@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation';
 import DictationInput from '@/components/DictationInput';
 import { markComplete, getCompletedIds } from '@/lib/progress';
 import dictationLessons from '@/data/dictation-lessons.json';
+import { getTopicLabel } from '@/lib/topics';
 
 type Lesson = {
   id: string;
@@ -17,14 +18,6 @@ type Lesson = {
   audioUrl: string;
   transcript: string;
   durationMinutes: number;
-};
-
-const TOPIC_LABELS: Record<string, string> = {
-  school: '🏫 School',
-  hobbies: '🎨 Hobbies',
-  family: '👨‍👩‍👧 Family',
-  food: '🍽️ Food',
-  'daily routine': '⏰ Daily Routine',
 };
 
 const SUBTYPE_LABELS: Record<string, string> = {
@@ -85,7 +78,7 @@ export default function DictationPage({ params }: { params: { id: string } }) {
                 {lesson.level}
               </span>
               <span className="bg-white/20 text-white text-xs font-bold px-2.5 py-1 rounded-full">
-                {TOPIC_LABELS[lesson.topic] || lesson.topic}
+                {getTopicLabel(lesson.topic)}
               </span>
               {lesson.subtype && (
                 <span className="bg-white/20 text-white text-xs font-bold px-2.5 py-1 rounded-full">

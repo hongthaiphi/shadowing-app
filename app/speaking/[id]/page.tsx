@@ -7,6 +7,7 @@ import AudioPlayer from '@/components/AudioPlayer';
 import Recorder from '@/components/Recorder';
 import { markComplete, getCompletedIds } from '@/lib/progress';
 import speakingLessons from '@/data/speaking-lessons.json';
+import { getTopicLabel } from '@/lib/topics';
 
 type Lesson = {
   id: string;
@@ -20,14 +21,6 @@ type Lesson = {
   hints: string[];
   tips: string;
   durationMinutes: number;
-};
-
-const TOPIC_LABELS: Record<string, string> = {
-  school: '🏫 School',
-  hobbies: '🎨 Hobbies',
-  family: '👨‍👩‍👧 Family',
-  food: '🍽️ Food',
-  'daily routine': '⏰ Daily Routine',
 };
 
 export default function SpeakingPage({ params }: { params: { id: string } }) {
@@ -77,7 +70,7 @@ export default function SpeakingPage({ params }: { params: { id: string } }) {
                 {lesson.level}
               </span>
               <span className="bg-white/20 text-white text-xs font-bold px-2.5 py-1 rounded-full">
-                {TOPIC_LABELS[lesson.topic] || lesson.topic}
+                {getTopicLabel(lesson.topic)}
               </span>
             </div>
             <h1 className="text-2xl font-black mb-2">{lesson.title}</h1>
