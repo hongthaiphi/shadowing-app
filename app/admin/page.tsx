@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { getUser } from '@/lib/auth';
 import { getSupabase } from '@/lib/supabase';
 import { loadTopics, saveTopics, type Topic } from '@/lib/topics';
+import { loadLevels, saveLevels, getColorOptions, getLevelColor, type Level } from '@/lib/levels';
 import shadowingLessonsRaw from '@/data/shadowing-lessons.json';
 import dictationLessonsRaw from '@/data/dictation-lessons.json';
 import speakingLessonsRaw from '@/data/speaking-lessons.json';
@@ -29,7 +30,7 @@ type ParsedImport = LessonEntry & { _error?: string };
 
 type ModalMode = 'add' | 'edit' | null;
 
-type AdminTab = 'lessons' | 'topics' | 'stats';
+type AdminTab = 'lessons' | 'topics' | 'levels' | 'stats';
 
 type StudentStat = {
   id: string;
@@ -67,14 +68,7 @@ function saveCustomLessons(lessons: LessonEntry[]): void {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(lessons));
 }
 
-const LEVEL_COLORS: Record<string, string> = {
-  Starter: 'bg-emerald-100 text-emerald-700',
-  'Level 1': 'bg-blue-100 text-blue-700',
-  'Level 2': 'bg-indigo-100 text-indigo-700',
-};
-
 const VALID_TYPES = ['shadowing', 'dictation', 'speaking'];
-const VALID_LEVELS = ['Starter', 'Level 1', 'Level 2'];
 
 const TEMPLATE_JSON: Partial<LessonEntry>[] = [
   {
@@ -128,8 +122,8 @@ function validateLesson(item: unknown, existingIds: Set<string>): ParsedImport {
   if (!lesson.type || !VALID_TYPES.includes(lesson.type as string)) {
     errors.push(`type must be one of: ${VALID_TYPES.join(', ')}`);
   }
-  if (!lesson.level || !VALID_LEVELS.includes(lesson.level as string)) {
-    errors.push(`level must be one of: ${VALID_LEVELS.join(', ')}`);
+  if (!lesson.level || typeof lesson.level !== 'string') {
+    errors.push('missing level');
   }
   if (!lesson.topic || typeof lesson.topic !== 'string') {
     errors.push('missing topic');
@@ -215,6 +209,14 @@ export default function AdminPage() {
   const [deleteTopicId, setDeleteTopicId] = useState<string | null>(null);
   const [topicFormError, setTopicFormError] = useState('');
 
+  // Levels state
+  const [levels, setLevels] = useState<Level[]>([]);
+  const [levelFormOpen, setLevelFormOpen] = useState(false);
+  const [editingLevel, setEditingLevel] = useState<Level | null>(null);
+  const [levelForm, setLevelForm] = useState<Level>({ id: '', label: '', color: 'bg-emerald-100 text-emerald-700' });
+  const [deleteLevelId, setDeleteLevelId] = useState<string | null>(null);
+  const [levelFormError, setLevelFormError] = useState('');
+
   // Import state
   const [importOpen, setImportOpen] = useState(false);
   const [importRaw, setImportRaw] = useState('');
@@ -231,6 +233,7 @@ export default function AdminPage() {
     setCurrentUserRole(user.role);
     setCustomLessons(loadCustomLessons());
     setTopics(loadTopics());
+    setLevels(loadLevels());
     setLoading(false);
   }, [router]);
 
@@ -342,7 +345,8 @@ export default function AdminPage() {
   // ── Add/Edit modal ──────────────────────────────────
   function openAdd() {
     const currentTopics = loadTopics();
-    setForm({ ...emptyForm, topic: currentTopics[0]?.id || '' });
+    const currentLevels = loadLevels();
+    setForm({ ...emptyForm, topic: currentTopics[0]?.id || '', level: currentLevels[0]?.id || '' });
     setChunksText('');
     setHintsText('');
     setEditingLesson(null);
@@ -459,6 +463,58 @@ export default function AdminPage() {
 
   function getLessonsUsingTopic(topicId: string): LessonEntry[] {
     return allLessons.filter((l) => l.topic === topicId);
+  }
+
+  // ── Level CRUD ──────────────────────────────────────
+  function openLevelAdd() {
+    setLevelForm({ id: '', label: '', color: 'bg-emerald-100 text-emerald-700' });
+    setEditingLevel(null);
+    setLevelFormError('');
+    setLevelFormOpen(true);
+  }
+
+  function openLevelEdit(level: Level) {
+    setLevelForm({ ...level });
+    setEditingLevel(level);
+    setLevelFormError('');
+    setLevelFormOpen(true);
+  }
+
+  function handleLevelSave() {
+    const id = levelForm.id.trim();
+    const label = levelForm.label.trim();
+    if (!id || !label) {
+      setLevelFormError('ID and label are required');
+      return;
+    }
+    const duplicate = levels.find(
+      (l) => l.id === id && (!editingLevel || l.id !== editingLevel.id)
+    );
+    if (duplicate) {
+      setLevelFormError(`Level ID "${id}" already exists`);
+      return;
+    }
+    const entry: Level = { id, label, color: levelForm.color };
+    let updated: Level[];
+    if (editingLevel) {
+      updated = levels.map((l) => (l.id === editingLevel.id ? entry : l));
+    } else {
+      updated = [...levels, entry];
+    }
+    setLevels(updated);
+    saveLevels(updated);
+    setLevelFormOpen(false);
+  }
+
+  function handleLevelDelete(id: string) {
+    const updated = levels.filter((l) => l.id !== id);
+    setLevels(updated);
+    saveLevels(updated);
+    setDeleteLevelId(null);
+  }
+
+  function getLessonsUsingLevel(levelId: string): LessonEntry[] {
+    return allLessons.filter((l) => l.level === levelId);
   }
 
   // ── Import ──────────────────────────────────────────
@@ -583,6 +639,7 @@ export default function AdminPage() {
           {([
             { key: 'lessons', label: '📚 Lessons' },
             { key: 'topics', label: '🏷️ Topics' },
+            { key: 'levels', label: '📈 Levels' },
             { key: 'stats', label: '📊 Student Stats' },
           ] as { key: AdminTab; label: string }[]).map((t) => (
             <button
@@ -659,7 +716,7 @@ export default function AdminPage() {
                       </div>
                     </td>
                     <td className="px-5 py-4">
-                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${LEVEL_COLORS[lesson.level] || 'bg-gray-100 text-gray-600'}`}>
+                      <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${getLevelColor(lesson.level)}`}>
                         {lesson.level}
                       </span>
                     </td>
@@ -866,6 +923,192 @@ export default function AdminPage() {
                 </button>
                 <button
                   onClick={() => handleTopicDelete(deleteTopicId)}
+                  className="px-5 py-2.5 bg-red-500 text-white rounded-xl font-bold text-sm hover:bg-red-600 transition-colors"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </>)}
+
+      {/* ── LEVELS TAB ──────────────────────────────────── */}
+      {activeTab === 'levels' && (<>
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <h2 className="text-xl font-bold text-gray-800">Manage Levels</h2>
+            <p className="text-sm text-gray-500 mt-0.5">
+              {levels.length} level{levels.length !== 1 ? 's' : ''} defined. Levels are used to categorize lesson difficulty.
+            </p>
+          </div>
+          <button
+            onClick={openLevelAdd}
+            className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-violet-500 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all shadow-md flex items-center gap-2"
+          >
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            Add Level
+          </button>
+        </div>
+
+        {levels.length === 0 ? (
+          <div className="text-center py-16 bg-white rounded-2xl border border-gray-100">
+            <div className="text-5xl mb-4">📈</div>
+            <h3 className="text-lg font-bold text-gray-700 mb-2">No levels yet</h3>
+            <p className="text-gray-400">Click &ldquo;Add Level&rdquo; to create your first level</p>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {levels.map((level) => (
+              <div
+                key={level.id}
+                className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 hover:shadow-md transition-all group"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <span className={`text-xs font-bold px-3 py-1.5 rounded-full ${level.color}`}>
+                    {level.label}
+                  </span>
+                  <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    <button
+                      onClick={() => openLevelEdit(level)}
+                      className="p-1.5 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                      title="Edit level"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => setDeleteLevelId(level.id)}
+                      className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                      title="Delete level"
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+                <p className="text-xs text-gray-400 mt-1 font-mono">id: {level.id}</p>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {/* Level Add/Edit Modal */}
+        {levelFormOpen && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm">
+              <div className="p-6 border-b border-gray-100">
+                <h3 className="text-xl font-black text-gray-800">
+                  {editingLevel ? 'Edit Level' : 'Add Level'}
+                </h3>
+              </div>
+              <div className="p-6 space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Label *</label>
+                  <input
+                    type="text"
+                    value={levelForm.label}
+                    onChange={(e) => setLevelForm((p) => ({ ...p, label: e.target.value }))}
+                    placeholder="e.g. Advanced"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    ID (slug) *
+                    {editingLevel && (
+                      <span className="text-xs text-amber-600 font-normal ml-1">— changing ID will not update existing lessons</span>
+                    )}
+                  </label>
+                  <input
+                    type="text"
+                    value={levelForm.id}
+                    onChange={(e) => setLevelForm((p) => ({ ...p, id: e.target.value }))}
+                    placeholder="e.g. advanced"
+                    className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-300"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Badge Color</label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {getColorOptions().map((opt) => (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        onClick={() => setLevelForm((p) => ({ ...p, color: opt.value }))}
+                        className={`text-xs font-bold px-2 py-2 rounded-xl border-2 transition-all ${
+                          levelForm.color === opt.value
+                            ? 'border-gray-800 ring-2 ring-gray-300'
+                            : 'border-transparent hover:border-gray-300'
+                        } ${opt.value}`}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                {/* Preview */}
+                <div className="flex items-center gap-2 pt-2 border-t border-gray-100">
+                  <span className="text-xs text-gray-500">Preview:</span>
+                  <span className={`text-xs font-bold px-3 py-1.5 rounded-full ${levelForm.color}`}>
+                    {levelForm.label || 'Label'}
+                  </span>
+                </div>
+                {levelFormError && (
+                  <p className="text-sm text-red-600 font-medium">{levelFormError}</p>
+                )}
+              </div>
+              <div className="p-6 border-t border-gray-100 flex gap-3 justify-end">
+                <button
+                  onClick={() => setLevelFormOpen(false)}
+                  className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleLevelSave}
+                  disabled={!levelForm.id.trim() || !levelForm.label.trim()}
+                  className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-violet-500 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  {editingLevel ? 'Save Changes' : 'Add Level'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Level Delete Confirmation */}
+        {deleteLevelId && (
+          <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
+              <h3 className="text-lg font-bold text-gray-800 mb-2">Delete Level?</h3>
+              <p className="text-gray-500 text-sm mb-1">
+                This will remove the level from the list. Lessons using this level will still show the level ID as plain text.
+              </p>
+              {(() => {
+                const affected = getLessonsUsingLevel(deleteLevelId);
+                if (affected.length > 0) {
+                  return (
+                    <p className="text-amber-600 text-xs font-medium mt-2 mb-4 bg-amber-50 px-3 py-2 rounded-lg">
+                      {affected.length} lesson{affected.length !== 1 ? 's' : ''} currently use this level.
+                    </p>
+                  );
+                }
+                return <div className="mb-4" />;
+              })()}
+              <div className="flex gap-3 justify-end">
+                <button
+                  onClick={() => setDeleteLevelId(null)}
+                  className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleLevelDelete(deleteLevelId)}
                   className="px-5 py-2.5 bg-red-500 text-white rounded-xl font-bold text-sm hover:bg-red-600 transition-colors"
                 >
                   Delete
@@ -1292,9 +1535,12 @@ export default function AdminPage() {
                     onChange={(e) => handleFormChange('level', e.target.value)}
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-300 bg-white"
                   >
-                    <option value="Starter">Starter</option>
-                    <option value="Level 1">Level 1</option>
-                    <option value="Level 2">Level 2</option>
+                    {levels.map((l) => (
+                      <option key={l.id} value={l.id}>{l.label}</option>
+                    ))}
+                    {!levels.some((l) => l.id === form.level) && form.level && (
+                      <option value={form.level}>{form.level}</option>
+                    )}
                   </select>
                 </div>
               </div>

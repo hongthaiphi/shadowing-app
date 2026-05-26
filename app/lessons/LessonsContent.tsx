@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getCompletedIds } from '@/lib/progress';
 import { getTopicLabel, loadTopics } from '@/lib/topics';
+import { getLevelColor, loadLevels } from '@/lib/levels';
 import shadowingLessons from '@/data/shadowing-lessons.json';
 import dictationLessons from '@/data/dictation-lessons.json';
 import speakingLessons from '@/data/speaking-lessons.json';
@@ -26,12 +27,6 @@ const allLessons: Lesson[] = [
   ...(dictationLessons as Lesson[]),
   ...(speakingLessons as Lesson[]),
 ];
-
-const LEVEL_COLORS: Record<string, string> = {
-  Starter: 'bg-emerald-100 text-emerald-700',
-  'Level 1': 'bg-blue-100 text-blue-700',
-  'Level 2': 'bg-indigo-100 text-indigo-700',
-};
 
 const TYPE_COLORS: Record<string, string> = {
   shadowing: 'bg-cyan-100 text-cyan-700',
@@ -73,7 +68,7 @@ export default function LessonsContent() {
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const typeFilters = ['all', 'shadowing', 'dictation', 'speaking'];
-  const levelFilters = ['all', 'Starter', 'Level 1', 'Level 2'];
+  const levelFilters = ['all', ...loadLevels().map((l) => l.id)];
   const topicFilters = ['all', ...loadTopics().map((t) => t.id)];
 
   return (
@@ -224,7 +219,7 @@ export default function LessonsContent() {
                 <div className="p-5">
                   {/* Badges */}
                   <div className="flex items-center flex-wrap gap-2 mb-3">
-                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${LEVEL_COLORS[lesson.level] || 'bg-gray-100 text-gray-600'}`}>
+                    <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${getLevelColor(lesson.level)}`}>
                       {lesson.level}
                     </span>
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${TYPE_COLORS[lesson.type] || 'bg-gray-100 text-gray-600'}`}>
