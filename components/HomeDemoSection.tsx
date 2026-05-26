@@ -6,6 +6,7 @@ import AudioPlayer from '@/components/AudioPlayer';
 import Recorder from '@/components/Recorder';
 import { checkDictation, WordResult } from '@/lib/dictation';
 import { isLoggedIn } from '@/lib/auth';
+import { loadTopics } from '@/lib/topics';
 
 const SHADOWING_CHUNK = "I go to school every morning.";
 const SHADOWING_AUDIO = "https://cykksxxcjduehsgtppet.supabase.co/storage/v1/object/public/audio/shadowing/s1-chunk-0.mp3";
@@ -208,7 +209,7 @@ export default function HomeDemoSection() {
 
               {/* Footer CTA */}
               <div className="flex items-center justify-between pt-4 border-t border-gray-100">
-                <p className="text-xs text-gray-400">50+ lessons across 5 topics</p>
+                <p className="text-xs text-gray-400">50+ lessons across {loadTopics().length} topics</p>
                 <Link
                   href="/lessons?type=dictation"
                   className="text-sm font-bold text-violet-600 hover:text-violet-700 flex items-center gap-1 transition-colors"
