@@ -1,0 +1,556 @@
+[
+  {
+    "id": "r1",
+    "title": "A Day at School",
+    "level": "Starter",
+    "topic": "school",
+    "type": "reading",
+    "image": "https://picsum.photos/seed/reading-school/800/400",
+    "durationMinutes": 10,
+    "wordCount": 128,
+    "paragraphs": [
+      "Tom is ten years old and goes to Green Valley Primary School. Every morning, he wakes up at seven o'clock and has breakfast with his family. His mother usually makes toast and orange juice for him.",
+      "Tom walks to school with his best friend, Lucy. The walk takes about fifteen minutes. At school, Tom's favourite subject is Science. He loves doing experiments in the science laboratory.",
+      "At lunchtime, Tom eats a sandwich and an apple in the school cafeteria. After school, he plays football in the park with his friends. He usually arrives home at half past five. Before bed, Tom reads a book for thirty minutes. He loves learning new things every day."
+    ],
+    "questions": [
+      {
+        "id": "r1q1",
+        "type": "multiple-choice",
+        "question": "What does Tom eat for breakfast?",
+        "options": ["Toast and orange juice", "Cereal and milk", "Rice and soup", "Bread and butter"],
+        "answer": "A",
+        "explanation": "The passage says his mother 'usually makes toast and orange juice for him'."
+      },
+      {
+        "id": "r1q2",
+        "type": "true-false-not-given",
+        "question": "Tom's school is called Blue River Primary School.",
+        "answer": "False",
+        "explanation": "The passage says Tom goes to Green Valley Primary School, not Blue River."
+      },
+      {
+        "id": "r1q3",
+        "type": "true-false-not-given",
+        "question": "Lucy is in the same class as Tom at school.",
+        "answer": "Not Given",
+        "explanation": "The passage mentions Lucy is Tom's best friend, but does not say whether they are in the same class."
+      },
+      {
+        "id": "r1q4",
+        "type": "fill-blank",
+        "question": "Tom's favourite subject at school is ________.",
+        "answer": "Science|science",
+        "explanation": "The passage states 'Tom's favourite subject is Science'."
+      },
+      {
+        "id": "r1q5",
+        "type": "short-answer",
+        "question": "What does Tom do after school?",
+        "answer": "He plays football in the park with his friends."
+      }
+    ]
+  },
+  {
+    "id": "r2",
+    "title": "My Best Friend",
+    "level": "Starter",
+    "topic": "hobbies",
+    "type": "reading",
+    "image": "https://picsum.photos/seed/reading-friends/800/400",
+    "durationMinutes": 10,
+    "wordCount": 130,
+    "paragraphs": [
+      "Sara is eleven years old. Her best friend is called Mei. They have been friends since they were in Year 1 together. Mei has long black hair and always wears a blue hair clip to school.",
+      "Mei is very kind and funny. She always makes Sara laugh with her jokes. They both enjoy reading books and watching cartoons at the weekend. Their favourite cartoon is called Space Rangers.",
+      "Mei is very good at drawing. She often draws pictures of animals for Sara. Sara keeps all of Mei's drawings in a special box under her bed. Every Saturday, the two friends meet at the local library to read books together. Sara thinks Mei is the best friend anyone could have."
+    ],
+    "questions": [
+      {
+        "id": "r2q1",
+        "type": "multiple-choice",
+        "question": "How long have Sara and Mei been friends?",
+        "options": ["Since they were in Year 1", "Since they were in Year 3", "Since they were babies", "Since they started secondary school"],
+        "answer": "A",
+        "explanation": "The passage says they 'have been friends since they were in Year 1 together'."
+      },
+      {
+        "id": "r2q2",
+        "type": "true-false-not-given",
+        "question": "Mei has short blonde hair.",
+        "answer": "False",
+        "explanation": "The passage says Mei has long black hair — not short or blonde."
+      },
+      {
+        "id": "r2q3",
+        "type": "true-false-not-given",
+        "question": "Sara and Mei visit the library every Saturday.",
+        "answer": "True",
+        "explanation": "The passage says 'Every Saturday, the two friends meet at the local library to read books together'."
+      },
+      {
+        "id": "r2q4",
+        "type": "fill-blank",
+        "question": "Sara keeps Mei's drawings in a special box under her ________.",
+        "answer": "bed",
+        "explanation": "The passage says Sara keeps the drawings 'in a special box under her bed'."
+      },
+      {
+        "id": "r2q5",
+        "type": "short-answer",
+        "question": "What do Sara and Mei both enjoy doing at the weekend?",
+        "answer": "Reading books and watching cartoons."
+      }
+    ]
+  },
+  {
+    "id": "r3",
+    "title": "A Day at the Zoo",
+    "level": "Starter",
+    "topic": "family",
+    "type": "reading",
+    "image": "https://picsum.photos/seed/reading-zoo/800/400",
+    "durationMinutes": 10,
+    "wordCount": 134,
+    "paragraphs": [
+      "Last Saturday, the Chen family visited the city zoo. There were four of them: Mr Chen, Mrs Chen, and their children Lily and Ben. Ben is eight years old and Lily is ten.",
+      "First, they went to see the elephants. There were three elephants — two adults and one baby. The baby elephant was very playful. It sprayed water with its trunk and made everyone laugh.",
+      "Next, the family watched the penguins at feeding time. A keeper threw fish into the water and the penguins dived in to catch them. Penguins cannot fly, but they are excellent swimmers. After lunch, the family visited the giraffe area. Giraffes are the tallest animals in the world. They use their long necks to reach leaves at the tops of trees. Ben said it was the best day of his life."
+    ],
+    "questions": [
+      {
+        "id": "r3q1",
+        "type": "multiple-choice",
+        "question": "How many people were in the Chen family group at the zoo?",
+        "options": ["Three", "Four", "Five", "Six"],
+        "answer": "B",
+        "explanation": "The passage says 'There were four of them: Mr Chen, Mrs Chen, and their children Lily and Ben'."
+      },
+      {
+        "id": "r3q2",
+        "type": "true-false-not-given",
+        "question": "The baby elephant sprayed water with its trunk.",
+        "answer": "True",
+        "explanation": "The passage says 'It sprayed water with its trunk and made everyone laugh'."
+      },
+      {
+        "id": "r3q3",
+        "type": "true-false-not-given",
+        "question": "Ben enjoyed the zoo visit more than Lily did.",
+        "answer": "Not Given",
+        "explanation": "The passage tells us what Ben said, but does not compare how much each child enjoyed the visit."
+      },
+      {
+        "id": "r3q4",
+        "type": "fill-blank",
+        "question": "Penguins cannot fly, but they are excellent ________.",
+        "answer": "swimmers",
+        "explanation": "The passage says 'Penguins cannot fly, but they are excellent swimmers'."
+      },
+      {
+        "id": "r3q5",
+        "type": "short-answer",
+        "question": "Why do giraffes have long necks?",
+        "answer": "To reach leaves at the tops of trees."
+      }
+    ]
+  },
+  {
+    "id": "r4",
+    "title": "Food Around the World",
+    "level": "Starter",
+    "topic": "food",
+    "type": "reading",
+    "image": "https://picsum.photos/seed/reading-food/800/400",
+    "durationMinutes": 10,
+    "wordCount": 127,
+    "paragraphs": [
+      "Food is different in every country. In Japan, people often eat rice, fish, and vegetables. A very popular dish is sushi, which is made with rice and raw fish. Japanese people use chopsticks to eat.",
+      "In Italy, pasta and pizza are famous foods. Italians make pasta in many shapes and serve it with different sauces. Pizza is now eaten all over the world.",
+      "In Mexico, tacos are a traditional food. They are made with corn tortillas, meat, and vegetables. Mexican food is often spicy. In India, curry is very popular. It can be mild or very spicy. People eat curry with rice or bread called naan. Trying food from other countries is a great way to learn about different cultures."
+    ],
+    "questions": [
+      {
+        "id": "r4q1",
+        "type": "multiple-choice",
+        "question": "What is sushi made with?",
+        "options": ["Noodles and vegetables", "Rice and raw fish", "Bread and cheese", "Pasta and sauce"],
+        "answer": "B",
+        "explanation": "The passage says sushi 'is made with rice and raw fish'."
+      },
+      {
+        "id": "r4q2",
+        "type": "true-false-not-given",
+        "question": "Pizza is described in the passage as an Italian food.",
+        "answer": "True",
+        "explanation": "The passage describes pizza under the section about Italy, listing it alongside pasta as a famous Italian food."
+      },
+      {
+        "id": "r4q3",
+        "type": "true-false-not-given",
+        "question": "All Indian curries are very spicy.",
+        "answer": "False",
+        "explanation": "The passage says Indian curry 'can be mild or very spicy', so not all curries are spicy."
+      },
+      {
+        "id": "r4q4",
+        "type": "fill-blank",
+        "question": "In India, curry is often eaten with rice or bread called ________.",
+        "answer": "naan",
+        "explanation": "The passage says 'People eat curry with rice or bread called naan'."
+      },
+      {
+        "id": "r4q5",
+        "type": "short-answer",
+        "question": "According to the passage, why is it good to try food from other countries?",
+        "answer": "It is a great way to learn about different cultures."
+      }
+    ]
+  },
+  {
+    "id": "r5",
+    "title": "Morning Routines",
+    "level": "Starter",
+    "topic": "daily routine",
+    "type": "reading",
+    "image": "https://picsum.photos/seed/reading-morning/800/400",
+    "durationMinutes": 10,
+    "wordCount": 135,
+    "paragraphs": [
+      "Different people start their morning in different ways. Emma is twelve years old. She wakes up at six thirty every day. First, she has a shower and gets dressed. After that, she has breakfast with her family. Emma always has cereal with milk and a glass of orange juice.",
+      "Emma's father, Mr Davis, gets up at six o'clock — thirty minutes before Emma. He goes for a ten-minute run before breakfast. He says morning exercise makes him feel awake and happy. He eats eggs and drinks coffee.",
+      "Emma's younger brother Jack is only seven. He wakes up last, at seven fifteen. He finds it very hard to get up early. His mother has to call him three times before he gets out of bed. Jack eats toast with jam for breakfast. The whole family leaves the house together at eight o'clock every morning."
+    ],
+    "questions": [
+      {
+        "id": "r5q1",
+        "type": "multiple-choice",
+        "question": "What time does Emma wake up?",
+        "options": ["Six o'clock", "Six fifteen", "Six thirty", "Seven fifteen"],
+        "answer": "C",
+        "explanation": "The passage says Emma 'wakes up at six thirty every day'."
+      },
+      {
+        "id": "r5q2",
+        "type": "true-false-not-given",
+        "question": "Mr Davis goes for a thirty-minute run each morning.",
+        "answer": "False",
+        "explanation": "The passage says Mr Davis 'goes for a ten-minute run', not thirty minutes."
+      },
+      {
+        "id": "r5q3",
+        "type": "true-false-not-given",
+        "question": "Jack is older than Emma.",
+        "answer": "False",
+        "explanation": "The passage says Jack is seven and Emma is twelve, so Emma is the older sibling."
+      },
+      {
+        "id": "r5q4",
+        "type": "fill-blank",
+        "question": "Jack eats toast with ________ for breakfast.",
+        "answer": "jam",
+        "explanation": "The passage says 'Jack eats toast with jam for breakfast'."
+      },
+      {
+        "id": "r5q5",
+        "type": "short-answer",
+        "question": "What time does the whole family leave the house?",
+        "answer": "Eight o'clock (every morning)."
+      }
+    ]
+  },
+  {
+    "id": "r6",
+    "title": "A School Science Project",
+    "level": "Level 1",
+    "topic": "school",
+    "type": "reading",
+    "image": "https://picsum.photos/seed/reading-science/800/400",
+    "durationMinutes": 12,
+    "wordCount": 193,
+    "paragraphs": [
+      "Every year, Riverside School holds a Science Fair for students in Years 4 to 6. Students must choose a topic, carry out an experiment, and present their results to a panel of judges. Prizes are awarded to the top three projects in each year group.",
+      "This year, twelve-year-old Maya decided to investigate how sunlight affects plant growth. She bought three identical small plants from a local garden centre. She placed one plant on a sunny windowsill, one in a shaded corner of the room, and one inside a dark cupboard. Every day for three weeks, she measured the height of each plant and carefully recorded the results in a notebook.",
+      "Maya's results were very clear. The plant in full sunlight grew twelve centimetres in three weeks. The plant in the shade grew only five centimetres. The plant in the dark grew just two centimetres, and its leaves turned yellow.",
+      "Maya created a poster showing her data, graphs, and photographs. She concluded that plants need sunlight to grow well and stay healthy. At the Science Fair, a panel of judges reviewed the projects and asked each student questions. Maya was awarded first prize. Her teacher said it was one of the most thorough projects she had seen in ten years of teaching."
+    ],
+    "questions": [
+      {
+        "id": "r6q1",
+        "type": "multiple-choice",
+        "question": "Which students take part in the Riverside School Science Fair?",
+        "options": ["All students in the school", "Students in Years 1 to 6", "Students in Years 4 to 6", "Only Year 6 students"],
+        "answer": "C",
+        "explanation": "The passage says the Science Fair is 'for students in Years 4 to 6'."
+      },
+      {
+        "id": "r6q2",
+        "type": "true-false-not-given",
+        "question": "Maya's experiment used three plants in three different light conditions.",
+        "answer": "True",
+        "explanation": "Maya placed one plant in sunlight, one in shade, and one in a dark cupboard — three different conditions."
+      },
+      {
+        "id": "r6q3",
+        "type": "true-false-not-given",
+        "question": "The plant kept in the dark grew faster than the plant in the shade.",
+        "answer": "False",
+        "explanation": "The plant in the dark grew two centimetres, while the plant in the shade grew five centimetres — so the shaded plant grew faster."
+      },
+      {
+        "id": "r6q4",
+        "type": "true-false-not-given",
+        "question": "Maya has entered the Science Fair in previous years.",
+        "answer": "Not Given",
+        "explanation": "The passage describes this year's project but does not say whether Maya has entered the fair before."
+      },
+      {
+        "id": "r6q5",
+        "type": "fill-blank",
+        "question": "Maya recorded the height of each plant in a ________.",
+        "answer": "notebook",
+        "explanation": "The passage says she 'carefully recorded the results in a notebook'."
+      },
+      {
+        "id": "r6q6",
+        "type": "short-answer",
+        "question": "What happened to the leaves of the plant kept in the dark?",
+        "answer": "They turned yellow."
+      }
+    ]
+  },
+  {
+    "id": "r7",
+    "title": "The Riverside Sports Club",
+    "level": "Level 1",
+    "topic": "hobbies",
+    "type": "reading",
+    "image": "https://picsum.photos/seed/reading-sports/800/400",
+    "durationMinutes": 12,
+    "wordCount": 185,
+    "paragraphs": [
+      "Riverside Community Sports Club was established in 1988 by a group of local volunteers who wanted to provide more sporting opportunities for young people in the area. Today, the club has over three hundred members aged between eight and eighteen.",
+      "The club currently offers five sports: swimming, tennis, basketball, athletics, and martial arts. Members may join up to two sports at no extra cost beyond the annual membership fee. The swimming section is the largest, with ninety members. The swimming team has won the regional championship for three years in a row.",
+      "The club employs fifteen coaches, all of whom hold professional qualifications. Head coach Daniel Wright has worked at the club for eleven years. He believes the most important aspect of the club is not winning competitions, but giving young people the chance to build confidence and develop teamwork skills.",
+      "Training sessions take place every Tuesday, Thursday, and Saturday. On the first Saturday of each month, the club holds open sessions where parents and family members are welcome to attend. Annual membership is priced at thirty-five pounds."
+    ],
+    "questions": [
+      {
+        "id": "r7q1",
+        "type": "multiple-choice",
+        "question": "When was Riverside Community Sports Club established?",
+        "options": ["1978", "1985", "1988", "1995"],
+        "answer": "C",
+        "explanation": "The passage says the club 'was established in 1988'."
+      },
+      {
+        "id": "r7q2",
+        "type": "true-false-not-given",
+        "question": "Club members must pay extra to join a second sport.",
+        "answer": "False",
+        "explanation": "The passage says members 'may join up to two sports at no extra cost'."
+      },
+      {
+        "id": "r7q3",
+        "type": "true-false-not-given",
+        "question": "The swimming team has recently won a regional championship.",
+        "answer": "True",
+        "explanation": "The passage says 'The swimming team has won the regional championship for three years in a row'."
+      },
+      {
+        "id": "r7q4",
+        "type": "fill-blank",
+        "question": "Annual membership at the club costs ________ pounds.",
+        "answer": "thirty-five|35",
+        "explanation": "The passage states 'Annual membership is priced at thirty-five pounds'."
+      },
+      {
+        "id": "r7q5",
+        "type": "short-answer",
+        "question": "According to head coach Daniel Wright, what is the most important purpose of the club?",
+        "answer": "Giving young people the chance to build confidence and develop teamwork skills (not winning competitions)."
+      }
+    ]
+  },
+  {
+    "id": "r8",
+    "title": "A Summer Holiday",
+    "level": "Level 1",
+    "topic": "family",
+    "type": "reading",
+    "image": "https://picsum.photos/seed/reading-holiday/800/400",
+    "durationMinutes": 12,
+    "wordCount": 196,
+    "paragraphs": [
+      "The Patel family spent two weeks in Portugal last summer. There were five of them: Mr and Mrs Patel, their teenage children Anita and Ravi, and their grandmother, whom they all called Dadi.",
+      "They stayed in a rented villa near the beach in a small coastal town called Cascais, about thirty kilometres west of Lisbon. The villa had a private swimming pool and a large shaded garden. Dadi was particularly pleased to discover that the garden had several fruit trees.",
+      "During their stay, the family made a day trip to Lisbon. They rode on the famous old yellow trams that travel through the hilly streets and visited a historic castle built in the eleventh century. They also explored an outdoor market where local traders sold pottery, fresh produce, and handmade crafts.",
+      "On the final afternoon, Anita and Ravi had a surfing lesson on the beach. Their instructor said Ravi showed real natural ability. Anita fell off her board several times, but she refused to give up and managed to stand up by the end of the lesson. That evening, the family had their last dinner together at a seafood restaurant overlooking the sea."
+    ],
+    "questions": [
+      {
+        "id": "r8q1",
+        "type": "multiple-choice",
+        "question": "Where did the Patel family stay during their holiday?",
+        "options": ["In Lisbon", "In Porto", "In Cascais", "In Faro"],
+        "answer": "C",
+        "explanation": "The passage says they stayed 'in a small coastal town called Cascais'."
+      },
+      {
+        "id": "r8q2",
+        "type": "true-false-not-given",
+        "question": "The villa had a private swimming pool.",
+        "answer": "True",
+        "explanation": "The passage states 'The villa had a private swimming pool and a large shaded garden'."
+      },
+      {
+        "id": "r8q3",
+        "type": "true-false-not-given",
+        "question": "Anita gave up surfing after falling off the board.",
+        "answer": "False",
+        "explanation": "The passage says 'she refused to give up and managed to stand up by the end of the lesson'."
+      },
+      {
+        "id": "r8q4",
+        "type": "true-false-not-given",
+        "question": "The Patel family booked their holiday through a travel agency.",
+        "answer": "Not Given",
+        "explanation": "The passage does not mention how the holiday was booked."
+      },
+      {
+        "id": "r8q5",
+        "type": "fill-blank",
+        "question": "The historic castle in Lisbon was built in the ________ century.",
+        "answer": "eleventh|11th",
+        "explanation": "The passage says they 'visited a historic castle built in the eleventh century'."
+      },
+      {
+        "id": "r8q6",
+        "type": "short-answer",
+        "question": "What did the Patel family do on their final evening in Portugal?",
+        "answer": "They had dinner at a seafood restaurant overlooking the sea."
+      }
+    ]
+  },
+  {
+    "id": "r9",
+    "title": "The Cheetah",
+    "level": "Level 2",
+    "topic": "hobbies",
+    "type": "reading",
+    "image": "https://picsum.photos/seed/reading-cheetah/800/400",
+    "durationMinutes": 15,
+    "wordCount": 221,
+    "paragraphs": [
+      "The cheetah is widely recognised as the fastest land animal on Earth. It can accelerate from a standstill to around 100 kilometres per hour in just three seconds — a speed that rivals many sports cars. However, this remarkable ability comes with serious limitations. A cheetah can only sustain its maximum speed for approximately 30 seconds before its body overheats. After a sprint, it must rest for up to 30 minutes to allow its temperature to return to normal.",
+      "Unlike most large cats, the cheetah is active during daylight hours. It depends heavily on its exceptional eyesight to locate prey at distances of up to five kilometres. The distinctive black tear-mark stripes that run from the inner corner of each eye down to the mouth serve a practical function: they reduce glare from sunlight, helping the cheetah to focus more accurately on moving targets — much like the black face paint sometimes worn by athletes competing outdoors.",
+      "The cheetah is classified as a vulnerable species by international conservation organisations. Fewer than 7,000 individuals are believed to survive in the wild, primarily in sub-Saharan Africa. The species faces three main threats: the destruction of its natural habitat, a decline in the prey animals it depends on, and conflict with farmers and ranchers who kill cheetahs to protect their livestock.",
+      "Several wildlife organisations are working to address these threats through captive breeding programmes, community education, and compensation schemes for farmers. Despite these efforts, biologists warn that without significantly greater investment and international cooperation, the cheetah may face extinction within the next 50 years."
+    ],
+    "questions": [
+      {
+        "id": "r9q1",
+        "type": "multiple-choice",
+        "question": "How long can a cheetah maintain its maximum speed?",
+        "options": ["About 10 seconds", "About 20 seconds", "About 30 seconds", "About 60 seconds"],
+        "answer": "C",
+        "explanation": "The passage says 'A cheetah can only sustain its maximum speed for approximately 30 seconds'."
+      },
+      {
+        "id": "r9q2",
+        "type": "true-false-not-given",
+        "question": "Cheetahs hunt at night, like most other large cats.",
+        "answer": "False",
+        "explanation": "The passage says 'the cheetah is active during daylight hours' and is 'unlike most large cats'."
+      },
+      {
+        "id": "r9q3",
+        "type": "true-false-not-given",
+        "question": "The black markings on a cheetah's face help to reduce glare from sunlight.",
+        "answer": "True",
+        "explanation": "The passage says the markings 'reduce glare from sunlight, helping the cheetah to focus more accurately on moving targets'."
+      },
+      {
+        "id": "r9q4",
+        "type": "true-false-not-given",
+        "question": "There are currently more cheetahs in captivity than in the wild.",
+        "answer": "Not Given",
+        "explanation": "The passage mentions captive breeding programmes but does not compare the size of the captive and wild populations."
+      },
+      {
+        "id": "r9q5",
+        "type": "fill-blank",
+        "question": "Fewer than ________ cheetahs are believed to survive in the wild.",
+        "answer": "7,000|7000",
+        "explanation": "The passage states 'Fewer than 7,000 individuals are believed to survive in the wild'."
+      },
+      {
+        "id": "r9q6",
+        "type": "short-answer",
+        "question": "What are the three main threats to the cheetah's survival mentioned in the passage?",
+        "answer": "Habitat destruction, a decline in prey animals, and conflict with farmers and ranchers."
+      }
+    ]
+  },
+  {
+    "id": "r10",
+    "title": "City Life vs Country Life",
+    "level": "Level 2",
+    "topic": "daily routine",
+    "type": "reading",
+    "image": "https://picsum.photos/seed/reading-city/800/400",
+    "durationMinutes": 15,
+    "wordCount": 226,
+    "paragraphs": [
+      "The choice between living in a city and living in the countryside is one that many people face at some point in their lives. Both options offer genuine advantages, and the most suitable choice will always depend on an individual's personal circumstances and priorities.",
+      "Urban areas offer residents clear benefits: greater employment opportunities, easier access to healthcare and specialist services, and a wide range of cultural amenities. Public transport networks in cities tend to be more extensive and reliable, reducing the need to own a private vehicle. For families with children, cities often provide access to a wider choice of schools.",
+      "However, city living also comes with notable disadvantages. Housing costs in major cities have risen sharply in recent decades, placing significant financial pressure on many residents. Air and noise pollution are serious ongoing concerns, and the fast pace of daily life in large urban centres can contribute to stress and poor mental health.",
+      "Rural communities typically offer a calmer environment, cleaner air, and stronger social bonds between neighbours. Property tends to be more affordable, and residents often have access to more outdoor space. On the other hand, rural areas frequently offer fewer employment opportunities, and access to specialist medical care or higher education may require travelling considerable distances.",
+      "An interesting recent trend is the migration of workers from cities to rural areas, driven largely by the rise of remote working. Many professionals now choose to live in the countryside while maintaining city-level salaries. This movement has, however, pushed house prices up in popular rural locations, making it increasingly difficult for local residents to afford homes in their own communities."
+    ],
+    "questions": [
+      {
+        "id": "r10q1",
+        "type": "multiple-choice",
+        "question": "According to the passage, what is one advantage of living in a city?",
+        "options": ["Cleaner air and quieter surroundings", "More affordable housing", "Greater employment opportunities", "Stronger social bonds between neighbours"],
+        "answer": "C",
+        "explanation": "The passage lists 'greater employment opportunities' as a benefit of urban living."
+      },
+      {
+        "id": "r10q2",
+        "type": "true-false-not-given",
+        "question": "The passage suggests that city life is generally relaxed and free from stress.",
+        "answer": "False",
+        "explanation": "The passage says the fast pace of urban life 'can contribute to stress and poor mental health'."
+      },
+      {
+        "id": "r10q3",
+        "type": "true-false-not-given",
+        "question": "Rural housing is always less expensive than housing in cities.",
+        "answer": "False",
+        "explanation": "The passage says rural property 'tends to be more affordable', but also notes that house prices in rural areas have risen due to migration. 'Always' is not supported."
+      },
+      {
+        "id": "r10q4",
+        "type": "true-false-not-given",
+        "question": "The rise of remote working has influenced where some people choose to live.",
+        "answer": "True",
+        "explanation": "The passage says the migration to rural areas is 'driven largely by the rise of remote working'."
+      },
+      {
+        "id": "r10q5",
+        "type": "fill-blank",
+        "question": "The migration of city workers to rural areas has pushed house ________ up in popular rural locations.",
+        "answer": "prices",
+        "explanation": "The passage says 'This movement has...pushed house prices up in popular rural locations'."
+      },
+      {
+        "id": "r10q6",
+        "type": "short-answer",
+        "question": "What negative effect has the migration of city workers to rural areas had on local communities?",
+        "answer": "It has pushed house prices up, making it increasingly difficult for local residents to afford homes in their own communities."
+      }
+    ]
+  }
+]
