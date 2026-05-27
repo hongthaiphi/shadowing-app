@@ -1,0 +1,768 @@
+[
+  {
+    "id": "w1",
+    "title": "My Best Friend",
+    "level": "Starter",
+    "topic": "family",
+    "type": "writing",
+    "taskType": "descriptive",
+    "durationMinutes": 15,
+    "wordTarget": 80,
+    "prompt": "Write about your best friend. Describe what they look like, what their personality is like, and why you are good friends.",
+    "requirements": [
+      "Write at least 80 words",
+      "Describe your friend's appearance",
+      "Describe their personality",
+      "Explain why you are good friends"
+    ],
+    "suggestedIdeas": [
+      "How you first met your best friend",
+      "What they look like (hair, height, eyes)",
+      "Their personality (funny, kind, helpful)",
+      "What you both enjoy doing together",
+      "A special memory you share",
+      "Why this friendship is important to you"
+    ],
+    "suggestedVocabulary": [
+      "friendly", "kind", "funny", "helpful", "honest", "loyal",
+      "tall", "short", "curly", "straight", "energetic", "cheerful",
+      "spend time", "get along", "close friend", "trust"
+    ],
+    "suggestedStructure": {
+      "introduction": "Who is your best friend? What is their name and how did you meet?",
+      "body": [
+        "What does your friend look like? Describe their hair, eyes, and style.",
+        "What is your friend's personality? Give examples of things they do that show this."
+      ],
+      "conclusion": "Why is this person your best friend? What does this friendship mean to you?"
+    }
+  },
+  {
+    "id": "w2",
+    "title": "My Family",
+    "level": "Starter",
+    "topic": "family",
+    "type": "writing",
+    "taskType": "descriptive",
+    "durationMinutes": 15,
+    "wordTarget": 80,
+    "prompt": "Describe your family. Write about the people in your family, what they are like, and what your family enjoys doing together.",
+    "requirements": [
+      "Write at least 80 words",
+      "Mention each family member",
+      "Describe at least one person in detail",
+      "Write about something your family does together"
+    ],
+    "suggestedIdeas": [
+      "How many people are in your family",
+      "Your parents' names and jobs",
+      "Brothers and sisters (ages, personalities)",
+      "What you enjoy doing as a family",
+      "A special family tradition",
+      "What you love most about your family"
+    ],
+    "suggestedVocabulary": [
+      "parents", "siblings", "older", "younger", "caring", "supportive",
+      "hardworking", "creative", "patient", "strict", "loving", "together",
+      "celebrate", "tradition", "proud", "belong"
+    ],
+    "suggestedStructure": {
+      "introduction": "Introduce your family. How many people are in it? Where do you live together?",
+      "body": [
+        "Describe each family member — their age, personality, and what they do.",
+        "What does your family enjoy doing together? Describe a typical family activity or weekend."
+      ],
+      "conclusion": "What do you love most about your family? Why is your family special to you?"
+    }
+  },
+  {
+    "id": "w3",
+    "title": "My School",
+    "level": "Starter",
+    "topic": "school",
+    "type": "writing",
+    "taskType": "descriptive",
+    "durationMinutes": 15,
+    "wordTarget": 80,
+    "prompt": "Describe your school. Write about what your school looks like, what subjects you study, and what you enjoy about school life.",
+    "requirements": [
+      "Write at least 80 words",
+      "Describe the school building and grounds",
+      "Mention your favourite subjects",
+      "Write about something you enjoy at school"
+    ],
+    "suggestedIdeas": [
+      "The location and size of your school",
+      "What the classrooms and playground look like",
+      "Your favourite subjects and why",
+      "Your favourite teacher",
+      "School clubs or activities you join",
+      "What you like most about school"
+    ],
+    "suggestedVocabulary": [
+      "spacious", "modern", "classroom", "playground", "library", "canteen",
+      "subject", "maths", "science", "literature", "exciting", "boring",
+      "favourite", "dedicated", "study", "attend"
+    ],
+    "suggestedStructure": {
+      "introduction": "Where is your school? What does it look like from the outside?",
+      "body": [
+        "Describe the inside of your school — the classrooms, library, playground, or other areas.",
+        "What subjects do you study? Which is your favourite and why? Tell us about your school life."
+      ],
+      "conclusion": "Overall, what do you like most about your school? Is there anything you would change?"
+    }
+  },
+  {
+    "id": "w4",
+    "title": "My Favourite Food",
+    "level": "Starter",
+    "topic": "food",
+    "type": "writing",
+    "taskType": "descriptive",
+    "durationMinutes": 15,
+    "wordTarget": 80,
+    "prompt": "Write about your favourite food. Describe what it is, how it looks and tastes, and when you usually eat it.",
+    "requirements": [
+      "Write at least 80 words",
+      "Name and describe the food",
+      "Describe the taste and smell",
+      "Write about when or where you eat it"
+    ],
+    "suggestedIdeas": [
+      "The name of the food and where it comes from",
+      "What the food looks like (colour, shape, texture)",
+      "How it tastes and smells",
+      "Who makes it for you or where you buy it",
+      "When you usually eat it",
+      "A memory connected to this food"
+    ],
+    "suggestedVocabulary": [
+      "delicious", "tasty", "sweet", "sour", "spicy", "crispy",
+      "soft", "warm", "fresh", "traditional", "homemade", "aroma",
+      "flavour", "ingredients", "recipe", "mouthwatering"
+    ],
+    "suggestedStructure": {
+      "introduction": "What is your favourite food? Give its name and where it comes from.",
+      "body": [
+        "Describe what the food looks like and smells like. What are the main ingredients?",
+        "How does it taste? When and where do you usually eat it? Who makes it?"
+      ],
+      "conclusion": "Why is this your favourite food? What makes it so special to you?"
+    }
+  },
+  {
+    "id": "w5",
+    "title": "My Favourite Hobby",
+    "level": "Starter",
+    "topic": "hobbies",
+    "type": "writing",
+    "taskType": "descriptive",
+    "durationMinutes": 15,
+    "wordTarget": 80,
+    "prompt": "Write about your favourite hobby. Describe what it is, how you do it, and why you enjoy it so much.",
+    "requirements": [
+      "Write at least 80 words",
+      "Name and describe your hobby",
+      "Explain how you do it",
+      "Give reasons why you enjoy it"
+    ],
+    "suggestedIdeas": [
+      "What the hobby is and how you started it",
+      "When and where you do it",
+      "Who you do it with (alone or with friends)",
+      "What equipment or materials you need",
+      "What you have learned from it",
+      "Why you enjoy it so much"
+    ],
+    "suggestedVocabulary": [
+      "enjoy", "practise", "improve", "relax", "exciting", "creative",
+      "skill", "talent", "challenge", "progress", "passionate", "dedicated",
+      "spend time", "focus", "achieve", "reward"
+    ],
+    "suggestedStructure": {
+      "introduction": "What is your favourite hobby? How long have you been doing it?",
+      "body": [
+        "Describe the hobby in detail. How do you do it? What equipment do you need? When do you practise?",
+        "What have you learned from this hobby? Have you improved over time? What challenges have you faced?"
+      ],
+      "conclusion": "Why is this your favourite hobby? How does it make you feel? Would you recommend it to others?"
+    }
+  },
+  {
+    "id": "w6",
+    "title": "My Pet",
+    "level": "Starter",
+    "topic": "family",
+    "type": "writing",
+    "taskType": "descriptive",
+    "durationMinutes": 15,
+    "wordTarget": 80,
+    "prompt": "Describe your pet, or an animal you would love to have as a pet. Write about what it looks like, its personality, and what you do together.",
+    "requirements": [
+      "Write at least 80 words",
+      "Describe the animal's appearance",
+      "Describe its personality or behaviour",
+      "Write about what you do with it or for it"
+    ],
+    "suggestedIdeas": [
+      "What type of animal it is and its name",
+      "Its age, size, colour, and appearance",
+      "Its personality (playful, lazy, curious)",
+      "What it likes to eat and do",
+      "How you take care of it",
+      "Your favourite memory with your pet"
+    ],
+    "suggestedVocabulary": [
+      "fluffy", "playful", "gentle", "loyal", "curious", "energetic",
+      "bark", "purr", "wag", "cuddle", "feed", "care for",
+      "fur", "paw", "tail", "affectionate"
+    ],
+    "suggestedStructure": {
+      "introduction": "What is your pet's name and what kind of animal is it? How long have you had it?",
+      "body": [
+        "Describe what your pet looks like — its size, colour, and any special features.",
+        "What is your pet's personality like? What does it like to do? How do you look after it?"
+      ],
+      "conclusion": "Why do you love your pet? What would you miss most if it were not there?"
+    }
+  },
+  {
+    "id": "w7",
+    "title": "A Happy Day",
+    "level": "Starter",
+    "topic": "daily routine",
+    "type": "writing",
+    "taskType": "narrative",
+    "durationMinutes": 20,
+    "wordTarget": 100,
+    "prompt": "Write about a happy day in your life. Tell the story of what happened, who was there, and explain why it made you so happy.",
+    "requirements": [
+      "Write at least 100 words",
+      "Use time expressions (first, then, after that, finally)",
+      "Describe what happened in order",
+      "Include your feelings"
+    ],
+    "suggestedIdeas": [
+      "When and where this happy day took place",
+      "Who was with you",
+      "What you did in the morning",
+      "The main event that made the day special",
+      "How you felt throughout the day",
+      "Why you still remember it"
+    ],
+    "suggestedVocabulary": [
+      "excited", "surprised", "wonderful", "laughed", "celebrated",
+      "remembered", "special", "amazing", "delighted", "joyful",
+      "first", "then", "after that", "finally", "suddenly", "eventually"
+    ],
+    "suggestedStructure": {
+      "introduction": "When was this happy day? Where were you and who were you with?",
+      "body": [
+        "Describe what happened in the morning and afternoon. Use time words to sequence events.",
+        "What was the best part of the day? Describe it in detail — what happened and how you felt."
+      ],
+      "conclusion": "How did the day end? How did you feel? Why do you still remember this day?"
+    }
+  },
+  {
+    "id": "w8",
+    "title": "My Bedroom",
+    "level": "Starter",
+    "topic": "daily routine",
+    "type": "writing",
+    "taskType": "descriptive",
+    "durationMinutes": 15,
+    "wordTarget": 80,
+    "prompt": "Describe your bedroom. Write about what is in the room, how it is arranged, and why it is special or comfortable to you.",
+    "requirements": [
+      "Write at least 80 words",
+      "Describe the furniture and objects in the room",
+      "Use position words (next to, above, on the left)",
+      "Explain what makes it your favourite place"
+    ],
+    "suggestedIdeas": [
+      "The size and colour of your room",
+      "The furniture (bed, desk, wardrobe, shelves)",
+      "Decorations (posters, plants, photos)",
+      "Your favourite corner and why",
+      "What you like doing in your room",
+      "How you keep it tidy (or messy!)"
+    ],
+    "suggestedVocabulary": [
+      "comfortable", "cosy", "bright", "peaceful", "colourful", "tidy",
+      "messy", "corner", "shelf", "poster", "curtain", "window",
+      "next to", "above", "opposite", "in the corner"
+    ],
+    "suggestedStructure": {
+      "introduction": "Where is your bedroom? What is the first thing you notice when you walk in?",
+      "body": [
+        "Describe the furniture and how it is arranged. Use position words to help the reader imagine the layout.",
+        "What decorations do you have? Is there a special corner or area that is important to you?"
+      ],
+      "conclusion": "Why is your bedroom special to you? How does it make you feel when you are there?"
+    }
+  },
+  {
+    "id": "w9",
+    "title": "My Favourite Place",
+    "level": "Level 1",
+    "topic": "daily routine",
+    "type": "writing",
+    "taskType": "descriptive",
+    "durationMinutes": 20,
+    "wordTarget": 120,
+    "prompt": "Describe your favourite place. It can be somewhere near your home, a park, a beach, a café, or anywhere you love. Write about what it is like and why it holds a special place in your heart.",
+    "requirements": [
+      "Write at least 120 words",
+      "Use descriptive language (sights, sounds, smells)",
+      "Explain when and why you go there",
+      "Include a personal memory connected to this place"
+    ],
+    "suggestedIdeas": [
+      "Where the place is and how you get there",
+      "What it looks like (scenery, buildings, atmosphere)",
+      "The sounds and smells that you associate with it",
+      "What you do when you are there",
+      "A memorable moment you had there",
+      "Why this place makes you feel happy or calm"
+    ],
+    "suggestedVocabulary": [
+      "peaceful", "stunning", "atmosphere", "surrounded", "relaxing",
+      "refreshing", "landscape", "escape", "tranquil", "vibrant",
+      "breathtaking", "nostalgic", "whenever", "reminds", "cherish", "retreat"
+    ],
+    "suggestedStructure": {
+      "introduction": "What is your favourite place? Where is it and how did you discover it?",
+      "body": [
+        "Describe the place in vivid detail. What does it look like? What can you hear, smell, and feel when you are there?",
+        "When do you visit this place? What do you do there? Describe a specific memory or experience."
+      ],
+      "conclusion": "Why is this your favourite place? How does it make you feel and why is it important to you?"
+    }
+  },
+  {
+    "id": "w10",
+    "title": "A Person I Admire",
+    "level": "Level 1",
+    "topic": "family",
+    "type": "writing",
+    "taskType": "descriptive",
+    "durationMinutes": 20,
+    "wordTarget": 120,
+    "prompt": "Write about a person you admire. They can be someone you know personally — a family member, teacher, or friend — or a famous person. Describe who they are, their qualities, and explain why you admire them.",
+    "requirements": [
+      "Write at least 120 words",
+      "Describe who the person is",
+      "Explain their key qualities with examples",
+      "Describe how they inspire or influence you"
+    ],
+    "suggestedIdeas": [
+      "Who the person is and your relationship to them",
+      "Their background and achievements",
+      "Personal qualities that stand out (courage, kindness, talent)",
+      "A specific moment when they impressed you",
+      "How they have influenced your life",
+      "What you hope to learn from them"
+    ],
+    "suggestedVocabulary": [
+      "admire", "inspire", "talented", "dedicated", "generous", "overcome",
+      "achieve", "role model", "influence", "respect", "determination",
+      "passionate", "resilient", "compassionate", "selfless", "remarkable"
+    ],
+    "suggestedStructure": {
+      "introduction": "Who is the person you admire? Briefly introduce them and your connection to them.",
+      "body": [
+        "Describe their most important qualities. Give specific examples of things they have done that show these qualities.",
+        "How has this person influenced or inspired you? Has there been a moment when they changed your perspective?"
+      ],
+      "conclusion": "Why do you admire this person above others? What lesson do you hope to take from their life?"
+    }
+  },
+  {
+    "id": "w11",
+    "title": "My Daily Routine",
+    "level": "Level 1",
+    "topic": "daily routine",
+    "type": "writing",
+    "taskType": "descriptive",
+    "durationMinutes": 20,
+    "wordTarget": 120,
+    "prompt": "Describe your typical daily routine on a school day. Write about what you do from the moment you wake up until you go to bed, and mention which parts you enjoy the most.",
+    "requirements": [
+      "Write at least 120 words",
+      "Use time expressions and sequencing words",
+      "Describe morning, afternoon, and evening",
+      "Share your feelings about different parts of the day"
+    ],
+    "suggestedIdeas": [
+      "What time you wake up and your morning routine",
+      "How you travel to school",
+      "What you do during the school day",
+      "After-school activities (sport, clubs, homework)",
+      "Your evening routine (dinner, relaxation)",
+      "What time you go to bed and how you wind down"
+    ],
+    "suggestedVocabulary": [
+      "alarm", "rush", "prepare", "attend", "concentrate", "break",
+      "usually", "occasionally", "rarely", "straightaway", "afterwards",
+      "meanwhile", "eventually", "routine", "schedule", "productive"
+    ],
+    "suggestedStructure": {
+      "introduction": "What time do you usually wake up? How would you describe your mornings — rushed or relaxed?",
+      "body": [
+        "Describe your morning routine in detail, from waking up to arriving at school.",
+        "What do you do after school and in the evening? Include any hobbies, homework, or family time."
+      ],
+      "conclusion": "Which part of your day do you enjoy most and why? Is there anything you would like to change about your routine?"
+    }
+  },
+  {
+    "id": "w12",
+    "title": "City Life or Country Life?",
+    "level": "Level 1",
+    "topic": "daily routine",
+    "type": "writing",
+    "taskType": "opinion",
+    "durationMinutes": 25,
+    "wordTarget": 150,
+    "prompt": "Some people prefer living in a busy city, while others prefer the peace and quiet of the countryside. Where would you prefer to live? Give your opinion with clear reasons and examples.",
+    "requirements": [
+      "Write at least 150 words",
+      "State your opinion clearly in the introduction",
+      "Give at least two reasons with examples",
+      "Acknowledge the other point of view"
+    ],
+    "suggestedIdeas": [
+      "Advantages of city life (transport, jobs, entertainment, services)",
+      "Advantages of country life (fresh air, nature, quiet, space)",
+      "Disadvantages of each (pollution/loneliness, cost/isolation)",
+      "Which lifestyle suits your personality better",
+      "Examples from your own experience or things you have read",
+      "Your final, considered opinion"
+    ],
+    "suggestedVocabulary": [
+      "convenient", "polluted", "crowded", "peaceful", "isolated", "facilities",
+      "opportunities", "fresh air", "natural", "lifestyle", "infrastructure",
+      "community", "in my opinion", "on the other hand", "although", "however"
+    ],
+    "suggestedStructure": {
+      "introduction": "State your preference clearly. Do you prefer city or country life? Give a brief reason.",
+      "body": [
+        "Explain the advantages of your preferred lifestyle. Use specific examples to support your points.",
+        "Acknowledge the advantages of the other lifestyle, but explain why your choice is still better for you."
+      ],
+      "conclusion": "Summarise your opinion. What is the most important factor for you when choosing where to live?"
+    }
+  },
+  {
+    "id": "w13",
+    "title": "An Unforgettable Trip",
+    "level": "Level 1",
+    "topic": "hobbies",
+    "type": "writing",
+    "taskType": "narrative",
+    "durationMinutes": 25,
+    "wordTarget": 150,
+    "prompt": "Write about a trip or holiday that you will never forget. Describe where you went, what you did, and explain why it was so memorable.",
+    "requirements": [
+      "Write at least 150 words",
+      "Tell the story in a clear sequence",
+      "Include descriptions of the place and activities",
+      "Explain why the trip was memorable"
+    ],
+    "suggestedIdeas": [
+      "Where you went and how you got there",
+      "Who you travelled with",
+      "Your first impressions of the place",
+      "The best activities or experiences",
+      "A funny or unexpected moment",
+      "What you felt when it was time to leave"
+    ],
+    "suggestedVocabulary": [
+      "journey", "destination", "arrival", "explore", "discover", "culture",
+      "scenery", "memorable", "impression", "unforgettable", "breathtaking",
+      "adventurous", "exhausted", "thrilled", "experience", "wander"
+    ],
+    "suggestedStructure": {
+      "introduction": "Where did you go and when? Who were you with? Set the scene for your reader.",
+      "body": [
+        "Describe the journey and your arrival. What were your first impressions? What did you do on the first day?",
+        "What was the highlight of the trip? Describe it in detail. Was there anything funny or unexpected that happened?"
+      ],
+      "conclusion": "How did the trip end? How did you feel going home? Why will you always remember this trip?"
+    }
+  },
+  {
+    "id": "w14",
+    "title": "Should Students Have Homework?",
+    "level": "Level 1",
+    "topic": "school",
+    "type": "writing",
+    "taskType": "opinion",
+    "durationMinutes": 25,
+    "wordTarget": 150,
+    "prompt": "Do you think students should be given homework? Write an essay giving your opinion. Support your argument with reasons and examples.",
+    "requirements": [
+      "Write at least 150 words",
+      "State your opinion clearly",
+      "Give at least two reasons with examples",
+      "Address the opposing view"
+    ],
+    "suggestedIdeas": [
+      "Arguments for homework (reinforces learning, builds discipline, helps revision)",
+      "Arguments against homework (causes stress, takes free time, may be unhelpful)",
+      "The right amount of homework",
+      "The difference between useful and unhelpful homework",
+      "Your personal experience with homework",
+      "Your balanced conclusion"
+    ],
+    "suggestedVocabulary": [
+      "beneficial", "responsibility", "reinforce", "revise", "essential",
+      "pressure", "stress", "balance", "independent", "argue",
+      "in my opinion", "on the other hand", "furthermore", "however", "believe", "suggest"
+    ],
+    "suggestedStructure": {
+      "introduction": "Do you think homework is a good idea? State your overall opinion from the beginning.",
+      "body": [
+        "Give your strongest arguments FOR or AGAINST homework. Provide specific examples from your own experience or studies.",
+        "Consider the other side of the argument. What do people who disagree with you say? How do you respond to their points?"
+      ],
+      "conclusion": "Restate your opinion clearly. What do you think is the ideal approach to homework in schools?"
+    }
+  },
+  {
+    "id": "w15",
+    "title": "My Dream Job",
+    "level": "Level 1",
+    "topic": "school",
+    "type": "writing",
+    "taskType": "opinion",
+    "durationMinutes": 25,
+    "wordTarget": 150,
+    "prompt": "What is your dream job? Describe what the job involves, what skills and qualifications it requires, and explain why it is the career you want to pursue.",
+    "requirements": [
+      "Write at least 150 words",
+      "Describe the job clearly",
+      "Explain the skills and qualifications needed",
+      "Give personal reasons why you want this career"
+    ],
+    "suggestedIdeas": [
+      "What the job is and what it involves day to day",
+      "Why you became interested in this career",
+      "The skills and qualifications required",
+      "The challenges and rewards of the job",
+      "How you plan to prepare for this career",
+      "How this job will help others or make a difference"
+    ],
+    "suggestedVocabulary": [
+      "career", "profession", "qualification", "skill", "requirement", "passionate",
+      "rewarding", "challenging", "dedicate", "achieve", "succeed", "specialise",
+      "contribute", "fulfilling", "opportunity", "inspire"
+    ],
+    "suggestedStructure": {
+      "introduction": "What is your dream job? Briefly introduce it and mention when you first became interested in it.",
+      "body": [
+        "Describe what the job involves on a daily basis. What skills and qualifications does it require?",
+        "Why do you want this career? What is it about this job that excites or motivates you? How do you plan to achieve it?"
+      ],
+      "conclusion": "How will this career allow you to achieve your goals and contribute to the world around you?"
+    }
+  },
+  {
+    "id": "w16",
+    "title": "The Impact of Social Media",
+    "level": "Level 2",
+    "topic": "hobbies",
+    "type": "writing",
+    "taskType": "opinion",
+    "durationMinutes": 30,
+    "wordTarget": 200,
+    "prompt": "Social media has transformed the way people communicate, share information, and see the world. Discuss the benefits and drawbacks of social media, and give your overall opinion on whether it has had a positive or negative impact on society.",
+    "requirements": [
+      "Write at least 200 words",
+      "Discuss both benefits AND drawbacks",
+      "Support each point with examples",
+      "Give a clear overall opinion in the conclusion"
+    ],
+    "suggestedIdeas": [
+      "Benefits: global connection, sharing information rapidly, business opportunities, creative expression",
+      "Drawbacks: addiction and screen time, cyberbullying, misinformation, privacy concerns, mental health",
+      "The role of young people as both creators and consumers",
+      "How social media affects relationships and communication",
+      "Whether individuals or platforms should take more responsibility",
+      "What a healthy relationship with social media looks like"
+    ],
+    "suggestedVocabulary": [
+      "connectivity", "cyberbullying", "misinformation", "privacy", "addiction",
+      "well-being", "platform", "algorithm", "interact", "influence",
+      "moderate", "digital literacy", "unprecedented", "scrutiny", "detrimental", "empower"
+    ],
+    "suggestedStructure": {
+      "introduction": "Introduce social media and its growth. State that you will discuss both sides before giving your view.",
+      "body": [
+        "Discuss the main benefits of social media. Give at least two specific examples (e.g. connecting people across distances, supporting small businesses).",
+        "Discuss the main drawbacks of social media. Give at least two specific examples (e.g. misinformation, mental health effects on teenagers).",
+        "Balance the arguments. Acknowledge that social media can be both positive and negative depending on how it is used."
+      ],
+      "conclusion": "Give your overall opinion. Has social media been more positive or negative for society? What should individuals and companies do differently?"
+    }
+  },
+  {
+    "id": "w17",
+    "title": "An Environmental Problem and How to Solve It",
+    "level": "Level 2",
+    "topic": "daily routine",
+    "type": "writing",
+    "taskType": "opinion",
+    "durationMinutes": 30,
+    "wordTarget": 200,
+    "prompt": "Choose one serious environmental problem facing the world today. Describe the problem in detail, explain its main causes and effects, and propose realistic solutions — both at the individual and government level.",
+    "requirements": [
+      "Write at least 200 words",
+      "Focus on ONE specific environmental problem",
+      "Explain causes AND effects clearly",
+      "Suggest practical solutions at two levels"
+    ],
+    "suggestedIdeas": [
+      "Choose your problem: plastic pollution, climate change, deforestation, or air/water pollution",
+      "Main causes of the problem (industry, consumer habits, policy failures)",
+      "Effects on the environment, wildlife, and human health",
+      "Individual solutions (reduce, reuse, recycle; lifestyle changes)",
+      "Government solutions (legislation, investment in renewables, international cooperation)",
+      "Why urgent action is needed now"
+    ],
+    "suggestedVocabulary": [
+      "emission", "deforestation", "biodiversity", "sustainable", "conservation",
+      "renewable energy", "carbon footprint", "ecosystem", "contamination", "toxic",
+      "legislation", "initiative", "combat", "urgent", "devastating", "irreversible"
+    ],
+    "suggestedStructure": {
+      "introduction": "Name the environmental problem you have chosen and explain why it is serious. Where is the problem most severe?",
+      "body": [
+        "Explain the main causes of this problem. Who or what is responsible? Use facts or examples where possible.",
+        "Describe the effects of this problem on the environment, animals, and people. Include both short-term and long-term consequences.",
+        "Suggest realistic solutions. What can individuals do? What should governments and companies do?"
+      ],
+      "conclusion": "Summarise why this problem needs immediate attention. End with a call to action or a hopeful statement about the future."
+    }
+  },
+  {
+    "id": "w18",
+    "title": "An Experience That Changed Me",
+    "level": "Level 2",
+    "topic": "family",
+    "type": "writing",
+    "taskType": "narrative",
+    "durationMinutes": 30,
+    "wordTarget": 200,
+    "prompt": "Write about an experience that changed the way you think or the kind of person you are. Describe what happened in detail and reflect on how it affected you — at the time and in the long term.",
+    "requirements": [
+      "Write at least 200 words",
+      "Tell the story with a clear beginning, middle, and end",
+      "Include your thoughts and feelings throughout",
+      "Reflect on what you learned and how you changed"
+    ],
+    "suggestedIdeas": [
+      "The context — what was happening in your life at the time",
+      "What the experience was (a failure, a success, meeting someone, travelling)",
+      "How you felt before, during, and after the experience",
+      "The moment when you realised something had changed",
+      "Specific lessons you took away from it",
+      "How you are different now because of this experience"
+    ],
+    "suggestedVocabulary": [
+      "perspective", "transform", "significant", "overcome", "challenge", "realise",
+      "appreciate", "impact", "valuable", "reflection", "turning point", "resilience",
+      "insight", "growth", "profound", "shape"
+    ],
+    "suggestedStructure": {
+      "introduction": "Set the scene. When did this experience happen? What was your life like before it? Hint at its significance.",
+      "body": [
+        "Describe the experience in detail. What happened? Who was involved? Use specific details and dialogue if appropriate.",
+        "How did you feel during the experience? Was there a key moment when your thinking shifted? Describe that moment in depth.",
+        "What did you learn? How did you change as a result? Give specific examples of how your behaviour or attitudes are different now."
+      ],
+      "conclusion": "Reflect on the overall importance of this experience. Why do you think it had such a lasting effect on you?"
+    }
+  },
+  {
+    "id": "w19",
+    "title": "Technology in Education",
+    "level": "Level 2",
+    "topic": "school",
+    "type": "writing",
+    "taskType": "opinion",
+    "durationMinutes": 30,
+    "wordTarget": 200,
+    "prompt": "Technology is increasingly being used in classrooms around the world. Do you think technology improves the quality of education, or does it create more problems than it solves? Give a well-argued opinion supported by reasons and examples.",
+    "requirements": [
+      "Write at least 200 words",
+      "Give a clear thesis statement in the introduction",
+      "Discuss at least three points",
+      "Address counter-arguments",
+      "Use academic-style language"
+    ],
+    "suggestedIdeas": [
+      "Benefits: access to vast information, interactive and personalised learning, collaboration tools",
+      "Benefits: self-paced learning, digital skills for the workforce, engagement through multimedia",
+      "Problems: distraction (games, social media), digital divide (not all students have devices)",
+      "Problems: over-reliance on technology weakening critical thinking or handwriting",
+      "Problems: screen time and health concerns",
+      "The importance of balance — technology as a tool, not a replacement for teaching"
+    ],
+    "suggestedVocabulary": [
+      "interactive", "accessible", "distraction", "engagement", "digital divide",
+      "supplement", "critical thinking", "innovative", "evidence-based", "pedagogy",
+      "facilitate", "equitable", "autonomous", "cognitive", "collaborate", "implement"
+    ],
+    "suggestedStructure": {
+      "introduction": "Introduce the growing role of technology in education. State your overall thesis — do you believe it is largely beneficial or problematic?",
+      "body": [
+        "Present your strongest arguments supporting your position. For each point, provide a specific example (e.g. online learning platforms during COVID-19, adaptive learning software).",
+        "Acknowledge the key problems or counter-arguments. Demonstrate that you understand the other side.",
+        "Respond to the counter-arguments. Explain why, despite these problems, your overall view remains the same."
+      ],
+      "conclusion": "Restate your thesis in different words. What is the most important condition under which technology improves education? What do schools, teachers, and students need to do to use it well?"
+    }
+  },
+  {
+    "id": "w20",
+    "title": "My Hometown",
+    "level": "Level 2",
+    "topic": "daily routine",
+    "type": "writing",
+    "taskType": "descriptive",
+    "durationMinutes": 30,
+    "wordTarget": 200,
+    "prompt": "Write a detailed description of your hometown. Explore its history, geography, culture, and the daily life of the people who live there. You may also reflect on how it has changed over time and share your personal feelings about it.",
+    "requirements": [
+      "Write at least 200 words",
+      "Include factual details about the place",
+      "Describe the atmosphere and daily life",
+      "Include a personal reflection on what the place means to you"
+    ],
+    "suggestedIdeas": [
+      "Location and basic geography (region, size, climate)",
+      "History and any notable historical events or figures",
+      "Famous landmarks, attractions, or cultural sites",
+      "The people — their way of life, traditions, and character",
+      "How the town or city has changed in recent years",
+      "What you love about it and what you think could be improved"
+    ],
+    "suggestedVocabulary": [
+      "heritage", "infrastructure", "community", "population", "landmark",
+      "architecture", "transform", "modernise", "preserve", "identity",
+      "bustling", "serene", "district", "renowned", "vibrant", "diverse"
+    ],
+    "suggestedStructure": {
+      "introduction": "Where is your hometown? Give the reader a brief but vivid first impression of the place.",
+      "body": [
+        "Describe the geography, history, and main attractions of your hometown. What makes it distinctive?",
+        "Describe daily life in your hometown. What are the people like? What are the most important traditions or cultural events?",
+        "Has your hometown changed in recent years? What improvements have been made, and what do you think still needs to change?"
+      ],
+      "conclusion": "What does your hometown mean to you personally? How has living there shaped who you are?"
+    }
+  }
+]
