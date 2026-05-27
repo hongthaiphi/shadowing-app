@@ -618,18 +618,19 @@ export default function WritingLessonPage() {
     markComplete(lesson.id, timeSpent, undefined, 'writing');
     setCompleted(true);
 
-    // Fire-and-forget: upsert essay to Supabase writing_submissions
-    // Only runs when user is authenticated; fails silently to not block UI
+    // Fire-and-forget: upsert essay to Supabase writing_submissions.
+    // Uses getSession() (reads local cache, no network) instead of
+    // getUser() (makes an HTTP round-trip on every mark-complete).
     const currentDraft = draftText;
     const lessonId = lesson.id;
     (async () => {
       try {
         const supabase = getSupabase();
-        const { data: { user: authUser } } = await supabase.auth.getUser();
-        if (!authUser?.id) return;
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session?.user?.id) return;
         await supabase.from('writing_submissions').upsert(
           {
-            user_id:    authUser.id,
+            user_id:    session.user.id,
             lesson_id:  lessonId,
             content:    currentDraft,
             word_count: countWords(currentDraft),
