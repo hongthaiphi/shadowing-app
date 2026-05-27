@@ -236,7 +236,9 @@ export default function ReadingAdmin() {
         topic:            form.topic,
         // Fix #2: no more `null as unknown as undefined` cast
         image_url:        imageUrl,
-        word_count:       form.word_count
+        // Use != null (not falsy) so an explicit 0 is preserved rather than
+        // silently replaced by the auto-calculation (0 is falsy in JS).
+        word_count:       form.word_count != null
           ? Number(form.word_count)
           : paragraphs.join(' ').split(/\s+/).length,
         duration_minutes: Number(form.duration_minutes) || 10,
@@ -262,10 +264,12 @@ export default function ReadingAdmin() {
         .upsert(result.lesson, { onConflict: 'id' });
       if (error) throw new Error(error.message);
 
+      // Reload list first, THEN close — ensures a reload failure remains
+      // visible in saveError rather than being cleared by closeModal().
       setSaveOk(true);
+      await loadLessons();
       setTimeout(() => setSaveOk(false), 3000);
       closeModal();
-      await loadLessons();
     } catch (err) {
       setSaveError((err as Error).message);
     } finally {

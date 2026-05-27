@@ -254,13 +254,16 @@ export default function WritingAdmin() {
         .from('writing_lessons')
         .upsert(result.lesson, { onConflict: 'id' });
       if (error) throw new Error(error.message);
-      // Fix #5: show success confirmation, then close
+      // Show success confirmation, reload the list, THEN close.
+      // loadLessons() must resolve first so that a reload failure is still
+      // visible — if closeModal() fired from a setTimeout before the await,
+      // the error state would be cleared before the admin could read it.
       setSaveOk(true);
+      await loadLessons();
       setTimeout(() => {
         setSaveOk(false);
         closeModal();
       }, 800);
-      await loadLessons();
     } catch (err) {
       setSaveError((err as Error).message);
     } finally {

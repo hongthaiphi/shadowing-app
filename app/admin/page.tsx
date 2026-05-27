@@ -228,6 +228,10 @@ export default function AdminPage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
+    // NOTE: This localStorage-based check is a UX fast-path only.
+    // The real security gate is in middleware.ts (lines 41–51), which
+    // verifies the Supabase JWT and fetches the role from the DB on every
+    // request — that cannot be spoofed from the client.
     const user = getUser();
     if (!user || (user.role !== 'admin' && user.role !== 'teacher')) {
       router.push('/login');
@@ -431,7 +435,12 @@ export default function AdminPage() {
   }
 
   function handleTopicSave() {
-    const id = topicForm.id.trim().toLowerCase().replace(/\s+/g, ' ');
+    // Normalise: lowercase, collapse spaces → hyphens, strip non-slug chars.
+    // Spaces must become hyphens — a bare space in a topic ID breaks URL
+    // query-params and filter comparisons (e.g. ?topic=daily-routine).
+    const id = topicForm.id.trim().toLowerCase()
+      .replace(/\s+/g, '-')
+      .replace(/[^a-z0-9-]/g, '');
     const label = topicForm.label.trim();
     if (!id || !label) {
       setTopicFormError('ID and label are required');
