@@ -10,6 +10,7 @@ import shadowingLessons from '@/data/shadowing-lessons.json';
 import dictationLessons from '@/data/dictation-lessons.json';
 import speakingLessons from '@/data/speaking-lessons.json';
 import readingLessons from '@/data/reading-lessons.json';
+import writingLessons from '@/data/writing-lessons.json';
 
 type Lesson = {
   id: string;
@@ -28,6 +29,7 @@ const allLessons: Lesson[] = [
   ...(dictationLessons as Lesson[]),
   ...(speakingLessons as Lesson[]),
   ...(readingLessons as Lesson[]),
+  ...(writingLessons as Lesson[]),
 ];
 
 const TYPE_COLORS: Record<string, string> = {
@@ -35,6 +37,7 @@ const TYPE_COLORS: Record<string, string> = {
   dictation: 'bg-violet-100 text-violet-700',
   speaking: 'bg-orange-100 text-orange-700',
   reading: 'bg-green-100 text-green-700',
+  writing: 'bg-amber-100 text-amber-700',
 };
 
 const PAGE_SIZE = 12;
@@ -70,7 +73,7 @@ export default function LessonsContent() {
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const typeFilters = ['all', 'shadowing', 'dictation', 'speaking', 'reading'];
+  const typeFilters = ['all', 'shadowing', 'dictation', 'speaking', 'reading', 'writing'];
   const levelFilters = ['all', ...loadLevels().map((l) => l.id)];
   const topicFilters = ['all', ...loadTopics().map((t) => t.id)];
 
@@ -193,6 +196,8 @@ export default function LessonsContent() {
               ? `/speaking/${lesson.id}`
               : lesson.type === 'reading'
               ? `/reading/${lesson.id}`
+              : lesson.type === 'writing'
+              ? `/writing/${lesson.id}`
               : `/dictation/${lesson.id}`;
 
             return (
@@ -228,7 +233,11 @@ export default function LessonsContent() {
                       {lesson.level}
                     </span>
                     <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${TYPE_COLORS[lesson.type] || 'bg-gray-100 text-gray-600'}`}>
-                      {lesson.type === 'shadowing' ? '🎧 Shadowing' : lesson.type === 'speaking' ? '🗣️ Speaking' : lesson.type === 'reading' ? '📖 Reading' : '✏️ Dictation'}
+                      {lesson.type === 'shadowing' ? '🎧 Shadowing'
+                      : lesson.type === 'speaking' ? '🗣️ Speaking'
+                      : lesson.type === 'reading'  ? '📖 Reading'
+                      : lesson.type === 'writing'  ? '✍️ Writing'
+                      : '✏️ Dictation'}
                     </span>
                     {lesson.subtype && (
                       <span className="text-xs font-medium px-2.5 py-1 rounded-full bg-gray-100 text-gray-600 capitalize">
