@@ -11,6 +11,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getUser } from '@/lib/auth';
 import { markComplete, getCompletedIds } from '@/lib/progress';
+import { getSupabase } from '@/lib/supabase';
 import writingLessons from '@/data/writing-lessons.json';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -616,6 +617,30 @@ export default function WritingLessonPage() {
     const timeSpent = Math.round((Date.now() - startTimeRef.current) / 1000);
     markComplete(lesson.id, timeSpent, undefined, 'writing');
     setCompleted(true);
+
+    // Fire-and-forget: upsert essay to Supabase writing_submissions
+    // Only runs when user is authenticated; fails silently to not block UI
+    const currentDraft = draftText;
+    const lessonId = lesson.id;
+    (async () => {
+      try {
+        const supabase = getSupabase();
+        const { data: { user: authUser } } = await supabase.auth.getUser();
+        if (!authUser?.id) return;
+        await supabase.from('writing_submissions').upsert(
+          {
+            user_id:    authUser.id,
+            lesson_id:  lessonId,
+            content:    currentDraft,
+            word_count: countWords(currentDraft),
+            saved_at:   new Date().toISOString(),
+          },
+          { onConflict: 'user_id,lesson_id' }
+        );
+      } catch {
+        // Intentionally silent — local progress already saved
+      }
+    })();
   }, [lesson, completed, alreadyCompleted, draftText]);
 
   // ─── Guard ───────────────────────────────────────────────────────────────
