@@ -22,6 +22,10 @@
 - [ ] T-02-5 Tạo bảng `streaks` — *streak hiện tính từ progress data, chưa có bảng riêng*
 - [x] T-02-6 Cấu hình Row Level Security (RLS) Supabase — *profiles + progress có RLS*
 - [x] T-02-7 Tạo Supabase Storage bucket cho audio và image — *bucket `audio` (public) đã tạo, chứa shadowing + dictation MP3*
+- [ ] T-02-8 Tạo bảng `reading_lessons` — *(id, title, level, topic, passage, image_url, created_at)*
+- [ ] T-02-9 Tạo bảng `reading_questions` — *(id, lesson_id, type, question, options, answer)*
+- [ ] T-02-10 Tạo bảng `writing_lessons` — *(id, title, level, topic, prompt, ideas, vocabulary, sample_structure)*
+- [ ] T-02-11 Tạo bảng `writing_submissions` — *(id, user_id, lesson_id, content, word_count, saved_at)*
 
 ---
 
@@ -61,7 +65,7 @@
 - [x] T-06-1 🔴 Trang `/lessons` — hiển thị danh sách bài học
 - [x] T-06-2 🔴 Filter theo **level** (Starter / Level 1 / Level 2)
 - [x] T-06-3 🔴 Filter theo **topic** (school / hobbies / family / food / daily routine)
-- [x] T-06-4 🔴 Filter theo **type** (shadowing / dictation)
+- [x] T-06-4 🔴 Filter theo **type** (shadowing / dictation / reading / writing)
 - [x] T-06-5 🟡 Filter theo **trạng thái** (New / Completed)
 - [x] T-06-6 🟡 Lesson card: thumbnail + tiêu đề + level + thời lượng + badge completed
 - [x] T-06-7 🟡 Pagination hoặc infinite scroll — *12 bài/trang, reset khi đổi filter*
@@ -101,73 +105,123 @@
 
 ---
 
-## PHASE 8 — Speaking Practice (FR-05) *(optional MVP)*
+## PHASE 8 — Reading Lesson (FR-05)
 
-- [x] T-09-1 🟡 Trang `/speaking/[id]` — *prompt + vocab hints + model answer (TTS)*
-- [x] T-09-2 🟡 Học sinh record câu trả lời và replay — *Recorder component, unlock Mark Complete sau khi record*
-- [ ] T-09-3 🟢 AI phân tích phát âm (Azure Speech Assessment)
-
----
-
-## PHASE 9 — Progress Tracking (FR-06)
-
-- [x] T-10-1 🔴 Trang `/progress` — dashboard học sinh
-- [x] T-10-2 🔴 Hiển thị số bài đã hoàn thành (shadowing + dictation)
-- [x] T-10-3 🔴 Tổng thời gian luyện tập (phút)
-- [x] T-10-4 🔴 Độ chính xác dictation trung bình (%)
-- [x] T-10-5 🔴 Current streak — tính từ localStorage, reset nếu bỏ 1 ngày
-- [x] T-10-6 🟡 Thông điệp động viên theo streak
-- [x] T-10-7 🟡 Current level (hiển thị shadowing vs dictation vs speaking count)
-- [x] T-10-8 🟡 Chart/calendar hiển thị ngày có luyện tập
-
----
-
-## PHASE 10 — Admin/Teacher Panel (FR-07)
-
-- [x] T-11-1 🔴 Route `/admin` — bảo vệ bằng role teacher/admin
-- [x] T-11-2 🔴 Danh sách bài học + tìm kiếm + filter
-- [x] T-11-3 🔴 Form tạo bài học mới: title, level, topic, type, transcript, chunking, notes — *hỗ trợ cả Speaking type (prompt, exampleAnswer, hints)*
-- [ ] T-11-4 🔴 Upload audio normal speed lên Supabase Storage *(Supabase pending)*
-- [ ] T-11-5 🔴 Upload audio slow speed lên Supabase Storage *(Supabase pending)*
-- [ ] T-11-6 🔴 Upload hình ảnh bài học *(Supabase pending)*
-- [x] T-11-7 🔴 Chỉnh sửa / xoá bài học (custom lessons in localStorage)
-- [x] T-11-8 🔴 Tổ chức content theo level / topic / unit
-- [x] T-11-9 🟡 Dashboard thống kê học sinh: số bài, thời gian, accuracy, hoạt động — *tab "Student Stats" trong admin: summary cards + bảng per-student + recent activity feed, đọc từ Supabase profiles + progress*
-- [x] T-11-10 🟡 Bulk import lessons từ file CSV/JSON — *JSON import, preview table, validate, download template*
+- [ ] T-09-1 🔴 Trang `/reading/[id]` — layout split-screen (desktop/tablet)
+- [ ] T-09-2 🔴 Left panel (50%): title, image (optional), reading passage
+- [ ] T-09-3 🔴 Right panel (50%): câu hỏi + ô trả lời
+- [ ] T-09-4 🔴 Câu hỏi dạng Multiple Choice (A/B/C/D)
+- [ ] T-09-5 🔴 Câu hỏi dạng True / False / Not Given
+- [ ] T-09-6 🔴 Câu hỏi dạng Fill in the Blank
+- [ ] T-09-7 🔴 Câu hỏi dạng Short Answer
+- [ ] T-09-8 🔴 Kiểm tra và highlight đáp án sau khi submit
+- [ ] T-09-9 🔴 Mobile: tab mode — tab "Passage" / tab "Questions"
+- [ ] T-09-10 🔴 Highlight tool: bôi vàng text trong passage (bôi chọn → highlight)
+- [ ] T-09-11 🔴 Font size adjustment (A+ / A-) trong left panel
+- [ ] T-09-12 🟡 Underline tool cho keyword
+- [ ] T-09-13 🟡 Lưu highlight state vào localStorage (reload không mất)
+- [ ] T-09-14 🟡 Nút Mark Complete + lưu progress
+- [ ] T-09-15 🟢 Sticky notes bên cạnh passage
+- [ ] T-09-16 🟢 Timer đếm thời gian làm bài
+- [ ] T-09-17 🟢 Vocabulary popup khi click vào từ
 
 ---
 
-## PHASE 11 — Content (CR-01, CR-02)
+## PHASE 9 — Writing Lesson (FR-06)
 
-- [x] T-12-1 🔴 Soạn 10 Shadowing lessons (school / hobbies / family / food / daily routine) — *10 sample lessons created*
-- [x] T-12-2 🔴 Ghi âm hoặc tạo TTS audio (normal + slow) — *Azure TTS (en-US-JennyNeural), lưu MP3 lên Supabase Storage, script `npm run generate-audio`*
-- [x] T-12-3 🔴 Soạn 10 Dictation lessons (sentence / dialogue / paragraph) — *10 sample lessons created*
-- [x] T-12-4 🔴 Ghi âm hoặc tạo TTS audio cho dictation lessons — *Azure TTS, cùng script generate-audio*
-- [ ] T-12-5 🟡 Tìm / tạo hình ảnh minh họa cho từng bài — *shadowing + speaking dùng picsum.photos*
-- [x] T-12-7 🟡 Soạn 10 Speaking lessons (prompt + exampleAnswer + hints) — *5 Starter + 5 Level 1*
-- [x] T-12-6 🟡 Chia chunking cho 10 shadowing lessons — *4 chunks per lesson*
-
----
-
-## PHASE 12 — Testing & Polish
-
-- [ ] T-13-1 🔴 Test toàn bộ flow: register → login → shadowing → dictation → progress
-- [ ] T-13-2 🔴 Test responsive trên mobile
-- [ ] T-13-3 🔴 Test audio playback trên các browser (Chrome, Safari, Firefox)
-- [ ] T-13-4 🔴 Test MediaRecorder trên iOS Safari (cần polyfill)
-- [ ] T-13-5 🟡 Kiểm tra performance (Lighthouse score > 80)
-- [x] T-13-6 🟡 Error handling: audio lỗi, microphone bị từ chối, network lỗi
-- [x] T-13-7 🟡 Loading states và skeleton UI
+- [ ] T-10-1 🔴 Trang `/writing/[id]` — layout bài viết
+- [ ] T-10-2 🔴 Part 1: Hiển thị writing prompt (đề bài, topic, yêu cầu)
+- [ ] T-10-3 🔴 Part 2: Ideas/Outline support panel — suggested ideas, vocabulary, sample structure
+- [ ] T-10-4 🔴 Main writing box: ô lớn, clean, distraction-free
+- [ ] T-10-5 🔴 Word count hiển thị real-time (vd: "56 words")
+- [ ] T-10-6 🔴 Auto save vào localStorage (reload không mất bài)
+- [ ] T-10-7 🔴 Lưu submission lên Supabase (`writing_submissions`)
+- [ ] T-10-8 🟡 Draft saving — lưu bài để viết tiếp sau
+- [ ] T-10-9 🟡 Nút Mark Complete sau khi submit bài
+- [ ] T-10-10 🟢 Full screen writing mode
+- [ ] T-10-11 🟢 AI feedback / grammar suggestions
+- [ ] T-10-12 🟢 Band score estimation
 
 ---
 
-## PHASE 13 — Deploy Production
+## PHASE 10 — Speaking Practice (FR-07) *(optional MVP)*
 
-- [x] T-14-1 🔴 Cấu hình environment variables trên Vercel — *NEXT_PUBLIC_SUPABASE_URL + ANON_KEY đã set*
-- [x] T-14-2 🔴 Deploy production lên Vercel — https://shadowing-app-eight.vercel.app
-- [ ] T-14-3 🔴 Cấu hình custom domain (nếu có)
-- [ ] T-14-4 🟡 Cấu hình Supabase connection pooling
-- [ ] T-14-5 🟡 Set up monitoring / error tracking (Sentry)
+- [x] T-11-1 🟡 Trang `/speaking/[id]` — *prompt + vocab hints + model answer (TTS)*
+- [x] T-11-2 🟡 Học sinh record câu trả lời và replay — *Recorder component, unlock Mark Complete sau khi record*
+- [ ] T-11-3 🟢 AI phân tích phát âm (Azure Speech Assessment)
+
+---
+
+## PHASE 11 — Progress Tracking (FR-08)
+
+- [x] T-12-1 🔴 Trang `/progress` — dashboard học sinh
+- [x] T-12-2 🔴 Hiển thị số bài đã hoàn thành (shadowing + dictation)
+- [x] T-12-3 🔴 Tổng thời gian luyện tập (phút)
+- [x] T-12-4 🔴 Độ chính xác dictation trung bình (%)
+- [x] T-12-5 🔴 Current streak — tính từ localStorage, reset nếu bỏ 1 ngày
+- [x] T-12-6 🟡 Thông điệp động viên theo streak
+- [x] T-12-7 🟡 Current level (hiển thị shadowing vs dictation vs speaking count)
+- [x] T-12-8 🟡 Chart/calendar hiển thị ngày có luyện tập
+- [ ] T-12-9 🟡 Bổ sung thống kê Reading: số bài hoàn thành, accuracy
+- [ ] T-12-10 🟡 Bổ sung thống kê Writing: số bài đã submit, tổng số từ đã viết
+
+---
+
+## PHASE 12 — Admin/Teacher Panel (FR-09)
+
+- [x] T-13-1 🔴 Route `/admin` — bảo vệ bằng role teacher/admin
+- [x] T-13-2 🔴 Danh sách bài học + tìm kiếm + filter
+- [x] T-13-3 🔴 Form tạo bài học Shadowing/Dictation: title, level, topic, type, transcript, chunking, notes
+- [ ] T-13-4 🔴 Upload audio normal speed lên Supabase Storage *(Supabase pending)*
+- [ ] T-13-5 🔴 Upload audio slow speed lên Supabase Storage *(Supabase pending)*
+- [ ] T-13-6 🔴 Upload hình ảnh bài học *(Supabase pending)*
+- [x] T-13-7 🔴 Chỉnh sửa / xoá bài học (custom lessons in localStorage)
+- [x] T-13-8 🔴 Tổ chức content theo level / topic / unit
+- [ ] T-13-9 🔴 Form tạo/chỉnh sửa/xoá bài Reading: passage, image, câu hỏi (mixed types)
+- [ ] T-13-10 🔴 Form tạo/chỉnh sửa/xoá bài Writing: prompt, idea suggestions, vocabulary, sample outline
+- [ ] T-13-11 🔴 Xem danh sách bài viết của học sinh (Writing submissions) theo lesson
+- [x] T-13-12 🟡 Dashboard thống kê học sinh: số bài, thời gian, accuracy, hoạt động — *tab "Student Stats" trong admin: summary cards + bảng per-student + recent activity feed*
+- [x] T-13-13 🟡 Bulk import lessons từ file CSV/JSON — *JSON import, preview table, validate, download template*
+- [ ] T-13-14 🟢 Teacher comments trên bài Writing của học sinh
+
+---
+
+## PHASE 13 — Content (CR-01, CR-02, CR-03, CR-04)
+
+- [x] T-14-1 🔴 Soạn 10 Shadowing lessons (school / hobbies / family / food / daily routine) — *10 sample lessons created*
+- [x] T-14-2 🔴 Ghi âm hoặc tạo TTS audio (normal + slow) — *Azure TTS (en-US-JennyNeural), lưu MP3 lên Supabase Storage, script `npm run generate-audio`*
+- [x] T-14-3 🔴 Soạn 10 Dictation lessons (sentence / dialogue / paragraph) — *10 sample lessons created*
+- [x] T-14-4 🔴 Ghi âm hoặc tạo TTS audio cho dictation lessons — *Azure TTS, cùng script generate-audio*
+- [ ] T-14-5 🟡 Tìm / tạo hình ảnh minh họa cho từng bài — *shadowing + speaking dùng picsum.photos*
+- [x] T-14-6 🟡 Soạn 10 Speaking lessons (prompt + exampleAnswer + hints) — *5 Starter + 5 Level 1*
+- [x] T-14-7 🟡 Chia chunking cho 10 shadowing lessons — *4 chunks per lesson*
+- [ ] T-14-8 🔴 Soạn 10 Reading lessons (passage + câu hỏi mixed types) — *CR-03*
+- [ ] T-14-9 🔴 Tìm / tạo hình ảnh minh họa cho reading lessons — *CR-03*
+- [ ] T-14-10 🔴 Soạn 10 Writing lessons (prompt + ideas + vocabulary + sample structure) — *CR-04*
+
+---
+
+## PHASE 14 — Testing & Polish
+
+- [ ] T-15-1 🔴 Test toàn bộ flow: register → login → shadowing → dictation → reading → writing → progress
+- [ ] T-15-2 🔴 Test responsive trên mobile
+- [ ] T-15-3 🔴 Test audio playback trên các browser (Chrome, Safari, Firefox)
+- [ ] T-15-4 🔴 Test MediaRecorder trên iOS Safari (cần polyfill)
+- [ ] T-15-5 🔴 Test Reading split-screen trên tablet + tab mode trên mobile
+- [ ] T-15-6 🔴 Test Writing auto-save (reload, close tab)
+- [ ] T-15-7 🟡 Kiểm tra performance (Lighthouse score > 80)
+- [x] T-15-8 🟡 Error handling: audio lỗi, microphone bị từ chối, network lỗi
+- [x] T-15-9 🟡 Loading states và skeleton UI
+
+---
+
+## PHASE 15 — Deploy Production
+
+- [x] T-16-1 🔴 Cấu hình environment variables trên Vercel — *NEXT_PUBLIC_SUPABASE_URL + ANON_KEY đã set*
+- [x] T-16-2 🔴 Deploy production lên Vercel — https://shadowing-app-eight.vercel.app
+- [ ] T-16-3 🔴 Cấu hình custom domain (nếu có)
+- [ ] T-16-4 🟡 Cấu hình Supabase connection pooling
+- [ ] T-16-5 🟡 Set up monitoring / error tracking (Sentry)
 
 ---
 
@@ -175,17 +229,19 @@
 
 | Phase | Mô tả | Tasks | Ưu tiên |
 |---|---|---|---|
-| 1 | Project Setup | 11 | 🔴 |
+| 1 | Project Setup | 15 | 🔴 |
 | 2 | Authentication | 7 | 🔴 |
 | 3 | Layout & Nav | 5 | 🔴 |
 | 4 | Home Page | 4 | 🔴 |
 | 5 | Lesson List | 7 | 🔴 |
 | 6 | Shadowing Lesson | 12 | 🔴 |
 | 7 | Dictation Lesson | 11 | 🔴 |
-| 8 | Speaking Practice | 3 | 🟡 |
-| 9 | Progress Tracking | 8 | 🔴 |
-| 10 | Admin Panel | 10 | 🔴 |
-| 11 | Content | 6 | 🔴 |
-| 12 | Testing & Polish | 7 | 🔴 |
-| 13 | Deploy | 5 | 🔴 |
-| **Tổng** | | **96 tasks** | |
+| 8 | Reading Lesson | 17 | 🔴 |
+| 9 | Writing Lesson | 12 | 🔴 |
+| 10 | Speaking Practice | 3 | 🟡 |
+| 11 | Progress Tracking | 10 | 🔴 |
+| 12 | Admin Panel | 14 | 🔴 |
+| 13 | Content | 10 | 🔴 |
+| 14 | Testing & Polish | 9 | 🔴 |
+| 15 | Deploy | 5 | 🔴 |
+| **Tổng** | | **141 tasks** | |

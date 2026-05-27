@@ -56,36 +56,74 @@
 
 ---
 
-### FR-05 — Speaking Practice *(optional MVP)*
+### FR-05 — Reading Practice
 | ID | Yêu cầu | Mức độ |
 |---|---|---|
-| FR-05-1 | Hiển thị prompt câu hỏi (vd: "Tell me about your best friend") | Should |
-| FR-05-2 | Học sinh ghi âm câu trả lời và nghe lại | Should |
-| FR-05-3 | AI phát hiện lỗi phát âm (tích hợp Azure Speech) | Could |
+| FR-05-1 | Split-screen layout: LEFT 50% hiển thị passage, RIGHT 50% hiển thị câu hỏi | Must |
+| FR-05-2 | Left panel: title, image (optional), reading text | Must |
+| FR-05-3 | Highlight tool: bôi vàng keyword/sentence trong passage | Must |
+| FR-05-4 | Font size adjustment (A+ / A-) để dễ đọc trên tablet/mobile | Must |
+| FR-05-5 | Underline tool cho keyword | Should |
+| FR-05-6 | Câu hỏi: Multiple Choice (A/B/C/D) | Must |
+| FR-05-7 | Câu hỏi: True / False / Not Given | Must |
+| FR-05-8 | Câu hỏi: Fill in the Blank | Must |
+| FR-05-9 | Câu hỏi: Short Answer (gõ câu trả lời ngắn) | Must |
+| FR-05-10 | Mobile: chuyển sang tab mode (tab "Passage" / tab "Questions") thay vì split-screen | Must |
+| FR-05-11 | Sticky notes bên cạnh passage | Could |
+| FR-05-12 | Timer đếm thời gian làm bài | Could |
+| FR-05-13 | Vocabulary popup / dictionary click | Could |
 
 ---
 
-### FR-06 — Progress Tracking
+### FR-06 — Writing Practice
 | ID | Yêu cầu | Mức độ |
 |---|---|---|
-| FR-06-1 | Hiển thị số bài đã hoàn thành | Must |
-| FR-06-2 | Tổng thời gian luyện tập (phút) | Must |
-| FR-06-3 | Độ chính xác dictation (%) | Must |
-| FR-06-4 | Current streak (chuỗi ngày liên tiếp) | Must |
-| FR-06-5 | Current level | Should |
-| FR-06-6 | Thông điệp động viên (vd: "Great job! 5 days in a row") | Should |
+| FR-06-1 | Hiển thị writing prompt (đề bài, topic, yêu cầu) | Must |
+| FR-06-2 | Ideas/Outline support: suggested ideas, vocabulary, sample structure | Must |
+| FR-06-3 | Ô viết lớn, clean, distraction-free (giống Google Docs mini) | Must |
+| FR-06-4 | Word count hiển thị real-time | Must |
+| FR-06-5 | Auto save (reload không mất bài) | Must |
+| FR-06-6 | Draft saving: lưu bài để viết tiếp sau | Should |
+| FR-06-7 | Full screen writing mode | Could |
+| FR-06-8 | AI feedback / grammar suggestions | Could |
+| FR-06-9 | Band score estimation | Could |
 
 ---
 
-### FR-07 — Teacher/Admin Panel
+### FR-07 — Speaking Practice *(optional MVP)*
 | ID | Yêu cầu | Mức độ |
 |---|---|---|
-| FR-07-1 | Tạo/chỉnh sửa/xoá bài học (title, level, topic, transcript, notes) | Must |
-| FR-07-2 | Upload audio 2 phiên bản: normal speed + slow speed | Must |
-| FR-07-3 | Upload hình ảnh cho bài học | Must |
-| FR-07-4 | Nhập chunking thủ công (chia câu thành các chunk) | Must |
-| FR-07-5 | Tổ chức content theo level / topic / unit / story series | Must |
-| FR-07-6 | Xem thống kê học sinh: số bài, thời gian, độ chính xác, hoạt động | Should |
+| FR-07-1 | Hiển thị prompt câu hỏi (vd: "Tell me about your best friend") | Should |
+| FR-07-2 | Học sinh ghi âm câu trả lời và nghe lại | Should |
+| FR-07-3 | AI phát hiện lỗi phát âm (tích hợp Azure Speech) | Could |
+
+---
+
+### FR-08 — Progress Tracking
+| ID | Yêu cầu | Mức độ |
+|---|---|---|
+| FR-08-1 | Hiển thị số bài đã hoàn thành | Must |
+| FR-08-2 | Tổng thời gian luyện tập (phút) | Must |
+| FR-08-3 | Độ chính xác dictation (%) | Must |
+| FR-08-4 | Current streak (chuỗi ngày liên tiếp) | Must |
+| FR-08-5 | Current level | Should |
+| FR-08-6 | Thông điệp động viên (vd: "Great job! 5 days in a row") | Should |
+
+---
+
+### FR-09 — Teacher/Admin Panel
+| ID | Yêu cầu | Mức độ |
+|---|---|---|
+| FR-09-1 | Tạo/chỉnh sửa/xoá bài học Shadowing/Dictation (title, level, topic, transcript, notes) | Must |
+| FR-09-2 | Upload audio 2 phiên bản: normal speed + slow speed | Must |
+| FR-09-3 | Upload hình ảnh cho bài học | Must |
+| FR-09-4 | Nhập chunking thủ công (chia câu thành các chunk) | Must |
+| FR-09-5 | Tổ chức content theo level / topic / unit / story series | Must |
+| FR-09-6 | Tạo/chỉnh sửa/xoá bài Reading: passage, image, câu hỏi các dạng | Must |
+| FR-09-7 | Tạo/chỉnh sửa/xoá bài Writing: prompt, idea suggestions, vocabulary, sample outline | Must |
+| FR-09-8 | Xem bài viết của học sinh (Writing submissions) | Must |
+| FR-09-9 | Xem thống kê học sinh: số bài, thời gian, độ chính xác, hoạt động | Should |
+| FR-09-10 | Teacher comments trên bài Writing | Could |
 
 ---
 
@@ -99,6 +137,15 @@
 ### CR-02 — Dictation Lessons (MVP: 50 bài)
 - Dạng: sentence (dễ) → dialogue (trung bình) → paragraph (khó)
 - Mỗi bài có: audio (normal + slow), đáp án
+
+### CR-03 — Reading Lessons (MVP: 20 bài)
+- Topics: school, hobbies, family, animals, daily life
+- Mỗi bài có: passage, image (optional), câu hỏi (mixed dạng)
+- Hỗ trợ highlight và font size adjustment
+
+### CR-04 — Writing Lessons (MVP: 20 đề)
+- Topics: describe a person/place/thing, opinion, narrative
+- Mỗi đề có: prompt, suggested ideas, suggested vocabulary, sample structure
 
 ---
 
@@ -124,6 +171,8 @@
 | Danh sách bài học | `/lessons` | Student |
 | Shadowing lesson | `/shadowing/[id]` | Student |
 | Dictation lesson | `/dictation/[id]` | Student |
+| Reading lesson | `/reading/[id]` | Student |
+| Writing lesson | `/writing/[id]` | Student |
 | My Progress | `/progress` | Student |
 | Admin Panel | `/admin` | Teacher/Admin |
 
