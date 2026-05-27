@@ -9,6 +9,9 @@ import { loadLevels, saveLevels, getColorOptions, getLevelColor, type Level } fr
 import shadowingLessonsRaw from '@/data/shadowing-lessons.json';
 import dictationLessonsRaw from '@/data/dictation-lessons.json';
 import speakingLessonsRaw from '@/data/speaking-lessons.json';
+import ReadingAdmin from '@/app/admin/tabs/ReadingAdmin';
+import WritingAdmin from '@/app/admin/tabs/WritingAdmin';
+import SubmissionsAdmin from '@/app/admin/tabs/SubmissionsAdmin';
 
 type LessonEntry = {
   id: string;
@@ -30,7 +33,7 @@ type ParsedImport = LessonEntry & { _error?: string };
 
 type ModalMode = 'add' | 'edit' | null;
 
-type AdminTab = 'lessons' | 'topics' | 'levels' | 'stats';
+type AdminTab = 'lessons' | 'topics' | 'levels' | 'stats' | 'reading' | 'writing' | 'submissions';
 
 type StudentStat = {
   id: string;
@@ -635,12 +638,15 @@ export default function AdminPage() {
         </div>
 
         {/* Tab switcher */}
-        <div className="flex gap-2 mt-6">
+        <div className="flex flex-wrap gap-2 mt-6">
           {([
-            { key: 'lessons', label: '📚 Lessons' },
-            { key: 'topics', label: '🏷️ Topics' },
-            { key: 'levels', label: '📈 Levels' },
-            { key: 'stats', label: '📊 Student Stats' },
+            { key: 'lessons',     label: '📚 Lessons'     },
+            { key: 'reading',     label: '📖 Reading'     },
+            { key: 'writing',     label: '✍️ Writing'     },
+            { key: 'submissions', label: '📝 Submissions' },
+            { key: 'topics',      label: '🏷️ Topics'      },
+            { key: 'levels',      label: '📈 Levels'      },
+            { key: 'stats',       label: '📊 Stats'       },
           ] as { key: AdminTab; label: string }[]).map((t) => (
             <button
               key={t.key}
@@ -760,6 +766,21 @@ export default function AdminPage() {
       </div>
 
       </>)}
+
+      {/* ── READING TAB ─────────────────────────────────── */}
+      {activeTab === 'reading' && (
+        <ReadingAdmin />
+      )}
+
+      {/* ── WRITING TAB ─────────────────────────────────── */}
+      {activeTab === 'writing' && (
+        <WritingAdmin />
+      )}
+
+      {/* ── SUBMISSIONS TAB ─────────────────────────────── */}
+      {activeTab === 'submissions' && (
+        <SubmissionsAdmin />
+      )}
 
       {/* ── TOPICS TAB ──────────────────────────────────── */}
       {activeTab === 'topics' && (<>
