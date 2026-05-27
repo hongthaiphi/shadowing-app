@@ -546,6 +546,11 @@ export default function WritingLessonPage() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  useEffect(() => {
+    if (lesson) document.title = `${lesson.title} | ShadowSpeak`;
+    return () => { document.title = 'ShadowSpeak — English Practice'; };
+  }, [lesson]);
+
   // ─── Cursor restore after vocab insert ──────────────────────────────────
 
   useLayoutEffect(() => {
@@ -596,6 +601,19 @@ export default function WritingLessonPage() {
       }
       if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
     };
+  }, []);
+
+  // Flush draft when the user closes/reloads the tab.
+  // `beforeunload` fires synchronously so localStorage.setItem is safe here.
+  // We intentionally do NOT call event.preventDefault() — we never want to
+  // show a "leave page?" confirm dialog that blocks navigation.
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const currentLesson = lessonRef.current;
+      if (currentLesson) persistDraft(currentLesson.id, draftTextRef.current);
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
   // ─── Vocabulary chip insert ──────────────────────────────────────────────

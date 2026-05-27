@@ -1,10 +1,34 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  themeColor: '#6366f1',
+};
+
 export const metadata: Metadata = {
-  title: 'ShadowSpeak — English Practice',
-  description: 'Improve your English with shadowing and dictation practice',
+  title: {
+    default: 'ShadowSpeak — English Practice',
+    template: '%s | ShadowSpeak',
+  },
+  description:
+    'Improve your English with shadowing, dictation, reading and writing practice. Perfect for IELTS, TOEIC and everyday fluency.',
+  keywords: ['English practice', 'shadowing', 'dictation', 'IELTS', 'pronunciation', 'reading', 'writing'],
+  authors: [{ name: 'ShadowSpeak' }],
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: 'website',
+    siteName: 'ShadowSpeak',
+    title: 'ShadowSpeak — English Practice',
+    description: 'Shadowing, dictation, reading and writing practice to boost your English fluency.',
+  },
+  twitter: {
+    card: 'summary',
+    title: 'ShadowSpeak — English Practice',
+    description: 'Shadowing, dictation, reading and writing practice to boost your English fluency.',
+  },
 };
 
 export default function RootLayout({

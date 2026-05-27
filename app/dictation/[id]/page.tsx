@@ -39,6 +39,11 @@ export default function DictationPage({ params }: { params: { id: string } }) {
     if (ids.includes(id)) setCompleted(true);
   }, [id]);
 
+  useEffect(() => {
+    if (lesson) document.title = `${lesson.title} | ShadowSpeak`;
+    return () => { document.title = 'ShadowSpeak — English Practice'; };
+  }, [lesson]);
+
   if (!lesson) {
     notFound();
   }
