@@ -6,6 +6,37 @@ import { getSupabase } from '@/lib/supabase';
 // Maximum submissions fetched per load — prevents unbounded memory/network usage
 const SUBMISSION_LIMIT = 500;
 
+// PostgREST encodes `.in()` as a URL query parameter, so large arrays can
+// exceed proxy/nginx URL-length limits (~4–8 KB).  Chunking to 100 keeps
+// each request well within safe limits while batching in parallel.
+const PROFILE_CHUNK_SIZE = 100;
+
+/** Fetch profiles for a potentially large list of IDs in parallel chunks. */
+async function fetchProfilesInChunks(
+  supabase: ReturnType<typeof import('@/lib/supabase').getSupabase>,
+  ids: string[]
+): Promise<Profile[]> {
+  if (ids.length === 0) return [];
+
+  const chunks: string[][] = [];
+  for (let i = 0; i < ids.length; i += PROFILE_CHUNK_SIZE) {
+    chunks.push(ids.slice(i, i + PROFILE_CHUNK_SIZE));
+  }
+
+  const results = await Promise.all(
+    chunks.map((chunk) =>
+      supabase.from('profiles').select('id, name, email, role').in('id', chunk)
+    )
+  );
+
+  // Surface the first error (if any); otherwise merge all rows
+  for (const { error } of results) {
+    if (error) throw new Error(`Profiles: ${error.message}`);
+  }
+
+  return results.flatMap(({ data }) => (data ?? []) as Profile[]);
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Submission {
@@ -71,17 +102,15 @@ export default function SubmissionsAdmin() {
       // 2. Derive the set of submitter IDs so we only fetch those profiles
       const submitterIds = Array.from(new Set(((subs ?? []) as Submission[]).map((s) => s.user_id)));
 
-      // 3. Fetch profiles and lessons in parallel — profiles scoped to submitters only
-      const [{ data: profiles, error: profErr }, { data: wLessons, error: wErr }] =
-        await Promise.all([
-          submitterIds.length > 0
-            ? supabase.from('profiles').select('id, name, email, role').in('id', submitterIds)
-            : Promise.resolve({ data: [] as Profile[], error: null }),
-          supabase.from('writing_lessons').select('id, title'),
-        ]);
+      // 3. Fetch profiles and lessons in parallel.
+      //    Profiles are fetched in chunks of PROFILE_CHUNK_SIZE to avoid
+      //    exceeding URL-length limits on large .in() query parameters.
+      const [profiles, { data: wLessons, error: wErr }] = await Promise.all([
+        fetchProfilesInChunks(supabase, submitterIds),
+        supabase.from('writing_lessons').select('id, title'),
+      ]);
 
-      if (profErr) throw new Error(`Profiles: ${profErr.message}`);
-      if (wErr)    throw new Error(`Writing lessons: ${wErr.message}`);
+      if (wErr) throw new Error(`Writing lessons: ${wErr.message}`);
 
       const profileMap: Record<string, Profile> = Object.fromEntries(
         ((profiles ?? []) as Profile[]).map((p) => [p.id, p])

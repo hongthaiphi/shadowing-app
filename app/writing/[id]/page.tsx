@@ -525,6 +525,10 @@ export default function WritingLessonPage() {
   const startTimeRef     = useRef(Date.now());
   // For restoring cursor after vocabulary chip insert
   const pendingCursorRef = useRef<number | null>(null);
+  // Mirror of latest state values — used by the unmount cleanup so it can
+  // flush a pending save without being re-created on every render.
+  const draftTextRef     = useRef(draftText);
+  const lessonRef        = useRef(lesson);
 
   // ─── Init ────────────────────────────────────────────────────────────────
 
@@ -557,6 +561,13 @@ export default function WritingLessonPage() {
     }
   }, [draftText, fullScreen]);
 
+  // ─── Keep latest-value refs in sync ─────────────────────────────────────
+  // These allow the unmount cleanup to read current values without needing
+  // to be inside the deps array (which would re-create the effect too often).
+
+  useEffect(() => { draftTextRef.current = draftText; }, [draftText]);
+  useEffect(() => { lessonRef.current    = lesson;    }, [lesson]);
+
   // ─── Text change + auto-save ─────────────────────────────────────────────
 
   const handleTextChange = useCallback((text: string) => {
@@ -573,10 +584,16 @@ export default function WritingLessonPage() {
     }, 1500);
   }, [lesson]);
 
-  // Cleanup timers on unmount
+  // Cleanup timers on unmount — flush any pending draft first so text
+  // typed within the 1.5 s debounce window is not silently lost.
   useEffect(() => {
     return () => {
-      if (saveTimerRef.current)  clearTimeout(saveTimerRef.current);
+      if (saveTimerRef.current) {
+        clearTimeout(saveTimerRef.current);
+        // Flush the pending draft synchronously before leaving the page
+        const currentLesson = lessonRef.current;
+        if (currentLesson) persistDraft(currentLesson.id, draftTextRef.current);
+      }
       if (clearTimerRef.current) clearTimeout(clearTimerRef.current);
     };
   }, []);
@@ -628,18 +645,24 @@ export default function WritingLessonPage() {
         const supabase = getSupabase();
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user?.id) return;
-        await supabase.from('writing_submissions').upsert(
-          {
-            user_id:    session.user.id,
-            lesson_id:  lessonId,
-            content:    currentDraft,
-            word_count: countWords(currentDraft),
-            saved_at:   new Date().toISOString(),
-          },
-          { onConflict: 'user_id,lesson_id' }
-        );
-      } catch {
-        // Intentionally silent — local progress already saved
+        const { error: upsertErr } = await supabase
+          .from('writing_submissions')
+          .upsert(
+            {
+              user_id:    session.user.id,
+              lesson_id:  lessonId,
+              content:    currentDraft,
+              word_count: countWords(currentDraft),
+              saved_at:   new Date().toISOString(),
+            },
+            { onConflict: 'user_id,lesson_id' }
+          );
+        // Local progress is already saved; log so the error is visible in
+        // dev-tools / server logs without blocking the student's UI.
+        if (upsertErr) console.error('[writing-submit] Supabase upsert failed:', upsertErr.message);
+      } catch (err) {
+        // Network-level failure — same treatment: log, don't block UI
+        console.error('[writing-submit] Unexpected error:', (err as Error).message);
       }
     })();
   }, [lesson, completed, alreadyCompleted, draftText]);
