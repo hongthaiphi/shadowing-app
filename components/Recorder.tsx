@@ -59,6 +59,17 @@ export default function Recorder({ onRecordingComplete, label }: RecorderProps) 
     setAudioUrl(null);
     chunksRef.current = [];
 
+    // Guard: MediaRecorder is not available in all browsers.
+    // iOS Safari added support in 14.3 (released Dec 2020). Older versions
+    // and some WebViews simply don't have the API.
+    if (typeof window === 'undefined' || !window.MediaRecorder) {
+      setError(
+        'Audio recording is not supported in your browser. ' +
+        'Please update to iOS 14.3+ / Safari 14.1+ or use Chrome / Firefox.'
+      );
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
@@ -66,8 +77,12 @@ export default function Recorder({ onRecordingComplete, label }: RecorderProps) 
 
       // Pick the first MIME type the browser actually supports.
       // iOS Safari only supports audio/mp4; Chrome prefers audio/webm.
-      const mimeType = ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4']
-        .find((t) => MediaRecorder.isTypeSupported(t)) ?? '';
+      const mimeType = (
+        typeof MediaRecorder.isTypeSupported === 'function'
+          ? ['audio/webm;codecs=opus', 'audio/webm', 'audio/ogg;codecs=opus', 'audio/mp4']
+              .find((t) => MediaRecorder.isTypeSupported(t))
+          : undefined
+      ) ?? '';
 
       const mr = new MediaRecorder(stream, mimeType ? { mimeType } : {});
       mediaRecorderRef.current = mr;

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ChunkPlayer from '@/components/ChunkPlayer';
@@ -37,6 +38,12 @@ export default function ShadowingPage({ params }: { params: { id: string } }) {
     const ids = getCompletedIds();
     if (ids.includes(id)) setCompleted(true);
   }, [id]);
+
+  // Per-page document title for SEO / browser tab
+  useEffect(() => {
+    if (lesson) document.title = `${lesson.title} | ShadowSpeak`;
+    return () => { document.title = 'ShadowSpeak — English Practice'; };
+  }, [lesson]);
 
   if (!lesson) {
     notFound();
@@ -100,13 +107,15 @@ export default function ShadowingPage({ params }: { params: { id: string } }) {
           {!imageLoaded && (
             <div className="absolute inset-0 animate-pulse bg-gray-200" />
           )}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src={lesson.image}
             alt={lesson.title}
-            className={`w-full h-full object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+            fill
+            sizes="(max-width: 896px) 100vw, 896px"
+            className={`object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
             onLoad={() => setImageLoaded(true)}
             onError={() => setImageLoaded(true)}
+            priority={false}
           />
         </div>
       )}

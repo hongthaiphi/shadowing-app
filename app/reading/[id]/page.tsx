@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
+import Image from 'next/image';
 import Link from 'next/link';
 import { getUser } from '@/lib/auth';
 import { markComplete, getCompletedIds } from '@/lib/progress';
@@ -643,6 +644,11 @@ export default function ReadingLessonPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 
+  useEffect(() => {
+    if (lesson) document.title = `${lesson.title} | ShadowSpeak`;
+    return () => { document.title = 'ShadowSpeak — English Practice'; };
+  }, [lesson]);
+
   // ─── Annotation helpers ──────────────────────────────────────────────────
 
   // Pre-compute the absolute start offset for each paragraph
@@ -784,12 +790,14 @@ export default function ReadingLessonPage() {
 
       {/* Lesson image */}
       {lesson.image && (
-        <div className="mx-4 mt-4 rounded-xl overflow-hidden">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+        <div className="mx-4 mt-4 rounded-xl overflow-hidden relative h-40">
+          <Image
             src={lesson.image}
             alt={lesson.title}
-            className="w-full h-40 object-cover"
+            fill
+            sizes="(max-width: 768px) 100vw, 50vw"
+            className="object-cover"
+            priority={false}
           />
         </div>
       )}
