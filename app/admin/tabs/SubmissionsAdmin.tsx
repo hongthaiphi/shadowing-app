@@ -3,6 +3,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { getSupabase } from '@/lib/supabase';
 
+// Maximum submissions fetched per load — prevents unbounded memory/network usage
+const SUBMISSION_LIMIT = 500;
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 interface Submission {
@@ -56,14 +59,27 @@ export default function SubmissionsAdmin() {
     try {
       const supabase = getSupabase();
 
-      const [{ data: subs, error: subErr }, { data: profiles, error: profErr }, { data: wLessons, error: wErr }] =
+      // 1. Fetch submissions (bounded to prevent unbounded memory/network usage)
+      const { data: subs, error: subErr } = await supabase
+        .from('writing_submissions')
+        .select('*')
+        .order('saved_at', { ascending: false })
+        .limit(SUBMISSION_LIMIT);
+
+      if (subErr) throw new Error(`Submissions: ${subErr.message}`);
+
+      // 2. Derive the set of submitter IDs so we only fetch those profiles
+      const submitterIds = Array.from(new Set(((subs ?? []) as Submission[]).map((s) => s.user_id)));
+
+      // 3. Fetch profiles and lessons in parallel — profiles scoped to submitters only
+      const [{ data: profiles, error: profErr }, { data: wLessons, error: wErr }] =
         await Promise.all([
-          supabase.from('writing_submissions').select('*').order('saved_at', { ascending: false }),
-          supabase.from('profiles').select('id, name, email, role'),
+          submitterIds.length > 0
+            ? supabase.from('profiles').select('id, name, email, role').in('id', submitterIds)
+            : Promise.resolve({ data: [] as Profile[], error: null }),
           supabase.from('writing_lessons').select('id, title'),
         ]);
 
-      if (subErr)  throw new Error(`Submissions: ${subErr.message}`);
       if (profErr) throw new Error(`Profiles: ${profErr.message}`);
       if (wErr)    throw new Error(`Writing lessons: ${wErr.message}`);
 
@@ -90,6 +106,14 @@ export default function SubmissionsAdmin() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  // Close essay-view modal on Escape
+  useEffect(() => {
+    if (!viewing) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') setViewing(null); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  }, [viewing]);
 
   // ── Derived data ────────────────────────────────────────────
   const uniqueLessons = Array.from(
@@ -118,7 +142,10 @@ export default function SubmissionsAdmin() {
         <div>
           <h2 className="text-xl font-bold text-gray-800">Student Writing Submissions</h2>
           <p className="text-sm text-gray-500 mt-0.5">
-            {loading ? 'Loading…' : `${submissions.length} submission${submissions.length !== 1 ? 's' : ''} total`}
+            {loading
+            ? 'Loading…'
+            : `${submissions.length} submission${submissions.length !== 1 ? 's' : ''}${submissions.length >= SUBMISSION_LIMIT ? ` (showing latest ${SUBMISSION_LIMIT})` : ''}`
+          }
           </p>
         </div>
         <button

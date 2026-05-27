@@ -1,33 +1,37 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getSupabase } from '@/lib/supabase';
 import { loadTopics } from '@/lib/topics';
 import { loadLevels, getLevelColor } from '@/lib/levels';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
+// Fix #9: ModalMode at module scope (was inside component body)
+type ModalMode = 'add' | 'edit' | null;
+
 interface Question {
-  id:          string;
-  type:        'multiple-choice' | 'true-false-not-given' | 'fill-blank' | 'short-answer';
-  question:    string;
-  options?:    string[];
-  answer:      string;
+  id:           string;
+  type:         'multiple-choice' | 'true-false-not-given' | 'fill-blank' | 'short-answer';
+  question:     string;
+  options?:     string[];
+  answer:       string;
   explanation?: string;
 }
 
 interface ReadingLesson {
-  id:              string;
-  title:           string;
-  level:           string;
-  topic:           string;
-  image_url?:      string;
-  word_count?:     number;
+  id:               string;
+  title:            string;
+  level:            string;
+  topic:            string;
+  // Fix #2: allow null so we don't need `null as unknown as undefined`
+  image_url?:       string | null;
+  word_count?:      number;
   duration_minutes: number;
-  paragraphs:      string[];
-  questions:       Question[];
-  created_at?:     string;
-  updated_at?:     string;
+  paragraphs:       string[];
+  questions:        Question[];
+  created_at?:      string;
+  updated_at?:      string;
 }
 
 type FormState = Omit<ReadingLesson, 'id' | 'created_at' | 'updated_at'>;
@@ -36,7 +40,7 @@ const EMPTY_FORM: FormState = {
   title:            '',
   level:            'Starter',
   topic:            'school',
-  image_url:        '',
+  image_url:        null,
   word_count:       undefined,
   duration_minutes: 10,
   paragraphs:       [],
@@ -45,13 +49,14 @@ const EMPTY_FORM: FormState = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+// Fix #10: add random suffix to prevent millisecond collisions
 function generateId(title: string): string {
   const slug = title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_|_$/g, '')
     .slice(0, 24);
-  return `r_${slug}_${Date.now().toString(36)}`;
+  return `r_${slug}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 }
 
 function formatDate(iso: string): string {
@@ -60,13 +65,18 @@ function formatDate(iso: string): string {
   });
 }
 
-function validateQuestionsJson(raw: string): { ok: true; questions: Question[] } | { ok: false; error: string } {
+function validateQuestionsJson(
+  raw: string,
+): { ok: true; questions: Question[] } | { ok: false; error: string } {
   try {
     const parsed = JSON.parse(raw);
     if (!Array.isArray(parsed)) return { ok: false, error: 'Must be a JSON array' };
     for (const q of parsed) {
       if (!q.id || !q.type || !q.question || q.answer === undefined) {
-        return { ok: false, error: `Question missing required field (id, type, question, answer): ${JSON.stringify(q).slice(0, 80)}` };
+        return {
+          ok: false,
+          error: `Question missing required field (id, type, question, answer): ${JSON.stringify(q).slice(0, 80)}`,
+        };
       }
       const validTypes = ['multiple-choice', 'true-false-not-given', 'fill-blank', 'short-answer'];
       if (!validTypes.includes(q.type)) {
@@ -84,9 +94,9 @@ function validateQuestionsJson(raw: string): { ok: true; questions: Question[] }
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-function StatusBadge({ saving, error, saved }: { saving: boolean; error: string; saved: boolean }) {
+// Fix #3: removed unused `error` prop — save errors are shown inline in the modal body
+function StatusBadge({ saving, saved }: { saving: boolean; saved: boolean }) {
   if (saving) return <span className="text-xs text-blue-600 font-medium">Saving…</span>;
-  if (error)  return <span className="text-xs text-red-600 font-medium">{error}</span>;
   if (saved)  return <span className="text-xs text-emerald-600 font-medium">✓ Saved</span>;
   return null;
 }
@@ -94,28 +104,30 @@ function StatusBadge({ saving, error, saved }: { saving: boolean; error: string;
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function ReadingAdmin() {
-  const [lessons, setLessons] = useState<ReadingLesson[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState('');
+  const [lessons, setLessons]         = useState<ReadingLesson[]>([]);
+  const [loading, setLoading]         = useState(true);
+  const [loadError, setLoadError]     = useState('');
 
-  // Form / modal state
-  type ModalMode = 'add' | 'edit' | null;
-  const [modalMode, setModalMode]       = useState<ModalMode>(null);
-  const [editingId, setEditingId]       = useState<string | null>(null);
-  const [form, setForm]                 = useState<FormState>(EMPTY_FORM);
+  const [modalMode, setModalMode]     = useState<ModalMode>(null);
+  const [editingId, setEditingId]     = useState<string | null>(null);
+  const [form, setForm]               = useState<FormState>(EMPTY_FORM);
   const [paragraphsText, setParagraphsText] = useState('');
   const [questionsJson, setQuestionsJson]   = useState('');
   const [questionsError, setQuestionsError] = useState('');
 
-  // Delete confirm
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteId, setDeleteId]       = useState<string | null>(null);
+  // Fix #6: replace alert() with inline error state for delete
+  const [deleteError, setDeleteError] = useState('');
 
-  // Per-row save status
-  const [saving, setSaving]   = useState(false);
-  const [saveError, setSaveError] = useState('');
-  const [saveOk, setSaveOk]   = useState(false);
+  const [saving, setSaving]           = useState(false);
+  const [saveError, setSaveError]     = useState('');
+  const [saveOk, setSaveOk]           = useState(false);
 
-  // ── Load ────────────────────────────────────────────────────
+  // Fix #4: memoize localStorage reads — not called on every render
+  const topics = useMemo(() => loadTopics(), []);
+  const levels = useMemo(() => loadLevels(), []);
+
+  // ── Load ─────────────────────────────────────────────────────────────────────
   const loadLessons = useCallback(async () => {
     setLoading(true);
     setLoadError('');
@@ -136,10 +148,17 @@ export default function ReadingAdmin() {
 
   useEffect(() => { loadLessons(); }, [loadLessons]);
 
-  // ── Modal helpers ───────────────────────────────────────────
+  // Fix #11: close modal on Escape key
+  useEffect(() => {
+    if (!modalMode) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalMode]);
+
+  // ── Modal helpers ─────────────────────────────────────────────────────────────
   function openAdd() {
-    const topics = loadTopics();
-    const levels = loadLevels();
     setForm({
       ...EMPTY_FORM,
       topic: topics[0]?.id || 'school',
@@ -159,7 +178,7 @@ export default function ReadingAdmin() {
       title:            lesson.title,
       level:            lesson.level,
       topic:            lesson.topic,
-      image_url:        lesson.image_url ?? '',
+      image_url:        lesson.image_url ?? null,
       word_count:       lesson.word_count,
       duration_minutes: lesson.duration_minutes,
       paragraphs:       lesson.paragraphs,
@@ -181,8 +200,10 @@ export default function ReadingAdmin() {
     setSaveError('');
   }
 
-  // ── Validate form ───────────────────────────────────────────
-  function buildLesson(): { ok: false; msg: string } | { ok: true; lesson: Omit<ReadingLesson, 'created_at' | 'updated_at'> } {
+  // ── Build + validate ──────────────────────────────────────────────────────────
+  function buildLesson():
+    | { ok: false; msg: string }
+    | { ok: true; lesson: Omit<ReadingLesson, 'created_at' | 'updated_at'> } {
     if (!form.title.trim()) return { ok: false, msg: 'Title is required' };
 
     const paragraphs = paragraphsText
@@ -190,6 +211,12 @@ export default function ReadingAdmin() {
       .map((p) => p.trim())
       .filter((p) => p.length > 0);
     if (paragraphs.length === 0) return { ok: false, msg: 'At least one paragraph is required' };
+
+    // Fix #12: validate image URL format
+    const imageUrl = form.image_url?.trim() || null;
+    if (imageUrl && !/^https?:\/\//i.test(imageUrl)) {
+      return { ok: false, msg: 'Image URL must start with http:// or https://' };
+    }
 
     const qResult = validateQuestionsJson(questionsJson || '[]');
     if (!qResult.ok) {
@@ -207,8 +234,11 @@ export default function ReadingAdmin() {
         title:            form.title.trim(),
         level:            form.level,
         topic:            form.topic,
-        image_url:        form.image_url?.trim() || null as unknown as undefined,
-        word_count:       form.word_count ? Number(form.word_count) : paragraphs.join(' ').split(/\s+/).length,
+        // Fix #2: no more `null as unknown as undefined` cast
+        image_url:        imageUrl,
+        word_count:       form.word_count
+          ? Number(form.word_count)
+          : paragraphs.join(' ').split(/\s+/).length,
         duration_minutes: Number(form.duration_minutes) || 10,
         paragraphs,
         questions:        qResult.questions,
@@ -216,7 +246,7 @@ export default function ReadingAdmin() {
     };
   }
 
-  // ── Save (upsert) ───────────────────────────────────────────
+  // ── Save (upsert) ─────────────────────────────────────────────────────────────
   async function handleSave() {
     const result = buildLesson();
     if (!result.ok) { setSaveError(result.msg); return; }
@@ -243,8 +273,9 @@ export default function ReadingAdmin() {
     }
   }
 
-  // ── Delete ──────────────────────────────────────────────────
+  // ── Delete ────────────────────────────────────────────────────────────────────
   async function handleDelete(id: string) {
+    setDeleteError('');
     try {
       const supabase = getSupabase();
       const { error } = await supabase.from('reading_lessons').delete().eq('id', id);
@@ -252,14 +283,12 @@ export default function ReadingAdmin() {
       setDeleteId(null);
       await loadLessons();
     } catch (err) {
-      alert((err as Error).message);
+      // Fix #6: show error in modal, not via alert()
+      setDeleteError((err as Error).message);
     }
   }
 
-  // ─── Render ──────────────────────────────────────────────────────────────────
-
-  const topics = loadTopics();
-  const levels = loadLevels();
+  // ─── Render ───────────────────────────────────────────────────────────────────
 
   return (
     <div>
@@ -268,7 +297,9 @@ export default function ReadingAdmin() {
         <div>
           <h2 className="text-xl font-bold text-gray-800">Reading Lessons</h2>
           <p className="text-sm text-gray-500 mt-0.5">
-            {loading ? 'Loading…' : `${lessons.length} lesson${lessons.length !== 1 ? 's' : ''} in Supabase`}
+            {loading
+              ? 'Loading…'
+              : `${lessons.length} lesson${lessons.length !== 1 ? 's' : ''} in Supabase`}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -294,20 +325,20 @@ export default function ReadingAdmin() {
         </div>
       </div>
 
-      {/* Error */}
+      {/* Load error */}
       {loadError && (
         <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
           {loadError}
         </div>
       )}
 
-      {/* Stats chips */}
+      {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Total',   value: lessons.length,                                              color: 'text-green-700', bg: 'bg-green-50 border-green-100' },
-          { label: 'Starter', value: lessons.filter(l => l.level === 'Starter').length,           color: 'text-blue-700',  bg: 'bg-blue-50 border-blue-100'   },
-          { label: 'Level 1', value: lessons.filter(l => l.level === 'Level 1').length,           color: 'text-violet-700',bg: 'bg-violet-50 border-violet-100'},
-          { label: 'Level 2+',value: lessons.filter(l => l.level !== 'Starter' && l.level !== 'Level 1').length, color: 'text-orange-700', bg: 'bg-orange-50 border-orange-100' },
+          { label: 'Total',    value: lessons.length,                                                                    color: 'text-green-700',  bg: 'bg-green-50 border-green-100'   },
+          { label: 'Starter',  value: lessons.filter((l) => l.level === 'Starter').length,                               color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-100'     },
+          { label: 'Level 1',  value: lessons.filter((l) => l.level === 'Level 1').length,                               color: 'text-violet-700', bg: 'bg-violet-50 border-violet-100' },
+          { label: 'Level 2+', value: lessons.filter((l) => l.level !== 'Starter' && l.level !== 'Level 1').length,     color: 'text-orange-700', bg: 'bg-orange-50 border-orange-100' },
         ].map((s) => (
           <div key={s.label} className={`rounded-2xl border p-4 ${s.bg}`}>
             <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
@@ -369,7 +400,7 @@ export default function ReadingAdmin() {
                           Edit
                         </button>
                         <button
-                          onClick={() => setDeleteId(lesson.id)}
+                          onClick={() => { setDeleteId(lesson.id); setDeleteError(''); }}
                           className="text-xs font-semibold text-red-600 hover:text-red-800 px-2.5 py-1.5 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
                         >
                           Delete
@@ -384,11 +415,12 @@ export default function ReadingAdmin() {
         </div>
       )}
 
-      {/* ── Add / Edit Modal ──────────────────────────────────── */}
+      {/* ── Add / Edit Modal ────────────────────────────────────────────────────── */}
+      {/* Fix #11: Escape key listener added via useEffect above */}
       {modalMode && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl my-8">
-            {/* Modal header */}
+            {/* Header */}
             <div className="p-6 border-b border-gray-100 flex items-center justify-between">
               <div>
                 <h3 className="text-lg font-bold text-gray-800">
@@ -401,6 +433,7 @@ export default function ReadingAdmin() {
               <button
                 onClick={closeModal}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Close (Esc)"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -408,9 +441,9 @@ export default function ReadingAdmin() {
               </button>
             </div>
 
-            {/* Modal body */}
+            {/* Body */}
             <div className="p-6 space-y-5">
-              {/* Metadata row */}
+              {/* Metadata */}
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="sm:col-span-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-1.5">Title *</label>
@@ -458,22 +491,32 @@ export default function ReadingAdmin() {
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Word Count (auto-calculated if empty)</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Word Count
+                    <span className="text-gray-400 font-normal ml-1">(auto-calculated if empty)</span>
+                  </label>
                   <input
                     type="number"
                     min={0}
                     value={form.word_count ?? ''}
-                    onChange={(e) => setForm((f) => ({ ...f, word_count: e.target.value ? Number(e.target.value) : undefined }))}
+                    onChange={(e) => setForm((f) => ({
+                      ...f,
+                      word_count: e.target.value ? Number(e.target.value) : undefined,
+                    }))}
                     placeholder="Auto"
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
                   />
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">Image URL (optional)</label>
+                  {/* Fix #12: URL validation happens in buildLesson; placeholder communicates requirement */}
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Image URL
+                    <span className="text-gray-400 font-normal ml-1">(optional — must start with https://)</span>
+                  </label>
                   <input
                     type="text"
                     value={form.image_url ?? ''}
-                    onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value }))}
+                    onChange={(e) => setForm((f) => ({ ...f, image_url: e.target.value || null }))}
                     placeholder="https://example.com/image.jpg"
                     className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-green-300"
                   />
@@ -520,18 +563,18 @@ export default function ReadingAdmin() {
                   value={questionsJson}
                   onChange={(e) => { setQuestionsJson(e.target.value); setQuestionsError(''); }}
                   rows={12}
-                  placeholder={JSON.stringify([
-                    {
-                      id: 'q1',
-                      type: 'multiple-choice',
-                      question: 'What is the main topic of the passage?',
-                      options: ['A. School', 'B. Work', 'C. Travel', 'D. Food'],
-                      answer: 'A',
-                      explanation: 'The passage is about school.',
-                    },
-                  ], null, 2)}
+                  placeholder={JSON.stringify([{
+                    id: 'q1',
+                    type: 'multiple-choice',
+                    question: 'What is the main topic of the passage?',
+                    options: ['A. School', 'B. Work', 'C. Travel', 'D. Food'],
+                    answer: 'A',
+                    explanation: 'The passage is about school.',
+                  }], null, 2)}
                   className={`w-full px-4 py-2.5 border rounded-xl text-sm focus:outline-none focus:ring-2 resize-y font-mono ${
-                    questionsError ? 'border-red-300 focus:ring-red-300' : 'border-gray-200 focus:ring-green-300'
+                    questionsError
+                      ? 'border-red-300 focus:ring-red-300'
+                      : 'border-gray-200 focus:ring-green-300'
                   }`}
                 />
                 {questionsError && (
@@ -543,10 +586,10 @@ export default function ReadingAdmin() {
                   </p>
                 )}
                 <p className="text-xs text-gray-400 mt-1">
-                  Supported types: <code className="bg-gray-100 px-1 rounded">multiple-choice</code>&#32;
-                  <code className="bg-gray-100 px-1 rounded">true-false-not-given</code>&#32;
-                  <code className="bg-gray-100 px-1 rounded">fill-blank</code>&#32;
-                  <code className="bg-gray-100 px-1 rounded">short-answer</code>
+                  Supported types:{' '}
+                  {['multiple-choice', 'true-false-not-given', 'fill-blank', 'short-answer'].map((t) => (
+                    <code key={t} className="bg-gray-100 px-1 rounded mr-1">{t}</code>
+                  ))}
                 </p>
               </div>
 
@@ -558,9 +601,10 @@ export default function ReadingAdmin() {
               )}
             </div>
 
-            {/* Modal footer */}
+            {/* Footer */}
             <div className="p-6 border-t border-gray-100 flex items-center justify-between gap-3">
-              <StatusBadge saving={saving} error="" saved={saveOk} />
+              {/* Fix #3: StatusBadge no longer has a dead error prop */}
+              <StatusBadge saving={saving} saved={saveOk} />
               <div className="flex items-center gap-3">
                 <button
                   onClick={closeModal}
@@ -587,16 +631,22 @@ export default function ReadingAdmin() {
         </div>
       )}
 
-      {/* ── Delete confirm ────────────────────────────────────── */}
+      {/* ── Delete confirm ──────────────────────────────────────────────────────── */}
       {deleteId && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <h3 className="text-lg font-bold text-gray-800 mb-2">Delete Reading Lesson?</h3>
             <p className="text-gray-500 text-sm mb-1">This will permanently remove the lesson from Supabase.</p>
-            <p className="text-gray-400 text-xs font-mono mb-5">{deleteId}</p>
+            <p className="text-gray-400 text-xs font-mono mb-4">{deleteId}</p>
+            {/* Fix #6: inline error replaces alert() */}
+            {deleteError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                {deleteError}
+              </div>
+            )}
             <div className="flex gap-3 justify-end">
               <button
-                onClick={() => setDeleteId(null)}
+                onClick={() => { setDeleteId(null); setDeleteError(''); }}
                 className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors"
               >
                 Cancel

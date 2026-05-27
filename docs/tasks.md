@@ -233,24 +233,24 @@
 
 ## Tổng kết
 
-| Phase | Mô tả | Tasks Done | Tasks Total | Ưu tiên |
+| Phase | Mô tả | Done | Total | Status |
 |---|---|---|---|---|
-| 1 | Project Setup | 13 | 14 | 🔴 |
+| 1 | Project Setup + DB Schema | 15 | 17 | 🔴 |
 | 2 | Authentication | 6 | 7 | 🔴 |
-| 3 | Layout & Nav | 5 | 5 | 🔴 ✅ |
-| 4 | Home Page | 4 | 4 | 🔴 ✅ |
-| 5 | Lesson List | 9 | 9 | 🔴 ✅ |
-| 6 | Shadowing Lesson | 12 | 12 | 🔴 ✅ |
-| 7 | Dictation Lesson | 11 | 11 | 🔴 ✅ |
+| 3 | Layout & Navigation | 5 | 5 | ✅ |
+| 4 | Home Page | 4 | 4 | ✅ |
+| 5 | Lesson List | 9 | 9 | ✅ |
+| 6 | Shadowing Lesson | 12 | 12 | ✅ |
+| 7 | Dictation Lesson | 11 | 11 | ✅ |
 | 8 | Reading Lesson | 16 | 19 | 🔴 |
-| 9 | Writing Lesson | 11 | 14 | 🔴 |
+| 9 | Writing Lesson | 12 | 14 | 🔴 |
 | 10 | Speaking Practice | 2 | 3 | 🟡 |
-| 11 | Progress Tracking | 10 | 10 | 🔴 ✅ |
-| 12 | Admin Panel | 7 | 14 | 🔴 |
+| 11 | Progress Tracking | 10 | 10 | ✅ |
+| 12 | Admin / Teacher Panel | 10 | 14 | 🔴 |
 | 13 | Content | 8 | 10 | 🔴 |
 | 14 | Testing & Polish | 2 | 9 | 🔴 |
-| 15 | Deploy | 2 | 5 | 🔴 |
-| **Tổng** | | **~118** | **~155** | |
+| 15 | Deploy Production | 2 | 5 | 🔴 |
+| **Tổng** | | **124** | **149** | **83%** |
 
 ---
 

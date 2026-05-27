@@ -1,11 +1,14 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { getSupabase } from '@/lib/supabase';
 import { loadTopics } from '@/lib/topics';
 import { loadLevels, getLevelColor } from '@/lib/levels';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
+
+// Fix #9: ModalMode at module scope (was inside component body)
+type ModalMode = 'add' | 'edit' | null;
 
 type TaskType = 'descriptive' | 'opinion' | 'narrative' | 'compare-contrast';
 
@@ -35,10 +38,10 @@ interface WritingLesson {
 type FormState = Omit<WritingLesson, 'id' | 'created_at' | 'updated_at'>;
 
 const TASK_TYPE_OPTIONS: { value: TaskType; label: string }[] = [
-  { value: 'descriptive',      label: '📝 Descriptive'       },
-  { value: 'opinion',          label: '💬 Opinion'           },
-  { value: 'narrative',        label: '📖 Narrative'         },
-  { value: 'compare-contrast', label: '⚖️ Compare & Contrast' },
+  { value: 'descriptive',      label: '📝 Descriptive'        },
+  { value: 'opinion',          label: '💬 Opinion'            },
+  { value: 'narrative',        label: '📖 Narrative'          },
+  { value: 'compare-contrast', label: '⚖️ Compare & Contrast'  },
 ];
 
 const EMPTY_FORM: FormState = {
@@ -57,13 +60,14 @@ const EMPTY_FORM: FormState = {
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
+// Fix #10: add random suffix to prevent millisecond collisions
 function generateId(title: string): string {
   const slug = title
     .toLowerCase()
     .replace(/[^a-z0-9]+/g, '_')
     .replace(/^_|_$/g, '')
     .slice(0, 24);
-  return `w_${slug}_${Date.now().toString(36)}`;
+  return `w_${slug}_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 5)}`;
 }
 
 function formatDate(iso: string): string {
@@ -80,6 +84,16 @@ function commaToArray(text: string): string[] {
   return text.split(',').map((l) => l.trim()).filter((l) => l.length > 0);
 }
 
+// ─── Sub-components ───────────────────────────────────────────────────────────
+
+// Fix #5: StatusBadge added (WritingAdmin was missing save confirmation)
+// Fix #3: no error prop — save errors are shown inline in the modal body
+function StatusBadge({ saving, saved }: { saving: boolean; saved: boolean }) {
+  if (saving) return <span className="text-xs text-blue-600 font-medium">Saving…</span>;
+  if (saved)  return <span className="text-xs text-emerald-600 font-medium">✓ Saved</span>;
+  return null;
+}
+
 // ─── Main component ───────────────────────────────────────────────────────────
 
 export default function WritingAdmin() {
@@ -87,28 +101,32 @@ export default function WritingAdmin() {
   const [loading, setLoading]       = useState(true);
   const [loadError, setLoadError]   = useState('');
 
-  // Form / modal state
-  type ModalMode = 'add' | 'edit' | null;
   const [modalMode, setModalMode]   = useState<ModalMode>(null);
   const [editingId, setEditingId]   = useState<string | null>(null);
   const [form, setForm]             = useState<FormState>(EMPTY_FORM);
 
-  // Text area bindings (array fields stored as human-friendly strings)
-  const [requirementsText, setRequirementsText]   = useState('');
-  const [ideasText, setIdeasText]                 = useState('');
-  const [vocabText, setVocabText]                 = useState('');
-  const [structIntro, setStructIntro]             = useState('');
-  const [structBodyText, setStructBodyText]       = useState('');
-  const [structConclusion, setStructConclusion]   = useState('');
+  // Human-friendly string bindings for array fields
+  const [requirementsText, setRequirementsText] = useState('');
+  const [ideasText, setIdeasText]               = useState('');
+  const [vocabText, setVocabText]               = useState('');
+  const [structIntro, setStructIntro]           = useState('');
+  const [structBodyText, setStructBodyText]     = useState('');
+  const [structConclusion, setStructConclusion] = useState('');
 
-  // Save status
-  const [saving, setSaving]     = useState(false);
-  const [saveError, setSaveError] = useState('');
+  const [saving, setSaving]         = useState(false);
+  const [saveError, setSaveError]   = useState('');
+  // Fix #5: added saveOk state for post-save confirmation
+  const [saveOk, setSaveOk]         = useState(false);
 
-  // Delete
-  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [deleteId, setDeleteId]     = useState<string | null>(null);
+  // Fix #6: replace alert() with inline error state for delete
+  const [deleteError, setDeleteError] = useState('');
 
-  // ── Load ────────────────────────────────────────────────────
+  // Fix #4: memoize localStorage reads — not called on every render
+  const topics = useMemo(() => loadTopics(), []);
+  const levels = useMemo(() => loadLevels(), []);
+
+  // ── Load ─────────────────────────────────────────────────────────────────────
   const loadLessons = useCallback(async () => {
     setLoading(true);
     setLoadError('');
@@ -129,10 +147,17 @@ export default function WritingAdmin() {
 
   useEffect(() => { loadLessons(); }, [loadLessons]);
 
-  // ── Modal helpers ───────────────────────────────────────────
+  // Fix #11: close modal on Escape key
+  useEffect(() => {
+    if (!modalMode) return;
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') closeModal(); };
+    document.addEventListener('keydown', onKey);
+    return () => document.removeEventListener('keydown', onKey);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [modalMode]);
+
+  // ── Modal helpers ─────────────────────────────────────────────────────────────
   function openAdd() {
-    const topics = loadTopics();
-    const levels = loadLevels();
     setForm({ ...EMPTY_FORM, topic: topics[0]?.id || 'school', level: levels[0]?.id || 'Starter' });
     setRequirementsText('');
     setIdeasText('');
@@ -142,6 +167,7 @@ export default function WritingAdmin() {
     setStructConclusion('');
     setEditingId(null);
     setSaveError('');
+    setSaveOk(false);
     setModalMode('add');
   }
 
@@ -167,6 +193,7 @@ export default function WritingAdmin() {
     setStructConclusion(lesson.suggested_structure?.conclusion ?? '');
     setEditingId(lesson.id);
     setSaveError('');
+    setSaveOk(false);
     setModalMode('edit');
   }
 
@@ -176,8 +203,10 @@ export default function WritingAdmin() {
     setSaveError('');
   }
 
-  // ── Build & save ────────────────────────────────────────────
-  function buildLesson(): { ok: false; msg: string } | { ok: true; lesson: Omit<WritingLesson, 'created_at' | 'updated_at'> } {
+  // ── Build + save ──────────────────────────────────────────────────────────────
+  function buildLesson():
+    | { ok: false; msg: string }
+    | { ok: true; lesson: Omit<WritingLesson, 'created_at' | 'updated_at'> } {
     if (!form.title.trim())  return { ok: false, msg: 'Title is required' };
     if (!form.prompt.trim()) return { ok: false, msg: 'Prompt is required' };
 
@@ -217,6 +246,7 @@ export default function WritingAdmin() {
 
     setSaving(true);
     setSaveError('');
+    setSaveOk(false);
 
     try {
       const supabase = getSupabase();
@@ -224,7 +254,12 @@ export default function WritingAdmin() {
         .from('writing_lessons')
         .upsert(result.lesson, { onConflict: 'id' });
       if (error) throw new Error(error.message);
-      closeModal();
+      // Fix #5: show success confirmation, then close
+      setSaveOk(true);
+      setTimeout(() => {
+        setSaveOk(false);
+        closeModal();
+      }, 800);
       await loadLessons();
     } catch (err) {
       setSaveError((err as Error).message);
@@ -234,6 +269,7 @@ export default function WritingAdmin() {
   }
 
   async function handleDelete(id: string) {
+    setDeleteError('');
     try {
       const supabase = getSupabase();
       const { error } = await supabase.from('writing_lessons').delete().eq('id', id);
@@ -241,14 +277,12 @@ export default function WritingAdmin() {
       setDeleteId(null);
       await loadLessons();
     } catch (err) {
-      alert((err as Error).message);
+      // Fix #6: show error in modal, not via alert()
+      setDeleteError((err as Error).message);
     }
   }
 
-  // ─── Render ──────────────────────────────────────────────────────────────────
-
-  const topics = loadTopics();
-  const levels = loadLevels();
+  // ─── Render ───────────────────────────────────────────────────────────────────
 
   return (
     <div>
@@ -257,7 +291,9 @@ export default function WritingAdmin() {
         <div>
           <h2 className="text-xl font-bold text-gray-800">Writing Lessons</h2>
           <p className="text-sm text-gray-500 mt-0.5">
-            {loading ? 'Loading…' : `${lessons.length} lesson${lessons.length !== 1 ? 's' : ''} in Supabase`}
+            {loading
+              ? 'Loading…'
+              : `${lessons.length} lesson${lessons.length !== 1 ? 's' : ''} in Supabase`}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -292,10 +328,10 @@ export default function WritingAdmin() {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
         {[
-          { label: 'Total',            value: lessons.length,                                                  color: 'text-amber-700', bg: 'bg-amber-50 border-amber-100'   },
-          { label: 'Descriptive',      value: lessons.filter(l => l.task_type === 'descriptive').length,       color: 'text-blue-700',  bg: 'bg-blue-50 border-blue-100'     },
-          { label: 'Opinion',          value: lessons.filter(l => l.task_type === 'opinion').length,           color: 'text-violet-700',bg: 'bg-violet-50 border-violet-100' },
-          { label: 'Narrative / C&C',  value: lessons.filter(l => l.task_type === 'narrative' || l.task_type === 'compare-contrast').length, color: 'text-orange-700', bg: 'bg-orange-50 border-orange-100' },
+          { label: 'Total',           value: lessons.length,                                                                                      color: 'text-amber-700',  bg: 'bg-amber-50 border-amber-100'   },
+          { label: 'Descriptive',     value: lessons.filter((l) => l.task_type === 'descriptive').length,                                         color: 'text-blue-700',   bg: 'bg-blue-50 border-blue-100'     },
+          { label: 'Opinion',         value: lessons.filter((l) => l.task_type === 'opinion').length,                                             color: 'text-violet-700', bg: 'bg-violet-50 border-violet-100' },
+          { label: 'Narrative / C&C', value: lessons.filter((l) => l.task_type === 'narrative' || l.task_type === 'compare-contrast').length,     color: 'text-orange-700', bg: 'bg-orange-50 border-orange-100' },
         ].map((s) => (
           <div key={s.label} className={`rounded-2xl border p-4 ${s.bg}`}>
             <p className={`text-2xl font-black ${s.color}`}>{s.value}</p>
@@ -343,7 +379,7 @@ export default function WritingAdmin() {
                     </td>
                     <td className="px-5 py-4">
                       <span className="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-700">
-                        {TASK_TYPE_OPTIONS.find(o => o.value === lesson.task_type)?.label ?? lesson.task_type}
+                        {TASK_TYPE_OPTIONS.find((o) => o.value === lesson.task_type)?.label ?? lesson.task_type}
                       </span>
                     </td>
                     <td className="px-5 py-4 text-sm text-gray-500">{lesson.word_target} words</td>
@@ -359,7 +395,7 @@ export default function WritingAdmin() {
                           Edit
                         </button>
                         <button
-                          onClick={() => setDeleteId(lesson.id)}
+                          onClick={() => { setDeleteId(lesson.id); setDeleteError(''); }}
                           className="text-xs font-semibold text-red-600 hover:text-red-800 px-2.5 py-1.5 bg-red-50 rounded-lg hover:bg-red-100 transition-colors"
                         >
                           Delete
@@ -374,7 +410,8 @@ export default function WritingAdmin() {
         </div>
       )}
 
-      {/* ── Add / Edit Modal ──────────────────────────────────── */}
+      {/* ── Add / Edit Modal ────────────────────────────────────────────────────── */}
+      {/* Fix #11: Escape key listener added via useEffect above */}
       {modalMode && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-start justify-center p-4 overflow-y-auto">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-3xl my-8">
@@ -391,6 +428,7 @@ export default function WritingAdmin() {
               <button
                 onClick={closeModal}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+                title="Close (Esc)"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
@@ -494,7 +532,7 @@ export default function WritingAdmin() {
                   value={requirementsText}
                   onChange={(e) => setRequirementsText(e.target.value)}
                   rows={4}
-                  placeholder={"Use at least 80 words\nInclude an introduction and conclusion\nUse past tense throughout"}
+                  placeholder={'Use at least 80 words\nInclude an introduction and conclusion\nUse past tense throughout'}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 resize-y"
                 />
               </div>
@@ -509,7 +547,7 @@ export default function WritingAdmin() {
                   value={ideasText}
                   onChange={(e) => setIdeasText(e.target.value)}
                   rows={4}
-                  placeholder={"Think about who you helped\nDescribe the situation\nExplain how they reacted"}
+                  placeholder={'Think about who you helped\nDescribe the situation\nExplain how they reacted'}
                   className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 resize-y"
                 />
               </div>
@@ -534,7 +572,9 @@ export default function WritingAdmin() {
                 <p className="text-sm font-semibold text-gray-700 mb-3">Suggested Structure</p>
                 <div className="space-y-3 pl-4 border-l-2 border-amber-200">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Introduction</label>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                      Introduction
+                    </label>
                     <input
                       type="text"
                       value={structIntro}
@@ -552,12 +592,14 @@ export default function WritingAdmin() {
                       value={structBodyText}
                       onChange={(e) => setStructBodyText(e.target.value)}
                       rows={3}
-                      placeholder={"Paragraph 1: Setting & background\nParagraph 2: What happened\nParagraph 3: The outcome"}
+                      placeholder={'Paragraph 1: Setting & background\nParagraph 2: What happened\nParagraph 3: The outcome'}
                       className="w-full px-4 py-2.5 border border-gray-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-300 resize-y"
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Conclusion</label>
+                    <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                      Conclusion
+                    </label>
                     <input
                       type="text"
                       value={structConclusion}
@@ -578,41 +620,51 @@ export default function WritingAdmin() {
             </div>
 
             {/* Footer */}
-            <div className="p-6 border-t border-gray-100 flex items-center justify-end gap-3">
-              <button
-                onClick={closeModal}
-                className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleSave}
-                disabled={saving || !form.title.trim() || !form.prompt.trim()}
-                className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
-              >
-                {saving && (
-                  <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-                  </svg>
-                )}
-                {modalMode === 'add' ? 'Add Lesson' : 'Save Changes'}
-              </button>
+            <div className="p-6 border-t border-gray-100 flex items-center justify-between gap-3">
+              {/* Fix #5: StatusBadge now present — shows saving/saved states */}
+              <StatusBadge saving={saving} saved={saveOk} />
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={closeModal}
+                  className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleSave}
+                  disabled={saving || !form.title.trim() || !form.prompt.trim()}
+                  className="px-5 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
+                >
+                  {saving && (
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
+                    </svg>
+                  )}
+                  {modalMode === 'add' ? 'Add Lesson' : 'Save Changes'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
       )}
 
-      {/* ── Delete confirm ────────────────────────────────────── */}
+      {/* ── Delete confirm ──────────────────────────────────────────────────────── */}
       {deleteId && (
         <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6">
             <h3 className="text-lg font-bold text-gray-800 mb-2">Delete Writing Lesson?</h3>
             <p className="text-gray-500 text-sm mb-1">This will permanently remove the lesson from Supabase.</p>
-            <p className="text-gray-400 text-xs font-mono mb-5">{deleteId}</p>
+            <p className="text-gray-400 text-xs font-mono mb-4">{deleteId}</p>
+            {/* Fix #6: inline error replaces alert() */}
+            {deleteError && (
+              <div className="mb-4 p-3 bg-red-50 border border-red-200 rounded-xl text-sm text-red-700">
+                {deleteError}
+              </div>
+            )}
             <div className="flex gap-3 justify-end">
               <button
-                onClick={() => setDeleteId(null)}
+                onClick={() => { setDeleteId(null); setDeleteError(''); }}
                 className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors"
               >
                 Cancel
