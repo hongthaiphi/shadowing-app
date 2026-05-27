@@ -3,7 +3,7 @@ export interface LessonProgress {
   completedAt: string; // ISO string
   timeSpent: number;   // seconds
   score?: number;      // 0-100
-  type?: 'shadowing' | 'dictation' | 'speaking';
+  type?: 'shadowing' | 'dictation' | 'speaking' | 'reading' | 'writing';
 }
 
 const STORAGE_KEY = 'shadowspeak_progress';
@@ -28,7 +28,7 @@ export function markComplete(
   lessonId: string,
   timeSpent: number,
   score?: number,
-  type?: 'shadowing' | 'dictation' | 'speaking'
+  type?: 'shadowing' | 'dictation' | 'speaking' | 'reading' | 'writing'
 ): void {
   const all = getAll();
   const existing = all.findIndex((p) => p.lessonId === lessonId);
