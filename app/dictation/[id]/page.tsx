@@ -26,13 +26,51 @@ const SUBTYPE_LABELS: Record<string, string> = {
   paragraph: '📝 Paragraph',
 };
 
+const CUSTOM_KEY = 'shadowspeak_custom_lessons';
+
+function loadCustomDictationLesson(id: string): Lesson | null {
+  try {
+    const raw = localStorage.getItem(CUSTOM_KEY);
+    if (!raw) return null;
+    const customs = JSON.parse(raw) as Array<Record<string, unknown>>;
+    const found = customs.find((l) => l.id === id && l.type === 'dictation');
+    if (!found) return null;
+    return {
+      id: String(found.id || ''),
+      title: String(found.title || ''),
+      level: String(found.level || ''),
+      topic: String(found.topic || ''),
+      type: 'dictation',
+      subtype: String(found.subtype || 'sentence'),
+      audioUrl: String(found.audioUrl || ''),
+      transcript: String(found.transcript || ''),
+      durationMinutes: Number(found.durationMinutes) || 5,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default function DictationPage({ params }: { params: { id: string } }) {
   const { id } = params;
-  const lesson = (dictationLessons as Lesson[]).find((l) => l.id === id);
 
+  // Try static JSON first (built-in lessons); custom lessons loaded after mount
+  const jsonLesson = (dictationLessons as Lesson[]).find((l) => l.id === id) || null;
+
+  const [lesson, setLesson] = useState<Lesson | null>(jsonLesson);
+  const [lessonLoaded, setLessonLoaded] = useState(!!jsonLesson);
   const [completed, setCompleted] = useState(false);
   const [lastScore, setLastScore] = useState<number | null>(null);
   const [startTime] = useState(Date.now());
+
+  // If not in static JSON, check localStorage for custom lessons
+  useEffect(() => {
+    if (!jsonLesson) {
+      const custom = loadCustomDictationLesson(id);
+      if (custom) setLesson(custom);
+      setLessonLoaded(true);
+    }
+  }, [id, jsonLesson]);
 
   useEffect(() => {
     const ids = getCompletedIds();
@@ -44,8 +82,18 @@ export default function DictationPage({ params }: { params: { id: string } }) {
     return () => { document.title = 'ShadowSpeak — English Practice'; };
   }, [lesson]);
 
+  // Show loading spinner while checking localStorage
+  if (!lessonLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-6 h-6 border-2 border-violet-200 border-t-violet-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   if (!lesson) {
     notFound();
+    return null; // unreachable — helps TypeScript narrow
   }
 
   function handleDictationComplete(accuracy: number) {
@@ -119,11 +167,24 @@ export default function DictationPage({ params }: { params: { id: string } }) {
 
       {/* Dictation input */}
       <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-        <DictationInput
-          transcript={lesson.transcript}
-          audioSrc={lesson.audioUrl}
-          onComplete={handleDictationComplete}
-        />
+        {lesson.audioUrl ? (
+          <DictationInput
+            transcript={lesson.transcript}
+            audioSrc={lesson.audioUrl}
+            onComplete={handleDictationComplete}
+          />
+        ) : (
+          <div className="space-y-4">
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700">
+              <strong>No audio file uploaded.</strong> Add an audio file to this lesson in the Admin panel to enable playback.
+            </div>
+            <DictationInput
+              transcript={lesson.transcript}
+              audioSrc=""
+              onComplete={handleDictationComplete}
+            />
+          </div>
+        )}
       </div>
 
       {/* Score display */}

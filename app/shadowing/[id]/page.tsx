@@ -25,14 +25,56 @@ type Lesson = {
   notes: string;
 };
 
+const CUSTOM_KEY = 'shadowspeak_custom_lessons';
+
+function loadCustomShadowingLesson(id: string): Lesson | null {
+  try {
+    const raw = localStorage.getItem(CUSTOM_KEY);
+    if (!raw) return null;
+    const customs = JSON.parse(raw) as Array<Record<string, unknown>>;
+    const found = customs.find((l) => l.id === id && l.type === 'shadowing');
+    if (!found) return null;
+    return {
+      id: String(found.id || ''),
+      title: String(found.title || ''),
+      level: String(found.level || ''),
+      topic: String(found.topic || ''),
+      type: 'shadowing',
+      image: String(found.imageUrl || found.image || ''),
+      audioUrl: String(found.audioUrl || ''),
+      audioSlowUrl: String(found.audioSlowUrl || ''),
+      chunkAudioUrls: Array.isArray(found.chunkAudioUrls) ? (found.chunkAudioUrls as string[]) : [],
+      transcript: String(found.transcript || ''),
+      chunks: Array.isArray(found.chunks) ? (found.chunks as string[]) : [],
+      durationMinutes: Number(found.durationMinutes) || 5,
+      notes: String(found.notes || ''),
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default function ShadowingPage({ params }: { params: { id: string } }) {
   const { id } = params;
-  const lesson = (shadowingLessons as Lesson[]).find((l) => l.id === id);
 
+  // Try static JSON first (built-in lessons); custom lessons loaded after mount
+  const jsonLesson = (shadowingLessons as Lesson[]).find((l) => l.id === id) || null;
+
+  const [lesson, setLesson] = useState<Lesson | null>(jsonLesson);
+  const [lessonLoaded, setLessonLoaded] = useState(!!jsonLesson);
   const [chunksDone, setChunksDone] = useState(false);
   const [completed, setCompleted] = useState(false);
   const [startTime] = useState(Date.now());
   const [imageLoaded, setImageLoaded] = useState(false);
+
+  // If not in static JSON, check localStorage for custom lessons
+  useEffect(() => {
+    if (!jsonLesson) {
+      const custom = loadCustomShadowingLesson(id);
+      if (custom) setLesson(custom);
+      setLessonLoaded(true);
+    }
+  }, [id, jsonLesson]);
 
   useEffect(() => {
     const ids = getCompletedIds();
@@ -45,8 +87,18 @@ export default function ShadowingPage({ params }: { params: { id: string } }) {
     return () => { document.title = 'ShadowSpeak — English Practice'; };
   }, [lesson]);
 
+  // Show loading skeleton while checking localStorage
+  if (!lessonLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-6 h-6 border-2 border-blue-200 border-t-blue-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   if (!lesson) {
     notFound();
+    return null; // unreachable — helps TypeScript narrow
   }
 
   function handleChunksComplete() {
@@ -133,16 +185,24 @@ export default function ShadowingPage({ params }: { params: { id: string } }) {
         )}
       </div>
 
-      {/* Chunk player */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
-        <h2 className="text-lg font-bold text-gray-800 mb-5">Chunk Practice</h2>
-        <ChunkPlayer
-          chunks={lesson.chunks}
-          audioUrl={lesson.audioUrl}
-          chunkAudioUrls={lesson.chunkAudioUrls}
-          onComplete={handleChunksComplete}
-        />
-      </div>
+      {/* Chunk player — show even without audio so custom lessons without audio still work */}
+      {lesson.chunks.length > 0 && (
+        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 mb-6">
+          <h2 className="text-lg font-bold text-gray-800 mb-5">Chunk Practice</h2>
+          {lesson.audioUrl ? (
+            <ChunkPlayer
+              chunks={lesson.chunks}
+              audioUrl={lesson.audioUrl}
+              chunkAudioUrls={lesson.chunkAudioUrls}
+              onComplete={handleChunksComplete}
+            />
+          ) : (
+            <div className="bg-amber-50 border border-amber-200 rounded-xl p-4 text-sm text-amber-700">
+              <strong>No audio file uploaded.</strong> Add an audio file to this lesson in the Admin panel to enable playback.
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Mark complete */}
       {(chunksDone || true) && (

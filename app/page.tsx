@@ -1,133 +1,269 @@
 import Link from 'next/link';
-import HomeDemoSection from '@/components/HomeDemoSection';
-import HomeCTASection from '@/components/HomeCTASection';
+import HeroPlayer from '@/components/landing/HeroPlayer';
+import PitchCompare from '@/components/landing/PitchCompare';
 
-const features = [
+/* ─── MethodIcon SVGs ───────────────────────────────────────────────────────── */
+const iconProps = {
+  width: 28, height: 28, viewBox: '0 0 28 28',
+  fill: 'none', stroke: 'currentColor', strokeWidth: 1.4,
+  strokeLinecap: 'round' as const, strokeLinejoin: 'round' as const,
+  'aria-hidden': true,
+};
+
+function ShadowIcon() {
+  return <svg {...iconProps}><path d="M4 14h2M9 9v10M13 5v18M17 9v10M21 12v4M24 14h0"/></svg>;
+}
+function DictIcon() {
+  return <svg {...iconProps}><rect x="5" y="6" width="18" height="16" rx="1.5"/><path d="M9 11h10M9 14h10M9 17h6"/></svg>;
+}
+function MicIcon() {
+  return <svg {...iconProps}><rect x="11" y="4" width="6" height="13" rx="3"/><path d="M7 14a7 7 0 0 0 14 0M14 21v3M10 24h8"/></svg>;
+}
+function ChartIcon() {
+  return <svg {...iconProps}><path d="M4 22h20M7 22V14M12 22V9M17 22V12M22 22V6"/></svg>;
+}
+
+/* ─── Hero ──────────────────────────────────────────────────────────────────── */
+function Hero() {
+  return (
+    <section className="ss-hero">
+      <div className="ss-hero-eyebrow">
+        <span className="ss-dot" aria-hidden="true" />
+        <span>Now with real-time pronunciation feedback</span>
+      </div>
+
+      <h1 className="ss-h1">
+        Speak English<br />
+        <em>like you mean it.</em>
+      </h1>
+
+      <p className="ss-hero-sub">
+        Shadowing, dictation and live pitch-tracking — five-minute drills that
+        train your ear and mouth at the same time.
+      </p>
+
+      <div className="ss-hero-ctas">
+        <Link href="/lessons" className="ss-btn-solid lg">
+          Start practising
+        </Link>
+        <Link href="/lessons" className="ss-btn-link">
+          <span className="ss-play" aria-hidden="true">
+            <svg width="10" height="10" viewBox="0 0 10 10">
+              <path d="M2 1 L9 5 L2 9 Z" fill="currentColor" />
+            </svg>
+          </span>
+          Browse lessons
+        </Link>
+      </div>
+
+      {/* Animated player — client component */}
+      <HeroPlayer />
+    </section>
+  );
+}
+
+/* ─── Marquee ───────────────────────────────────────────────────────────────── */
+function Marquee() {
+  const items = [
+    'IELTS speaking', 'TOEIC listening', 'Business English',
+    'Pronunciation drills', 'Daily fluency', 'Accent training',
+  ];
+  const repeated = [...items, ...items, ...items];
+  return (
+    <div className="ss-marquee" aria-hidden="true">
+      <div className="ss-marquee-track">
+        {repeated.map((x, i) => (
+          <span key={i}>
+            <svg width="10" height="10" viewBox="0 0 10 10">
+              <circle cx="5" cy="5" r="2" fill="currentColor" />
+            </svg>
+            {' '}{x}
+          </span>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/* ─── Methods ───────────────────────────────────────────────────────────────── */
+const METHODS = [
   {
-    emoji: '🎧',
-    title: 'Shadowing Practice',
-    description: 'Listen and repeat sentence chunks to perfect your pronunciation and rhythm.',
-    gradient: 'from-blue-500 to-cyan-500',
-    bg: 'from-blue-50 to-cyan-50',
-    border: 'border-blue-100',
+    id: '01',
+    k: 'Shadowing',
+    d: 'Echo native audio in real time. We chunk every line into bite-sized phrases so your mouth keeps up with your ears.',
+    icon: <ShadowIcon />,
     href: '/lessons?type=shadowing',
   },
   {
-    emoji: '✏️',
-    title: 'Dictation Practice',
-    description: 'Test your listening comprehension by writing what you hear word for word.',
-    gradient: 'from-violet-500 to-purple-600',
-    bg: 'from-violet-50 to-purple-50',
-    border: 'border-violet-100',
+    id: '02',
+    k: 'Dictation',
+    d: 'Type what you hear. We score word-level accuracy and surface the sounds you keep mishearing.',
+    icon: <DictIcon />,
     href: '/lessons?type=dictation',
   },
   {
-    emoji: '🗣️',
-    title: 'Speaking Practice',
-    description: 'Record yourself and compare with native speakers to improve fluency.',
-    gradient: 'from-orange-400 to-pink-500',
-    bg: 'from-orange-50 to-pink-50',
-    border: 'border-orange-100',
-    href: '/lessons',
+    id: '03',
+    k: 'Live speaking',
+    d: 'Record yourself against a native take. Pitch, tempo and stress get a quiet, honest verdict.',
+    icon: <MicIcon />,
+    href: '/lessons?type=speaking',
   },
   {
-    emoji: '📊',
-    title: 'Track Progress',
-    description: 'See your learning streak, completed lessons, and accuracy improvements.',
-    gradient: 'from-emerald-500 to-teal-500',
-    bg: 'from-emerald-50 to-teal-50',
-    border: 'border-emerald-100',
+    id: '04',
+    k: 'Progress',
+    d: 'Streaks without the gamified noise. Just the words and patterns you actually mastered this week.',
+    icon: <ChartIcon />,
     href: '/progress',
   },
 ];
 
-const stats = [
-  { value: '20', label: 'Practice lessons' },
-  { value: '3', label: 'Difficulty levels' },
-  { value: '5', label: 'Topics covered' },
+function Methods() {
+  return (
+    <section className="ss-methods" aria-labelledby="methods-heading">
+      <div className="ss-section-head">
+        <span className="ss-section-num">§ 02</span>
+        <h2 className="ss-h2" id="methods-heading">
+          Four loops.<br /><em>One fluent voice.</em>
+        </h2>
+        <p className="ss-section-sub">
+          Every lesson cycles through the four practice modes — short enough to
+          keep your attention, long enough to actually move.
+        </p>
+      </div>
+
+      <div className="ss-methods-grid">
+        {METHODS.map((c, i) => (
+          <Link key={c.id} href={c.href} className="ss-method-card" style={{ '--i': i } as React.CSSProperties}>
+            <div className="ss-method-top">
+              <span className="ss-method-num">{c.id}</span>
+              <span className="ss-method-icon">{c.icon}</span>
+            </div>
+            <h3 className="ss-method-k">{c.k}</h3>
+            <p className="ss-method-d">{c.d}</p>
+            <div className="ss-method-foot">Try this →</div>
+          </Link>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ─── Live demo ─────────────────────────────────────────────────────────────── */
+function LiveDemo() {
+  return (
+    <section className="ss-live" aria-labelledby="demo-heading">
+      <div className="ss-live-text">
+        <span className="ss-section-num">§ 03</span>
+        <h2 className="ss-h2" id="demo-heading">
+          Hear it. <em>Say it.</em><br />See how close you got.
+        </h2>
+        <p className="ss-section-sub">
+          Our pitch tracker compares your take to the native line in real time.
+          No grades, no green checks — just the same visual a coach would draw
+          on a napkin.
+        </p>
+        <ul className="ss-bullets">
+          <li><span>•</span> Chunk-by-chunk replay at 0.6×, 0.85× and full speed.</li>
+          <li><span>•</span> Side-by-side pitch contours and stress markers.</li>
+          <li><span>•</span> Three accents — General American, British RP, and Australian.</li>
+        </ul>
+      </div>
+
+      {/* Animated pitch compare — client component */}
+      <PitchCompare />
+    </section>
+  );
+}
+
+/* ─── Stats ─────────────────────────────────────────────────────────────────── */
+const STATS = [
+  { n: '20+', l: 'Curated lessons', k: 'Updated weekly' },
+  { n: '5',   l: 'Practice modes',  k: 'Shadowing · Dictation · Speaking · Reading · Writing' },
+  { n: '5min',l: 'Minimum daily drill', k: 'Built for busy weeks' },
+  { n: '94%', l: 'Report better fluency', k: 'After 30 days' },
 ];
 
+function Stats() {
+  return (
+    <section className="ss-stats" aria-label="ShadowSpeak by the numbers">
+      {STATS.map((s, i) => (
+        <div key={i} className="ss-stat">
+          <b className="ss-stat-n">{s.n}</b>
+          <span className="ss-stat-l">{s.l}</span>
+          <span className="ss-stat-k">{s.k}</span>
+        </div>
+      ))}
+    </section>
+  );
+}
+
+/* ─── Voices / testimonials ─────────────────────────────────────────────────── */
+const VOICES = [
+  {
+    q: "I stopped translating in my head somewhere around week three. That was the moment it clicked.",
+    a: 'Linh N.', r: 'Marketing manager, Hà Nội',
+  },
+  {
+    q: "The pitch view shows you exactly where the music of your sentence breaks. Nothing else taught me that.",
+    a: 'Marco P.', r: 'Software engineer, Milano',
+  },
+  {
+    q: "I do five minutes with my coffee. No streak guilt, no cartoons — just the lesson and a record button.",
+    a: 'Aisha R.', r: 'MBA student, Toronto',
+  },
+];
+
+function Voices() {
+  return (
+    <section className="ss-voices" aria-labelledby="voices-heading">
+      <div className="ss-section-head">
+        <span className="ss-section-num">§ 05</span>
+        <h2 className="ss-h2" id="voices-heading">
+          From people who<br /><em>just kept showing up.</em>
+        </h2>
+      </div>
+      <div className="ss-voices-grid">
+        {VOICES.map((v, i) => (
+          <figure key={i} className="ss-voice">
+            <blockquote>&ldquo;{v.q}&rdquo;</blockquote>
+            <figcaption>
+              <b>{v.a}</b>
+              <span>{v.r}</span>
+            </figcaption>
+          </figure>
+        ))}
+      </div>
+    </section>
+  );
+}
+
+/* ─── Big CTA ───────────────────────────────────────────────────────────────── */
+function BigCTA() {
+  return (
+    <section className="ss-bigcta" aria-labelledby="bigcta-heading">
+      <h2 className="ss-h2 huge" id="bigcta-heading">
+        Five minutes.<br /><em>Today.</em>
+      </h2>
+      <p>That&rsquo;s the whole bar. Open a lesson, hit play, and let your mouth catch up.</p>
+      <div className="ss-bigcta-ctas">
+        <Link href="/lessons" className="ss-btn-solid lg">Browse lessons</Link>
+        <Link href="/register" className="ss-btn-ghost lg">Create free account</Link>
+      </div>
+    </section>
+  );
+}
+
+/* ─── Page ──────────────────────────────────────────────────────────────────── */
 export default function Home() {
   return (
-    <div>
-      {/* Hero Section */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-violet-600 to-purple-700 opacity-95" />
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_rgba(255,255,255,0.1)_0%,_transparent_60%)]" />
-
-        <div className="relative max-w-6xl mx-auto px-4 py-24 text-center">
-          <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-sm text-white text-sm font-semibold px-4 py-2 rounded-full mb-6 border border-white/30">
-            <span>🎧</span> English Learning App
-          </div>
-          <h1 className="text-5xl md:text-6xl font-black text-white mb-6 leading-tight">
-            Practice English
-            <br />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-200 to-pink-200">
-              Every Day
-            </span>
-          </h1>
-          <p className="text-xl text-blue-100 mb-10 max-w-2xl mx-auto leading-relaxed">
-            Improve your listening, pronunciation, and writing with interactive shadowing and dictation exercises.
-          </p>
-
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
-            <Link
-              href="/lessons"
-              className="px-8 py-4 bg-white text-blue-700 rounded-2xl font-black text-lg hover:bg-blue-50 transition-all shadow-xl hover:shadow-2xl hover:-translate-y-0.5"
-            >
-              Start Practising →
-            </Link>
-            <Link
-              href="/register"
-              className="px-8 py-4 bg-white/10 backdrop-blur-sm text-white rounded-2xl font-bold text-lg border border-white/30 hover:bg-white/20 transition-all"
-            >
-              Create Free Account
-            </Link>
-          </div>
-
-          {/* Stats */}
-          <div className="flex items-center justify-center gap-8 mt-16 flex-wrap">
-            {stats.map((s) => (
-              <div key={s.label} className="text-center">
-                <p className="text-3xl font-black text-white">{s.value}+</p>
-                <p className="text-blue-200 text-sm font-medium">{s.label}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Features Section */}
-      <section className="max-w-6xl mx-auto px-4 py-20">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-black text-gray-800 mb-4">How ShadowSpeak Works</h2>
-          <p className="text-gray-500 text-lg max-w-xl mx-auto">
-            Four powerful methods to build your English skills, step by step.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {features.map((f) => (
-            <Link
-              key={f.title}
-              href={f.href}
-              className={`bg-gradient-to-br ${f.bg} rounded-2xl border ${f.border} p-6 hover:shadow-lg transition-all hover:-translate-y-1 group`}
-            >
-              <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${f.gradient} flex items-center justify-center text-2xl mb-4 shadow-md group-hover:scale-110 transition-transform`}>
-                {f.emoji}
-              </div>
-              <h3 className="font-bold text-gray-800 text-lg mb-2">{f.title}</h3>
-              <p className="text-gray-500 text-sm leading-relaxed">{f.description}</p>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* Demo Section */}
-      <HomeDemoSection />
-
-      {/* CTA Section — hidden when logged in */}
-      <HomeCTASection />
+    <div className="ss-landing">
+      <Hero />
+      <Marquee />
+      <Methods />
+      <LiveDemo />
+      <Stats />
+      <Voices />
+      <BigCTA />
     </div>
   );
 }
