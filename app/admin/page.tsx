@@ -23,6 +23,10 @@ type LessonEntry = {
   chunks?: string[];
   subtype?: string;
   durationMinutes: number;
+  // media
+  audioUrl?: string;
+  audioSlowUrl?: string;
+  imageUrl?: string;
   // speaking-specific
   prompt?: string;
   exampleAnswer?: string;
@@ -113,6 +117,9 @@ const emptyForm: Omit<LessonEntry, 'id'> = {
   chunks: [],
   subtype: 'sentence',
   durationMinutes: 5,
+  audioUrl: '',
+  audioSlowUrl: '',
+  imageUrl: '',
 };
 
 function validateLesson(item: unknown, existingIds: Set<string>): ParsedImport {
@@ -219,6 +226,13 @@ export default function AdminPage() {
   const [levelForm, setLevelForm] = useState<Level>({ id: '', label: '', color: 'bg-emerald-100 text-emerald-700' });
   const [deleteLevelId, setDeleteLevelId] = useState<string | null>(null);
   const [levelFormError, setLevelFormError] = useState('');
+
+  // Upload state (for Add/Edit modal)
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [audioSlowFile, setAudioSlowFile] = useState<File | null>(null);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState('');
 
   // Import state
   const [importOpen, setImportOpen] = useState(false);
@@ -349,6 +363,19 @@ export default function AdminPage() {
 
   const allLessons = [...builtInLessons, ...customLessons];
 
+  // ── Supabase Storage upload helper ──────────────────
+  async function uploadToStorage(file: File, pathNoExt: string): Promise<string> {
+    const supabase = getSupabase();
+    const ext = file.name.split('.').pop()?.toLowerCase() || 'bin';
+    const fullPath = `${pathNoExt}.${ext}`;
+    const { data, error } = await supabase.storage
+      .from('audio')
+      .upload(fullPath, file, { upsert: true, contentType: file.type });
+    if (error) throw new Error(`Upload failed: ${error.message}`);
+    const { data: urlData } = supabase.storage.from('audio').getPublicUrl(data.path);
+    return urlData.publicUrl;
+  }
+
   // ── Add/Edit modal ──────────────────────────────────
   function openAdd() {
     const currentTopics = loadTopics();
@@ -356,6 +383,10 @@ export default function AdminPage() {
     setForm({ ...emptyForm, topic: currentTopics[0]?.id || '', level: currentLevels[0]?.id || '' });
     setChunksText('');
     setHintsText('');
+    setAudioFile(null);
+    setAudioSlowFile(null);
+    setImageFile(null);
+    setUploadError('');
     setEditingLesson(null);
     setModalMode('add');
   }
@@ -364,6 +395,10 @@ export default function AdminPage() {
     setForm({ ...lesson });
     setChunksText(lesson.chunks?.join('\n') || '');
     setHintsText(lesson.hints?.join(', ') || '');
+    setAudioFile(null);
+    setAudioSlowFile(null);
+    setImageFile(null);
+    setUploadError('');
     setEditingLesson(lesson);
     setModalMode('edit');
   }
@@ -372,44 +407,83 @@ export default function AdminPage() {
     setForm((prev) => ({ ...prev, [key]: value }));
   }
 
-  function handleSave() {
+  async function handleSave() {
     if (!form.title.trim()) return;
     if (form.type !== 'speaking' && !form.transcript?.trim()) return;
 
-    const chunks = chunksText
-      .split('\n')
-      .map((l) => l.trim())
-      .filter((l) => l.length > 0);
-    const hints = hintsText
-      .split(',')
-      .map((h) => h.trim())
-      .filter((h) => h.length > 0);
+    setUploading(true);
+    setUploadError('');
 
-    if (modalMode === 'add') {
-      const newLesson: LessonEntry = {
-        ...form,
-        id: `custom_${Date.now()}`,
-        chunks: form.type === 'shadowing' ? chunks : undefined,
-        hints: form.type === 'speaking' ? hints : undefined,
-      };
-      const updated = [...customLessons, newLesson];
-      setCustomLessons(updated);
-      saveCustomLessons(updated);
-    } else if (modalMode === 'edit' && editingLesson) {
-      const updated = customLessons.map((l) =>
-        l.id === editingLesson.id
-          ? {
-              ...form,
-              id: l.id,
-              chunks: form.type === 'shadowing' ? chunks : undefined,
-              hints: form.type === 'speaking' ? hints : undefined,
-            }
-          : l
-      );
-      setCustomLessons(updated);
-      saveCustomLessons(updated);
+    try {
+      // Determine lesson ID upfront so we can use it in Storage paths
+      const lessonId = (modalMode === 'edit' && editingLesson)
+        ? editingLesson.id
+        : `custom_${Date.now()}`;
+
+      // Resolve media URLs: upload new file, or keep existing URL
+      let audioUrl = form.audioUrl || '';
+      let audioSlowUrl = form.audioSlowUrl || '';
+      let imageUrl = form.imageUrl || '';
+
+      if (audioFile) {
+        audioUrl = await uploadToStorage(audioFile, `custom/audio/${lessonId}-normal`);
+      }
+      if (audioSlowFile) {
+        audioSlowUrl = await uploadToStorage(audioSlowFile, `custom/audio/${lessonId}-slow`);
+      }
+      if (imageFile) {
+        imageUrl = await uploadToStorage(imageFile, `custom/images/${lessonId}`);
+      }
+
+      const chunks = chunksText
+        .split('\n')
+        .map((l) => l.trim())
+        .filter((l) => l.length > 0);
+      const hints = hintsText
+        .split(',')
+        .map((h) => h.trim())
+        .filter((h) => h.length > 0);
+
+      if (modalMode === 'add') {
+        const newLesson: LessonEntry = {
+          ...form,
+          id: lessonId,
+          audioUrl,
+          audioSlowUrl,
+          imageUrl,
+          chunks: form.type === 'shadowing' ? chunks : undefined,
+          hints: form.type === 'speaking' ? hints : undefined,
+        };
+        const updated = [...customLessons, newLesson];
+        setCustomLessons(updated);
+        saveCustomLessons(updated);
+      } else if (modalMode === 'edit' && editingLesson) {
+        const updated = customLessons.map((l) =>
+          l.id === editingLesson.id
+            ? {
+                ...form,
+                id: l.id,
+                audioUrl,
+                audioSlowUrl,
+                imageUrl,
+                chunks: form.type === 'shadowing' ? chunks : undefined,
+                hints: form.type === 'speaking' ? hints : undefined,
+              }
+            : l
+        );
+        setCustomLessons(updated);
+        saveCustomLessons(updated);
+      }
+
+      setAudioFile(null);
+      setAudioSlowFile(null);
+      setImageFile(null);
+      setModalMode(null);
+    } catch (err) {
+      setUploadError((err as Error).message);
+    } finally {
+      setUploading(false);
     }
-    setModalMode(null);
   }
 
   function handleDelete(id: string) {
@@ -1683,19 +1757,132 @@ export default function AdminPage() {
                 </>
               )}
             </div>
+
+            {/* ── Media uploads ── */}
+            <div className="border-t border-gray-100 pt-4 space-y-4">
+              <p className="text-xs font-bold text-gray-400 uppercase tracking-wide">Media files</p>
+
+              {/* Audio normal speed — shadowing & dictation */}
+              {(form.type === 'shadowing' || form.type === 'dictation') && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Audio — Normal Speed
+                  </label>
+                  <label className="flex items-center gap-2 px-4 py-2.5 border border-dashed border-gray-300 rounded-xl text-sm text-gray-500 cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-colors">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <span className="flex-1 truncate">
+                      {audioFile ? audioFile.name : 'Upload MP3 / WAV'}
+                    </span>
+                    {audioFile && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setAudioFile(null); }}
+                        className="text-red-400 hover:text-red-600 font-bold flex-shrink-0"
+                      >✕</button>
+                    )}
+                    <input
+                      type="file" accept="audio/*" className="hidden"
+                      onChange={(e) => setAudioFile(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                  {form.audioUrl && !audioFile && (
+                    <p className="text-xs text-emerald-600 mt-1 truncate">✓ Current: {form.audioUrl}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Audio slow speed — shadowing only */}
+              {form.type === 'shadowing' && (
+                <div>
+                  <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                    Audio — Slow Speed <span className="text-gray-400 font-normal">(optional)</span>
+                  </label>
+                  <label className="flex items-center gap-2 px-4 py-2.5 border border-dashed border-gray-300 rounded-xl text-sm text-gray-500 cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-colors">
+                    <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                    </svg>
+                    <span className="flex-1 truncate">
+                      {audioSlowFile ? audioSlowFile.name : 'Upload slow-speed MP3 / WAV'}
+                    </span>
+                    {audioSlowFile && (
+                      <button
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); setAudioSlowFile(null); }}
+                        className="text-red-400 hover:text-red-600 font-bold flex-shrink-0"
+                      >✕</button>
+                    )}
+                    <input
+                      type="file" accept="audio/*" className="hidden"
+                      onChange={(e) => setAudioSlowFile(e.target.files?.[0] || null)}
+                    />
+                  </label>
+                  {form.audioSlowUrl && !audioSlowFile && (
+                    <p className="text-xs text-emerald-600 mt-1 truncate">✓ Current: {form.audioSlowUrl}</p>
+                  )}
+                </div>
+              )}
+
+              {/* Image — all types */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1.5">
+                  Lesson Image <span className="text-gray-400 font-normal">(optional)</span>
+                </label>
+                <label className="flex items-center gap-2 px-4 py-2.5 border border-dashed border-gray-300 rounded-xl text-sm text-gray-500 cursor-pointer hover:border-blue-400 hover:bg-blue-50/30 transition-colors">
+                  <svg className="w-4 h-4 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+                  </svg>
+                  <span className="flex-1 truncate">
+                    {imageFile ? imageFile.name : 'Upload JPG / PNG / WebP'}
+                  </span>
+                  {imageFile && (
+                    <button
+                      type="button"
+                      onClick={(e) => { e.preventDefault(); setImageFile(null); }}
+                      className="text-red-400 hover:text-red-600 font-bold flex-shrink-0"
+                    >✕</button>
+                  )}
+                  <input
+                    type="file" accept="image/*" className="hidden"
+                    onChange={(e) => setImageFile(e.target.files?.[0] || null)}
+                  />
+                </label>
+                {form.imageUrl && !imageFile && (
+                  <p className="text-xs text-emerald-600 mt-1 truncate">✓ Current: {form.imageUrl}</p>
+                )}
+              </div>
+
+              {uploadError && (
+                <p className="text-sm text-red-600 font-medium bg-red-50 px-3 py-2 rounded-lg flex items-start gap-2">
+                  <svg className="w-4 h-4 mt-0.5 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                    <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7 4a1 1 0 11-2 0 1 1 0 012 0zm-1-9a1 1 0 00-1 1v4a1 1 0 102 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                  {uploadError}
+                </p>
+              )}
+            </div>
             <div className="p-6 border-t border-gray-100 flex gap-3 justify-end">
               <button
                 onClick={() => setModalMode(null)}
-                className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors"
+                disabled={uploading}
+                className="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-xl font-semibold text-sm hover:bg-gray-200 transition-colors disabled:opacity-50"
               >
                 Cancel
               </button>
               <button
                 onClick={handleSave}
-                disabled={!form.title.trim() || (form.type !== 'speaking' && !form.transcript?.trim())}
-                className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-violet-500 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                disabled={!form.title.trim() || (form.type !== 'speaking' && !form.transcript?.trim()) || uploading}
+                className="px-5 py-2.5 bg-gradient-to-r from-blue-500 to-violet-500 text-white rounded-xl font-bold text-sm hover:opacity-90 transition-all disabled:opacity-40 disabled:cursor-not-allowed flex items-center gap-2"
               >
-                {modalMode === 'add' ? 'Add Lesson' : 'Save Changes'}
+                {uploading ? (
+                  <>
+                    <div className="w-3.5 h-3.5 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    Uploading…
+                  </>
+                ) : (
+                  modalMode === 'add' ? 'Add Lesson' : 'Save Changes'
+                )}
               </button>
             </div>
           </div>

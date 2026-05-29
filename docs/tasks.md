@@ -178,9 +178,9 @@
 - [x] T-13-1 🔴 Route `/admin` — bảo vệ bằng role teacher/admin
 - [x] T-13-2 🔴 Danh sách bài học + tìm kiếm + filter
 - [x] T-13-3 🔴 Form tạo bài học Shadowing/Dictation: title, level, topic, type, transcript, chunking, notes
-- [ ] T-13-4 🔴 Upload audio normal speed lên Supabase Storage *(Supabase pending)*
-- [ ] T-13-5 🔴 Upload audio slow speed lên Supabase Storage *(Supabase pending)*
-- [ ] T-13-6 🔴 Upload hình ảnh bài học *(Supabase pending)*
+- [x] T-13-4 🔴 Upload audio normal speed lên Supabase Storage — *file input trong admin modal → `supabase.storage.from('audio').upload('custom/audio/{id}-normal.{ext}')` → lưu publicUrl vào lesson*
+- [x] T-13-5 🔴 Upload audio slow speed lên Supabase Storage — *tương tự T-13-4, path `custom/audio/{id}-slow.{ext}`, chỉ hiện khi type=shadowing*
+- [x] T-13-6 🔴 Upload hình ảnh bài học — *file input image/*, path `custom/images/{id}.{ext}` trong bucket `audio`, lưu URL vào `imageUrl`; shadowing/dictation/speaking pages fallback load custom lessons từ localStorage*
 - [x] T-13-7 🔴 Chỉnh sửa / xoá bài học (custom lessons in localStorage)
 - [x] T-13-8 🔴 Tổ chức content theo level / topic / unit
 - [x] T-13-9 🔴 Form tạo/chỉnh sửa/xoá bài Reading: passage, image, câu hỏi (mixed types) — *`app/admin/tabs/ReadingAdmin.tsx`: metadata form + paragraphs textarea (blank-line sep) + questions JSON editor with validate button; upsert to Supabase reading_lessons*
@@ -246,17 +246,17 @@
 | 9 | Writing Lesson | 12 | 14 | 🔴 |
 | 10 | Speaking Practice | 2 | 3 | 🟡 |
 | 11 | Progress Tracking | 10 | 10 | ✅ |
-| 12 | Admin / Teacher Panel | 10 | 14 | 🔴 |
+| 12 | Admin / Teacher Panel | 13 | 14 | 🔴 |
 | 13 | Content | 8 | 10 | 🔴 |
 | 14 | Testing & Polish | 9 | 9 | ✅ |
 | 15 | Deploy Production | 2 | 5 | 🔴 |
-| **Tổng** | | **131** | **149** | **88%** |
+| **Tổng** | | **134** | **149** | **90%** |
 
 ---
 
 ## 🗺️ KẾ HOẠCH THỰC HIỆN TIẾP THEO
 
-> Sprint F (Testing & Polish) hoàn thành. Còn lại: Supabase Storage upload + optional features (OAuth, AI feedback, Sentry).
+> Sprint G (Supabase Storage Upload) hoàn thành. Còn lại: optional features (OAuth, AI feedback, Sentry, custom domain).
 
 ### ✅ SPRINT A — Data Layer *(DONE)*
 - [x] `data/reading-lessons.json` — 10 bài (r1–r10)
@@ -312,6 +312,17 @@
 
 ---
 
+### ✅ SPRINT G — Supabase Storage Upload *(DONE)*
+
+| Task | Kết quả |
+|---|---|
+| T-13-4 | `app/admin/page.tsx` — file input "Audio Normal Speed" trong modal Add/Edit (shadowing + dictation); `uploadToStorage()` upsert lên Supabase `audio` bucket; lưu publicUrl vào `audioUrl` |
+| T-13-5 | Tương tự T-13-4, file "Audio Slow Speed" chỉ hiện với shadowing; path `custom/audio/{id}-slow.{ext}` |
+| T-13-6 | File input "Lesson Image" (image/*) cho tất cả types; path `custom/images/{id}.{ext}`; lưu vào `imageUrl` |
+| Bonus | `app/shadowing/[id]/page.tsx` + `dictation/` + `speaking/` — fallback load custom lesson từ localStorage nếu không có trong static JSON; graceful message nếu audio chưa được upload |
+
+---
+
 ### Dependency map
 ```
 ✅ Sprint A → ✅ Sprint B → ✅ Sprint C → ✅ Sprint D
@@ -319,4 +330,6 @@
                           ✅ Sprint E (Admin Reading/Writing CRUD)
                                                   ↓
                                 ✅ Sprint F (Testing & Polish)
+                                                  ↓
+                          ✅ Sprint G (Supabase Storage Upload)
 ```

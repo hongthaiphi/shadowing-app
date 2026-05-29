@@ -24,14 +24,52 @@ type Lesson = {
   durationMinutes: number;
 };
 
+const CUSTOM_KEY = 'shadowspeak_custom_lessons';
+
+function loadCustomSpeakingLesson(id: string): Lesson | null {
+  try {
+    const raw = localStorage.getItem(CUSTOM_KEY);
+    if (!raw) return null;
+    const customs = JSON.parse(raw) as Array<Record<string, unknown>>;
+    const found = customs.find((l) => l.id === id && l.type === 'speaking');
+    if (!found) return null;
+    return {
+      id: String(found.id || ''),
+      title: String(found.title || ''),
+      level: String(found.level || ''),
+      topic: String(found.topic || ''),
+      type: 'speaking',
+      image: String(found.imageUrl || found.image || ''),
+      prompt: String(found.prompt || ''),
+      exampleAnswer: String(found.exampleAnswer || ''),
+      hints: Array.isArray(found.hints) ? (found.hints as string[]) : [],
+      tips: String(found.tips || ''),
+      durationMinutes: Number(found.durationMinutes) || 5,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export default function SpeakingPage({ params }: { params: { id: string } }) {
   const { id } = params;
-  const lesson = (speakingLessons as Lesson[]).find((l) => l.id === id);
 
+  const jsonLesson = (speakingLessons as Lesson[]).find((l) => l.id === id) || null;
+
+  const [lesson, setLesson] = useState<Lesson | null>(jsonLesson);
+  const [lessonLoaded, setLessonLoaded] = useState(!!jsonLesson);
   const [completed, setCompleted] = useState(false);
   const [hasRecorded, setHasRecorded] = useState(false);
   const [startTime] = useState(Date.now());
   const [imageLoaded, setImageLoaded] = useState(false);
+
+  useEffect(() => {
+    if (!jsonLesson) {
+      const custom = loadCustomSpeakingLesson(id);
+      if (custom) setLesson(custom);
+      setLessonLoaded(true);
+    }
+  }, [id, jsonLesson]);
 
   useEffect(() => {
     const ids = getCompletedIds();
@@ -43,10 +81,22 @@ export default function SpeakingPage({ params }: { params: { id: string } }) {
     return () => { document.title = 'ShadowSpeak — English Practice'; };
   }, [lesson]);
 
-  if (!lesson) notFound();
+  if (!lessonLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-6 h-6 border-2 border-orange-200 border-t-orange-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!lesson) {
+    notFound();
+    return null;
+  }
 
   function handleMarkComplete() {
     const timeSpent = Math.round((Date.now() - startTime) / 1000);
+    // lesson is non-null here: we returned null above if lesson was null
     markComplete(lesson!.id, timeSpent, undefined, 'speaking');
     setCompleted(true);
   }

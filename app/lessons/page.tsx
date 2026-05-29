@@ -3,44 +3,39 @@ import LessonsContent from './LessonsContent';
 
 function LessonsSkeleton() {
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 animate-pulse">
-      {/* Header */}
-      <div className="h-28 bg-gradient-to-r from-blue-200 to-violet-200 rounded-2xl mb-8" />
+    <div className="ss-lessons" style={{ animation: 'ss-pulse 1.6s ease-in-out infinite' }}>
+      {/* Header skeleton */}
+      <div style={{ marginBottom: 40 }}>
+        <div style={{ height: 12, width: 60, background: 'color-mix(in oklab, var(--ink), transparent 88%)', borderRadius: 4, marginBottom: 16 }} />
+        <div style={{ height: 56, width: '60%', background: 'color-mix(in oklab, var(--ink), transparent 90%)', borderRadius: 8, marginBottom: 12 }} />
+        <div style={{ height: 16, width: '40%', background: 'color-mix(in oklab, var(--ink), transparent 92%)', borderRadius: 4 }} />
+      </div>
 
-      {/* Filters */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-5 mb-8 space-y-4">
-        {[...Array(4)].map((_, i) => (
-          <div key={i}>
-            <div className="h-3 w-12 bg-gray-200 rounded mb-2" />
-            <div className="flex gap-2">
-              {[...Array(i === 1 ? 4 : i === 2 ? 6 : 3)].map((_, j) => (
-                <div key={j} className="h-8 w-20 bg-gray-100 rounded-xl" />
-              ))}
-            </div>
+      {/* Filters skeleton */}
+      <div className="ss-filters">
+        {[4, 5, 4, 3].map((count, row) => (
+          <div key={row} className="ss-filter-row">
+            <div style={{ width: 50, height: 10, background: 'color-mix(in oklab, var(--ink), transparent 88%)', borderRadius: 3 }} />
+            {Array.from({ length: count }, (_, j) => (
+              <div key={j} style={{ height: 34, width: 64 + j * 8, background: 'color-mix(in oklab, var(--ink), transparent 92%)', borderRadius: 999 }} />
+            ))}
           </div>
         ))}
       </div>
 
-      {/* Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-        {[...Array(6)].map((_, i) => (
-          <div key={i} className="bg-white rounded-2xl border border-gray-100 shadow-sm overflow-hidden">
-            <div className="h-36 bg-gray-200" />
-            <div className="p-5">
-              <div className="flex gap-2 mb-3">
-                <div className="h-5 w-16 bg-gray-200 rounded-full" />
-                <div className="h-5 w-20 bg-gray-200 rounded-full" />
-              </div>
-              <div className="h-5 bg-gray-200 rounded-lg mb-2 w-3/4" />
-              <div className="h-4 bg-gray-100 rounded-lg w-1/3 mb-4" />
-              <div className="flex justify-between">
-                <div className="h-3 w-10 bg-gray-100 rounded" />
-                <div className="h-3 w-12 bg-gray-100 rounded" />
-              </div>
-            </div>
+      {/* Cards skeleton */}
+      <div className="ss-lessons-grid" style={{ marginTop: 28 }}>
+        {Array.from({ length: 9 }, (_, i) => (
+          <div key={i} className="ss-lesson-card" style={{ pointerEvents: 'none' }}>
+            <div style={{ height: 12, width: 28, background: 'color-mix(in oklab, var(--ink), transparent 88%)', borderRadius: 3 }} />
+            <div style={{ height: 28, width: '75%', background: 'color-mix(in oklab, var(--ink), transparent 90%)', borderRadius: 6 }} />
+            <div style={{ height: 32, background: 'color-mix(in oklab, var(--ink), transparent 92%)', borderRadius: 4 }} />
+            <div style={{ height: 12, width: '50%', background: 'color-mix(in oklab, var(--ink), transparent 92%)', borderRadius: 3 }} />
           </div>
         ))}
       </div>
+
+      <style>{`@keyframes ss-pulse { 0%,100%{opacity:1} 50%{opacity:.55} }`}</style>
     </div>
   );
 }

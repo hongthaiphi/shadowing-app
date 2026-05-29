@@ -1,11 +1,45 @@
 import type { Metadata, Viewport } from 'next';
+import { Instrument_Serif, Inter_Tight, Fraunces, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/Navbar';
+import Footer from '@/components/Footer';
 
+/* ─── Google Fonts ──────────────────────────────────────────────────────────── */
+const instrumentSerif = Instrument_Serif({
+  weight: '400',
+  style: ['normal', 'italic'],
+  subsets: ['latin'],
+  variable: '--font-instrument-serif',
+  display: 'swap',
+});
+
+const interTight = Inter_Tight({
+  weight: ['300', '400', '500', '600', '700'],
+  subsets: ['latin'],
+  variable: '--font-inter-tight',
+  display: 'swap',
+});
+
+const fraunces = Fraunces({
+  weight: ['400', '500', '600'],
+  style: ['normal', 'italic'],
+  subsets: ['latin'],
+  variable: '--font-fraunces',
+  display: 'swap',
+});
+
+const jetbrainsMono = JetBrains_Mono({
+  weight: ['400', '500'],
+  subsets: ['latin'],
+  variable: '--font-jetbrains-mono',
+  display: 'swap',
+});
+
+/* ─── Metadata ──────────────────────────────────────────────────────────────── */
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#6366f1',
+  themeColor: '#1a1410',
 };
 
 export const metadata: Metadata = {
@@ -31,19 +65,17 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+/* ─── Root layout ───────────────────────────────────────────────────────────── */
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="bg-gradient-to-br from-slate-50 via-blue-50 to-violet-50 min-h-screen">
+    <html
+      lang="en"
+      className={`${instrumentSerif.variable} ${interTight.variable} ${fraunces.variable} ${jetbrainsMono.variable}`}
+    >
+      <body className="min-h-screen">
         <Navbar />
         <main>{children}</main>
-        <footer className="text-center py-8 text-sm text-gray-400 border-t border-gray-100 mt-16 bg-white/50">
-          Powered by <span className="font-semibold text-gray-600">ShadowSpeak</span>
-        </footer>
+        <Footer />
       </body>
     </html>
   );

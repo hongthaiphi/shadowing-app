@@ -5,6 +5,26 @@ import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { getUser, logout, User } from '@/lib/auth';
 
+function WaveIcon() {
+  return (
+    <svg
+      viewBox="0 0 28 28" width="22" height="22" fill="none"
+      stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"
+      aria-hidden="true"
+    >
+      <path d="M5 14 Q 9 6 14 14 T 23 14" />
+      <path d="M5 14 Q 9 22 14 14 T 23 14" opacity=".4" />
+    </svg>
+  );
+}
+
+/* Hamburger bar shared style */
+const BAR: React.CSSProperties = {
+  display: 'block', width: 18, height: 1.5,
+  background: 'var(--ink)', borderRadius: 2,
+  transition: 'transform .2s, opacity .2s',
+};
+
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
@@ -22,153 +42,163 @@ export default function Navbar() {
     router.push('/');
   }
 
-  const navLinks = [
-    { href: '/', label: 'Home' },
-    ...(user ? [
-      { href: '/lessons', label: 'Lessons' },
-      { href: '/progress', label: 'Progress' },
-      ...(user.role === 'admin' || user.role === 'teacher' ? [{ href: '/admin', label: 'Admin' }] : []),
-    ] : []),
-  ];
-
   function isActive(href: string) {
     if (href === '/') return pathname === '/';
     return pathname.startsWith(href);
   }
 
+  const navLinks = [
+    { href: '/lessons',  label: 'Lessons' },
+    ...(user ? [{ href: '/progress', label: 'Progress' }] : []),
+    ...(user && (user.role === 'admin' || user.role === 'teacher')
+      ? [{ href: '/admin', label: 'Admin' }]
+      : []),
+  ];
+
   return (
-    <nav className="bg-white/90 backdrop-blur-md border-b border-gray-200 sticky top-0 z-50 shadow-sm">
-      <div className="max-w-6xl mx-auto px-4">
-        <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <Link href="/" className="flex items-center gap-2 font-bold text-xl text-gray-800 hover:opacity-80 transition-opacity">
-            <span className="text-2xl">🎧</span>
-            <span className="bg-gradient-to-r from-blue-600 to-violet-600 bg-clip-text text-transparent">
-              ShadowSpeak
-            </span>
+    <header className="ss-nav" role="banner">
+      {/* ── Logo ── */}
+      <Link href="/" className="ss-logo" aria-label="ShadowSpeak home">
+        <span className="ss-logo-mark"><WaveIcon /></span>
+        <span className="ss-logo-word">Shadow<em>speak</em></span>
+      </Link>
+
+      {/* ── Desktop centre nav ── */}
+      <nav className="ss-nav-links" aria-label="Main navigation">
+        {navLinks.map((link) => (
+          <Link key={link.href} href={link.href} className={isActive(link.href) ? 'on' : ''}>
+            {link.label}
           </Link>
+        ))}
+      </nav>
 
-          {/* Desktop Nav */}
-          <div className="hidden md:flex items-center gap-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                className={`px-4 py-2 rounded-lg font-medium text-sm transition-all ${
-                  isActive(link.href)
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                {link.label}
-                {isActive(link.href) && (
-                  <span className="block h-0.5 bg-gradient-to-r from-blue-500 to-violet-500 rounded-full mt-0.5" />
+      {/* ── Desktop right (auth + hamburger) ── */}
+      <div className="ss-nav-cta">
+        {/* Auth area — hidden on mobile via .ss-nav-cta-auth class */}
+        <span className="ss-nav-cta-auth" style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {user ? (
+            <>
+              <span style={{ fontSize: 13, color: 'var(--muted)' }}>
+                {user.name}
+                {user.role !== 'student' && (
+                  <span style={{
+                    marginLeft: 6, fontSize: 11, padding: '2px 7px',
+                    borderRadius: 4,
+                    background: 'color-mix(in oklab, var(--accent), transparent 85%)',
+                    color: 'var(--accent)', fontWeight: 600, textTransform: 'capitalize',
+                  }}>
+                    {user.role}
+                  </span>
                 )}
-              </Link>
-            ))}
-          </div>
+              </span>
+              <button className="ss-btn-ghost" onClick={handleLogout}>Sign out</button>
+            </>
+          ) : (
+            <>
+              <Link href="/login"    className="ss-btn-ghost">Sign in</Link>
+              <Link href="/register" className="ss-btn-solid">Start free →</Link>
+            </>
+          )}
+        </span>
 
-          {/* Desktop Right */}
-          <div className="hidden md:flex items-center gap-3">
+        {/* Hamburger — shown on mobile via CSS */}
+        <button
+          className="ss-mobile-menu-btn"
+          onClick={() => setMenuOpen((o) => !o)}
+          aria-label="Toggle navigation menu"
+          aria-expanded={menuOpen}
+          style={{
+            width: 36, height: 36, borderRadius: 8, cursor: 'pointer',
+            border: '1px solid color-mix(in oklab, var(--ink), transparent 88%)',
+            flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 5,
+            background: 'transparent',
+          }}
+        >
+          <span style={{ ...BAR, transform: menuOpen ? 'translateY(3.5px) rotate(45deg)' : 'none' }} />
+          <span style={{ ...BAR, opacity: menuOpen ? 0 : 1 }} />
+          <span style={{ ...BAR, transform: menuOpen ? 'translateY(-3.5px) rotate(-45deg)' : 'none' }} />
+        </button>
+      </div>
+
+      {/* ── Mobile drawer (only rendered when open) ── */}
+      {menuOpen && (
+        <div
+          style={{
+            gridColumn: '1 / -1',
+            padding: '12px 0 4px',
+            borderTop: '1px solid color-mix(in oklab, var(--ink), transparent 90%)',
+            display: 'flex', flexDirection: 'column', gap: 4,
+          }}
+        >
+          {navLinks.map((link) => (
+            <Link
+              key={link.href}
+              href={link.href}
+              onClick={() => setMenuOpen(false)}
+              style={{
+                padding: '10px 16px', borderRadius: 8, fontSize: 15,
+                fontWeight: isActive(link.href) ? 600 : 400,
+                color: isActive(link.href) ? 'var(--ink)' : 'var(--muted)',
+                background: isActive(link.href)
+                  ? 'color-mix(in oklab, var(--ink), transparent 92%)'
+                  : 'transparent',
+              }}
+            >
+              {link.label}
+            </Link>
+          ))}
+
+          <div style={{
+            marginTop: 8, paddingTop: 12,
+            borderTop: '1px dashed color-mix(in oklab, var(--ink), transparent 88%)',
+            display: 'flex', flexDirection: 'column', gap: 8,
+          }}>
             {user ? (
-              <div className="flex items-center gap-3">
-                <span className="text-sm text-gray-600">
-                  <span className="font-medium text-gray-800">{user.name}</span>
-                  {user.role !== 'student' && (
-                    <span className="ml-1 text-xs bg-violet-100 text-violet-700 px-2 py-0.5 rounded-full font-medium capitalize">
-                      {user.role}
-                    </span>
-                  )}
+              <>
+                <span style={{ padding: '0 16px', fontSize: 13, color: 'var(--muted)' }}>
+                  {user.email}
                 </span>
                 <button
                   onClick={handleLogout}
-                  className="text-sm text-gray-500 hover:text-red-600 font-medium transition-colors px-3 py-1.5 rounded-lg hover:bg-red-50"
+                  style={{
+                    textAlign: 'left', padding: '10px 16px', borderRadius: 8,
+                    fontSize: 14, color: 'var(--accent)', fontWeight: 500,
+                    background: 'color-mix(in oklab, var(--accent), transparent 92%)',
+                    cursor: 'pointer', border: 'none',
+                  }}
                 >
-                  Logout
+                  Sign out
                 </button>
-              </div>
+              </>
             ) : (
-              <div className="flex items-center gap-2">
+              <>
                 <Link
                   href="/login"
-                  className="text-sm font-medium text-gray-600 hover:text-gray-900 px-3 py-1.5 rounded-lg hover:bg-gray-100 transition-all"
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    padding: '10px 16px', borderRadius: 8, fontSize: 14,
+                    fontWeight: 500, color: 'var(--ink)', textAlign: 'center',
+                    border: '1px solid color-mix(in oklab, var(--ink), transparent 85%)',
+                  }}
                 >
-                  Login
+                  Sign in
                 </Link>
                 <Link
                   href="/register"
-                  className="text-sm font-bold text-white bg-gradient-to-r from-blue-500 to-violet-500 px-4 py-2 rounded-xl hover:opacity-90 transition-opacity shadow-sm"
+                  onClick={() => setMenuOpen(false)}
+                  style={{
+                    padding: '11px 16px', borderRadius: 999, fontSize: 14,
+                    fontWeight: 500, textAlign: 'center',
+                    background: 'var(--ink)', color: 'var(--bg)',
+                  }}
                 >
-                  Get Started
+                  Start free →
                 </Link>
-              </div>
+              </>
             )}
           </div>
-
-          {/* Mobile hamburger */}
-          <button
-            onClick={() => setMenuOpen(!menuOpen)}
-            className="md:hidden p-2 rounded-lg text-gray-600 hover:bg-gray-100 transition-colors"
-            aria-label="Toggle menu"
-          >
-            <div className="w-5 h-4 flex flex-col justify-between">
-              <span className={`block h-0.5 bg-current rounded transition-all ${menuOpen ? 'rotate-45 translate-y-1.5' : ''}`} />
-              <span className={`block h-0.5 bg-current rounded transition-all ${menuOpen ? 'opacity-0' : ''}`} />
-              <span className={`block h-0.5 bg-current rounded transition-all ${menuOpen ? '-rotate-45 -translate-y-1.5' : ''}`} />
-            </div>
-          </button>
         </div>
-
-        {/* Mobile Menu */}
-        {menuOpen && (
-          <div className="md:hidden border-t border-gray-100 py-3 space-y-1">
-            {navLinks.map((link) => (
-              <Link
-                key={link.href}
-                href={link.href}
-                onClick={() => setMenuOpen(false)}
-                className={`block px-4 py-2.5 rounded-lg font-medium text-sm transition-all ${
-                  isActive(link.href)
-                    ? 'text-blue-600 bg-blue-50'
-                    : 'text-gray-600 hover:text-gray-900 hover:bg-gray-100'
-                }`}
-              >
-                {link.label}
-              </Link>
-            ))}
-            <div className="pt-2 border-t border-gray-100">
-              {user ? (
-                <div className="px-4">
-                  <p className="text-sm text-gray-500 mb-2">{user.email}</p>
-                  <button
-                    onClick={handleLogout}
-                    className="w-full text-sm text-left text-red-600 font-medium py-2 px-3 rounded-lg hover:bg-red-50 transition-colors"
-                  >
-                    Logout
-                  </button>
-                </div>
-              ) : (
-                <div className="flex flex-col gap-2 px-4">
-                  <Link
-                    href="/login"
-                    onClick={() => setMenuOpen(false)}
-                    className="text-sm font-medium text-center text-gray-700 py-2 px-4 rounded-xl border border-gray-200 hover:bg-gray-50 transition-all"
-                  >
-                    Login
-                  </Link>
-                  <Link
-                    href="/register"
-                    onClick={() => setMenuOpen(false)}
-                    className="text-sm font-bold text-center text-white bg-gradient-to-r from-blue-500 to-violet-500 py-2 px-4 rounded-xl hover:opacity-90 transition-opacity"
-                  >
-                    Get Started
-                  </Link>
-                </div>
-              )}
-            </div>
-          </div>
-        )}
-      </div>
-    </nav>
+      )}
+    </header>
   );
 }
