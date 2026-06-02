@@ -61,18 +61,60 @@ type RecentActivity = {
   timeSpent: number;
 };
 
-const STORAGE_KEY = 'shadowspeak_custom_lessons';
-
-function loadCustomLessons(): LessonEntry[] {
-  if (typeof window === 'undefined') return [];
+// Legacy: migrate any locally-stored custom lessons to Supabase on first load
+async function migrateLegacyLessons(supabase: ReturnType<typeof import('@/lib/supabase').getSupabase>): Promise<void> {
+  const STORAGE_KEY = 'shadowspeak_custom_lessons';
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    return raw ? JSON.parse(raw) : [];
-  } catch { return []; }
+    if (!raw) return;
+    const lessons = JSON.parse(raw) as LessonEntry[];
+    if (lessons.length === 0) return;
+    await supabase.from('lessons').upsert(
+      lessons.map((l) => lessonToRow(l)),
+      { onConflict: 'id', ignoreDuplicates: true }
+    );
+    localStorage.removeItem(STORAGE_KEY);
+  } catch { /* best-effort */ }
 }
 
-function saveCustomLessons(lessons: LessonEntry[]): void {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(lessons));
+function lessonToRow(l: LessonEntry) {
+  return {
+    id: l.id,
+    title: l.title,
+    type: l.type,
+    level: l.level,
+    topic: l.topic,
+    subtype: l.subtype ?? null,
+    transcript: l.transcript ?? null,
+    chunks: l.chunks ?? null,
+    prompt: l.prompt ?? null,
+    example_answer: l.exampleAnswer ?? null,
+    hints: l.hints ?? null,
+    audio_url: l.audioUrl ?? null,
+    audio_slow_url: l.audioSlowUrl ?? null,
+    image_url: l.imageUrl ?? null,
+    duration_minutes: l.durationMinutes ?? 5,
+  };
+}
+
+function rowToLesson(row: Record<string, unknown>): LessonEntry {
+  return {
+    id: String(row.id),
+    title: String(row.title),
+    type: String(row.type),
+    level: String(row.level),
+    topic: String(row.topic),
+    subtype: row.subtype ? String(row.subtype) : undefined,
+    transcript: row.transcript ? String(row.transcript) : undefined,
+    chunks: Array.isArray(row.chunks) ? (row.chunks as string[]) : undefined,
+    prompt: row.prompt ? String(row.prompt) : undefined,
+    exampleAnswer: row.example_answer ? String(row.example_answer) : undefined,
+    hints: Array.isArray(row.hints) ? (row.hints as string[]) : undefined,
+    audioUrl: row.audio_url ? String(row.audio_url) : undefined,
+    audioSlowUrl: row.audio_slow_url ? String(row.audio_slow_url) : undefined,
+    imageUrl: row.image_url ? String(row.image_url) : undefined,
+    durationMinutes: Number(row.duration_minutes) || 5,
+  };
 }
 
 const VALID_TYPES = ['shadowing', 'dictation', 'speaking'];
@@ -252,11 +294,24 @@ export default function AdminPage() {
       return;
     }
     setCurrentUserRole(user.role);
-    setCustomLessons(loadCustomLessons());
     setTopics(loadTopics());
     setLevels(loadLevels());
-    setLoading(false);
+
+    // Load custom lessons from Supabase
+    const supabase = getSupabase();
+    migrateLegacyLessons(supabase).then(() => {
+      supabase.from('lessons').select('*').order('created_at', { ascending: false }).then(({ data }) => {
+        setCustomLessons((data ?? []).map((r) => rowToLesson(r as Record<string, unknown>)));
+        setLoading(false);
+      });
+    });
   }, [router]);
+
+  async function loadCustomLessonsFromSupabase() {
+    const supabase = getSupabase();
+    const { data } = await supabase.from('lessons').select('*').order('created_at', { ascending: false });
+    setCustomLessons((data ?? []).map((r) => rowToLesson(r as Record<string, unknown>)));
+  }
 
   async function loadStats(force = false) {
     if (statsLoaded && !force) return;
@@ -277,9 +332,9 @@ export default function AdminPage() {
       const profileList = (profiles ?? []) as Array<{ id: string; name: string; email: string; role: string; created_at: string }>;
       const progressList = (progress ?? []) as Array<{ user_id: string; lesson_id: string; lesson_type: string; completed_at: string; time_spent: number; score: number | null }>;
 
-      // Build custom lesson title map (may have been added since page loaded)
+      // Build custom lesson title map from already-loaded state
       const customMap: Record<string, string> = Object.fromEntries(
-        loadCustomLessons().map((l) => [l.id, l.title])
+        customLessons.map((l) => [l.id, l.title])
       );
       const titleMap = { ...JSON_LESSON_MAP, ...customMap };
 
@@ -444,37 +499,23 @@ export default function AdminPage() {
         .map((h) => h.trim())
         .filter((h) => h.length > 0);
 
-      if (modalMode === 'add') {
-        const newLesson: LessonEntry = {
-          ...form,
-          id: lessonId,
-          audioUrl,
-          audioSlowUrl,
-          imageUrl,
-          chunks: form.type === 'shadowing' ? chunks : undefined,
-          hints: form.type === 'speaking' ? hints : undefined,
-        };
-        const updated = [...customLessons, newLesson];
-        setCustomLessons(updated);
-        saveCustomLessons(updated);
-      } else if (modalMode === 'edit' && editingLesson) {
-        const updated = customLessons.map((l) =>
-          l.id === editingLesson.id
-            ? {
-                ...form,
-                id: l.id,
-                audioUrl,
-                audioSlowUrl,
-                imageUrl,
-                chunks: form.type === 'shadowing' ? chunks : undefined,
-                hints: form.type === 'speaking' ? hints : undefined,
-              }
-            : l
-        );
-        setCustomLessons(updated);
-        saveCustomLessons(updated);
-      }
+      const lessonData: LessonEntry = {
+        ...form,
+        id: lessonId,
+        audioUrl,
+        audioSlowUrl,
+        imageUrl,
+        chunks: form.type === 'shadowing' ? chunks : undefined,
+        hints: form.type === 'speaking' ? hints : undefined,
+      };
 
+      const supabase = getSupabase();
+      const { error: dbError } = await supabase
+        .from('lessons')
+        .upsert(lessonToRow(lessonData), { onConflict: 'id' });
+      if (dbError) throw new Error(dbError.message);
+
+      await loadCustomLessonsFromSupabase();
       setAudioFile(null);
       setAudioSlowFile(null);
       setImageFile(null);
@@ -486,10 +527,11 @@ export default function AdminPage() {
     }
   }
 
-  function handleDelete(id: string) {
-    const updated = customLessons.filter((l) => l.id !== id);
-    setCustomLessons(updated);
-    saveCustomLessons(updated);
+  async function handleDelete(id: string) {
+    const supabase = getSupabase();
+    const { error } = await supabase.from('lessons').delete().eq('id', id);
+    if (error) { alert(error.message); return; }
+    await loadCustomLessonsFromSupabase();
     setDeleteId(null);
   }
 
@@ -645,14 +687,14 @@ export default function AdminPage() {
     URL.revokeObjectURL(url);
   }
 
-  function handleImportConfirm() {
+  async function handleImportConfirm() {
     const valid = importParsed.filter((l) => !l._error);
     if (valid.length === 0) return;
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const toImport: LessonEntry[] = valid.map(({ _error, ...rest }) => rest);
-    const updated = [...customLessons, ...toImport];
-    setCustomLessons(updated);
-    saveCustomLessons(updated);
+    const supabase = getSupabase();
+    await supabase.from('lessons').upsert(toImport.map(lessonToRow), { onConflict: 'id' });
+    await loadCustomLessonsFromSupabase();
     setImportOpen(false);
     setImportRaw('');
     setImportParsed([]);

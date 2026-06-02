@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import DictationInput from '@/components/DictationInput';
 import { markComplete, getCompletedIds } from '@/lib/progress';
+import { getSupabase } from '@/lib/supabase';
 import dictationLessons from '@/data/dictation-lessons.json';
 import { getTopicLabel } from '@/lib/topics';
 
@@ -26,35 +27,31 @@ const SUBTYPE_LABELS: Record<string, string> = {
   paragraph: '📝 Paragraph',
 };
 
-const CUSTOM_KEY = 'shadowspeak_custom_lessons';
-
-function loadCustomDictationLesson(id: string): Lesson | null {
-  try {
-    const raw = localStorage.getItem(CUSTOM_KEY);
-    if (!raw) return null;
-    const customs = JSON.parse(raw) as Array<Record<string, unknown>>;
-    const found = customs.find((l) => l.id === id && l.type === 'dictation');
-    if (!found) return null;
-    return {
-      id: String(found.id || ''),
-      title: String(found.title || ''),
-      level: String(found.level || ''),
-      topic: String(found.topic || ''),
-      type: 'dictation',
-      subtype: String(found.subtype || 'sentence'),
-      audioUrl: String(found.audioUrl || ''),
-      transcript: String(found.transcript || ''),
-      durationMinutes: Number(found.durationMinutes) || 5,
-    };
-  } catch {
-    return null;
-  }
+async function fetchDictationLesson(id: string): Promise<Lesson | null> {
+  const supabase = getSupabase();
+  const { data } = await supabase
+    .from('lessons')
+    .select('*')
+    .eq('id', id)
+    .eq('type', 'dictation')
+    .single();
+  if (!data) return null;
+  return {
+    id: String(data.id),
+    title: String(data.title),
+    level: String(data.level),
+    topic: String(data.topic),
+    type: 'dictation',
+    subtype: data.subtype ? String(data.subtype) : 'sentence',
+    audioUrl: data.audio_url ? String(data.audio_url) : '',
+    transcript: data.transcript ? String(data.transcript) : '',
+    durationMinutes: Number(data.duration_minutes) || 5,
+  };
 }
 
 export default function DictationPage({ params }: { params: { id: string } }) {
   const { id } = params;
 
-  // Try static JSON first (built-in lessons); custom lessons loaded after mount
   const jsonLesson = (dictationLessons as Lesson[]).find((l) => l.id === id) || null;
 
   const [lesson, setLesson] = useState<Lesson | null>(jsonLesson);
@@ -63,12 +60,12 @@ export default function DictationPage({ params }: { params: { id: string } }) {
   const [lastScore, setLastScore] = useState<number | null>(null);
   const [startTime] = useState(Date.now());
 
-  // If not in static JSON, check localStorage for custom lessons
   useEffect(() => {
     if (!jsonLesson) {
-      const custom = loadCustomDictationLesson(id);
-      if (custom) setLesson(custom);
-      setLessonLoaded(true);
+      fetchDictationLesson(id).then((custom) => {
+        if (custom) setLesson(custom);
+        setLessonLoaded(true);
+      });
     }
   }, [id, jsonLesson]);
 

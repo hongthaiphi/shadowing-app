@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { getCompletedIds } from '@/lib/progress';
 import { getTopicLabel, loadTopics } from '@/lib/topics';
 import { loadLevels } from '@/lib/levels';
+import { getSupabase } from '@/lib/supabase';
 import shadowingLessons from '@/data/shadowing-lessons.json';
 import dictationLessons from '@/data/dictation-lessons.json';
 import speakingLessons from '@/data/speaking-lessons.json';
@@ -24,13 +25,33 @@ type Lesson = {
   subtype?: string;
 };
 
-const allLessons: Lesson[] = [
+const STATIC_LESSONS: Lesson[] = [
   ...(shadowingLessons as Lesson[]),
   ...(dictationLessons as Lesson[]),
   ...(speakingLessons as Lesson[]),
   ...(readingLessons as Lesson[]),
   ...(writingLessons as Lesson[]),
 ];
+
+async function fetchDynamicLessons(): Promise<Lesson[]> {
+  const supabase = getSupabase();
+  const { data } = await supabase
+    .from('lessons')
+    .select('id, title, level, topic, type, image_url, duration_minutes, transcript, subtype')
+    .order('created_at', { ascending: true });
+  if (!data) return [];
+  return data.map((r) => ({
+    id: String(r.id),
+    title: String(r.title),
+    level: String(r.level),
+    topic: String(r.topic),
+    type: String(r.type),
+    image: r.image_url ? String(r.image_url) : undefined,
+    durationMinutes: Number(r.duration_minutes) || 5,
+    transcript: r.transcript ? String(r.transcript) : undefined,
+    subtype: r.subtype ? String(r.subtype) : undefined,
+  }));
+}
 
 /* Deterministic decorative mini-wave (seed-based, SSR-safe) */
 function MiniWave({ seed = 0 }: { seed?: number }) {
@@ -80,9 +101,17 @@ export default function LessonsContent() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [page, setPage] = useState(1);
+  const [allLessons, setAllLessons] = useState<Lesson[]>(STATIC_LESSONS);
 
   useEffect(() => {
     setCompletedIds(getCompletedIds());
+    fetchDynamicLessons().then((dynamic) => {
+      const staticIds = new Set(STATIC_LESSONS.map((l) => l.id));
+      const newOnes = dynamic.filter((l) => !staticIds.has(l.id));
+      if (newOnes.length > 0) {
+        setAllLessons([...STATIC_LESSONS, ...newOnes]);
+      }
+    });
   }, []);
 
   useEffect(() => {
