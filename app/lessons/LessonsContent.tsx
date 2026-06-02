@@ -46,7 +46,7 @@ async function fetchDynamicLessons(): Promise<Lesson[]> {
       .order('created_at', { ascending: true }),
     supabase
       .from('writing_lessons')
-      .select('id, title, level, topic, image_url, duration_minutes')
+      .select('id, title, level, topic, duration_minutes')
       .order('created_at', { ascending: true }),
   ]);
 
@@ -78,7 +78,6 @@ async function fetchDynamicLessons(): Promise<Lesson[]> {
     level: String(r.level),
     topic: String(r.topic),
     type: 'writing',
-    image: r.image_url ? String(r.image_url) : undefined,
     durationMinutes: Number(r.duration_minutes) || 10,
   }));
 
