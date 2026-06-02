@@ -7,6 +7,7 @@ import { notFound } from 'next/navigation';
 import AudioPlayer from '@/components/AudioPlayer';
 import Recorder from '@/components/Recorder';
 import { markComplete, getCompletedIds } from '@/lib/progress';
+import { getSupabase } from '@/lib/supabase';
 import speakingLessons from '@/data/speaking-lessons.json';
 import { getTopicLabel } from '@/lib/topics';
 
@@ -24,31 +25,28 @@ type Lesson = {
   durationMinutes: number;
 };
 
-const CUSTOM_KEY = 'shadowspeak_custom_lessons';
-
-function loadCustomSpeakingLesson(id: string): Lesson | null {
-  try {
-    const raw = localStorage.getItem(CUSTOM_KEY);
-    if (!raw) return null;
-    const customs = JSON.parse(raw) as Array<Record<string, unknown>>;
-    const found = customs.find((l) => l.id === id && l.type === 'speaking');
-    if (!found) return null;
-    return {
-      id: String(found.id || ''),
-      title: String(found.title || ''),
-      level: String(found.level || ''),
-      topic: String(found.topic || ''),
-      type: 'speaking',
-      image: String(found.imageUrl || found.image || ''),
-      prompt: String(found.prompt || ''),
-      exampleAnswer: String(found.exampleAnswer || ''),
-      hints: Array.isArray(found.hints) ? (found.hints as string[]) : [],
-      tips: String(found.tips || ''),
-      durationMinutes: Number(found.durationMinutes) || 5,
-    };
-  } catch {
-    return null;
-  }
+async function fetchSpeakingLesson(id: string): Promise<Lesson | null> {
+  const supabase = getSupabase();
+  const { data } = await supabase
+    .from('lessons')
+    .select('*')
+    .eq('id', id)
+    .eq('type', 'speaking')
+    .single();
+  if (!data) return null;
+  return {
+    id: String(data.id),
+    title: String(data.title),
+    level: String(data.level),
+    topic: String(data.topic),
+    type: 'speaking',
+    image: data.image_url ? String(data.image_url) : '',
+    prompt: data.prompt ? String(data.prompt) : '',
+    exampleAnswer: data.example_answer ? String(data.example_answer) : '',
+    hints: Array.isArray(data.hints) ? (data.hints as string[]) : [],
+    tips: '',
+    durationMinutes: Number(data.duration_minutes) || 5,
+  };
 }
 
 export default function SpeakingPage({ params }: { params: { id: string } }) {
@@ -65,9 +63,10 @@ export default function SpeakingPage({ params }: { params: { id: string } }) {
 
   useEffect(() => {
     if (!jsonLesson) {
-      const custom = loadCustomSpeakingLesson(id);
-      if (custom) setLesson(custom);
-      setLessonLoaded(true);
+      fetchSpeakingLesson(id).then((custom) => {
+        if (custom) setLesson(custom);
+        setLessonLoaded(true);
+      });
     }
   }, [id, jsonLesson]);
 

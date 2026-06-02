@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import ChunkPlayer from '@/components/ChunkPlayer';
 import { markComplete, getCompletedIds } from '@/lib/progress';
+import { getSupabase } from '@/lib/supabase';
 import shadowingLessons from '@/data/shadowing-lessons.json';
 import { getTopicLabel } from '@/lib/topics';
 
@@ -25,39 +26,35 @@ type Lesson = {
   notes: string;
 };
 
-const CUSTOM_KEY = 'shadowspeak_custom_lessons';
-
-function loadCustomShadowingLesson(id: string): Lesson | null {
-  try {
-    const raw = localStorage.getItem(CUSTOM_KEY);
-    if (!raw) return null;
-    const customs = JSON.parse(raw) as Array<Record<string, unknown>>;
-    const found = customs.find((l) => l.id === id && l.type === 'shadowing');
-    if (!found) return null;
-    return {
-      id: String(found.id || ''),
-      title: String(found.title || ''),
-      level: String(found.level || ''),
-      topic: String(found.topic || ''),
-      type: 'shadowing',
-      image: String(found.imageUrl || found.image || ''),
-      audioUrl: String(found.audioUrl || ''),
-      audioSlowUrl: String(found.audioSlowUrl || ''),
-      chunkAudioUrls: Array.isArray(found.chunkAudioUrls) ? (found.chunkAudioUrls as string[]) : [],
-      transcript: String(found.transcript || ''),
-      chunks: Array.isArray(found.chunks) ? (found.chunks as string[]) : [],
-      durationMinutes: Number(found.durationMinutes) || 5,
-      notes: String(found.notes || ''),
-    };
-  } catch {
-    return null;
-  }
+async function fetchShadowingLesson(id: string): Promise<Lesson | null> {
+  const supabase = getSupabase();
+  const { data } = await supabase
+    .from('lessons')
+    .select('*')
+    .eq('id', id)
+    .eq('type', 'shadowing')
+    .single();
+  if (!data) return null;
+  return {
+    id: String(data.id),
+    title: String(data.title),
+    level: String(data.level),
+    topic: String(data.topic),
+    type: 'shadowing',
+    image: data.image_url ? String(data.image_url) : '',
+    audioUrl: data.audio_url ? String(data.audio_url) : '',
+    audioSlowUrl: data.audio_slow_url ? String(data.audio_slow_url) : '',
+    chunkAudioUrls: [],
+    transcript: data.transcript ? String(data.transcript) : '',
+    chunks: Array.isArray(data.chunks) ? (data.chunks as string[]) : [],
+    durationMinutes: Number(data.duration_minutes) || 5,
+    notes: '',
+  };
 }
 
 export default function ShadowingPage({ params }: { params: { id: string } }) {
   const { id } = params;
 
-  // Try static JSON first (built-in lessons); custom lessons loaded after mount
   const jsonLesson = (shadowingLessons as Lesson[]).find((l) => l.id === id) || null;
 
   const [lesson, setLesson] = useState<Lesson | null>(jsonLesson);
@@ -67,12 +64,12 @@ export default function ShadowingPage({ params }: { params: { id: string } }) {
   const [startTime] = useState(Date.now());
   const [imageLoaded, setImageLoaded] = useState(false);
 
-  // If not in static JSON, check localStorage for custom lessons
   useEffect(() => {
     if (!jsonLesson) {
-      const custom = loadCustomShadowingLesson(id);
-      if (custom) setLesson(custom);
-      setLessonLoaded(true);
+      fetchShadowingLesson(id).then((custom) => {
+        if (custom) setLesson(custom);
+        setLessonLoaded(true);
+      });
     }
   }, [id, jsonLesson]);
 
