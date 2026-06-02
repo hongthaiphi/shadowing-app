@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getCompletedIds } from '@/lib/progress';
@@ -35,12 +35,22 @@ const STATIC_LESSONS: Lesson[] = [
 
 async function fetchDynamicLessons(): Promise<Lesson[]> {
   const supabase = getSupabase();
-  const { data } = await supabase
-    .from('lessons')
-    .select('id, title, level, topic, type, image_url, duration_minutes, transcript, subtype')
-    .order('created_at', { ascending: true });
-  if (!data) return [];
-  return data.map((r) => ({
+  const [{ data: lessonData }, { data: readingData }, { data: writingData }] = await Promise.all([
+    supabase
+      .from('lessons')
+      .select('id, title, level, topic, type, image_url, duration_minutes, transcript, subtype')
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('reading_lessons')
+      .select('id, title, level, topic, image_url, duration_minutes')
+      .order('created_at', { ascending: true }),
+    supabase
+      .from('writing_lessons')
+      .select('id, title, level, topic, image_url, duration_minutes')
+      .order('created_at', { ascending: true }),
+  ]);
+
+  const shadowing = (lessonData ?? []).map((r) => ({
     id: String(r.id),
     title: String(r.title),
     level: String(r.level),
@@ -51,6 +61,28 @@ async function fetchDynamicLessons(): Promise<Lesson[]> {
     transcript: r.transcript ? String(r.transcript) : undefined,
     subtype: r.subtype ? String(r.subtype) : undefined,
   }));
+
+  const reading = (readingData ?? []).map((r) => ({
+    id: String(r.id),
+    title: String(r.title),
+    level: String(r.level),
+    topic: String(r.topic),
+    type: 'reading',
+    image: r.image_url ? String(r.image_url) : undefined,
+    durationMinutes: Number(r.duration_minutes) || 10,
+  }));
+
+  const writing = (writingData ?? []).map((r) => ({
+    id: String(r.id),
+    title: String(r.title),
+    level: String(r.level),
+    topic: String(r.topic),
+    type: 'writing',
+    image: r.image_url ? String(r.image_url) : undefined,
+    durationMinutes: Number(r.duration_minutes) || 10,
+  }));
+
+  return [...shadowing, ...reading, ...writing];
 }
 
 /* Deterministic decorative mini-wave (seed-based, SSR-safe) */
@@ -99,24 +131,52 @@ export default function LessonsContent() {
   const [levelFilter,  setLevelFilter]  = useState('all');
   const [topicFilter,  setTopicFilter]  = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
+  const [searchQuery,  setSearchQuery]  = useState('');
   const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [allLessons, setAllLessons] = useState<Lesson[]>(STATIC_LESSONS);
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    document.addEventListener('keydown', handler);
+    return () => document.removeEventListener('keydown', handler);
+  }, []);
 
   useEffect(() => {
     setCompletedIds(getCompletedIds());
     fetchDynamicLessons().then((dynamic) => {
-      const staticIds = new Set(STATIC_LESSONS.map((l) => l.id));
-      const newOnes = dynamic.filter((l) => !staticIds.has(l.id));
-      if (newOnes.length > 0) {
-        setAllLessons([...STATIC_LESSONS, ...newOnes]);
-      }
+      // Shadowing/dictation/speaking: static JSON + Supabase extras (no duplicates)
+      const staticSds = STATIC_LESSONS.filter((l) => ['shadowing', 'dictation', 'speaking'].includes(l.type));
+      const staticSdsIds = new Set(staticSds.map((l) => l.id));
+      const dynamicSds = dynamic
+        .filter((l) => ['shadowing', 'dictation', 'speaking'].includes(l.type))
+        .filter((l) => !staticSdsIds.has(l.id));
+
+      // Reading/writing: Supabase is the source of truth.
+      // Fall back to static JSON only if Supabase returns nothing (table may not exist yet).
+      const dynamicReading = dynamic.filter((l) => l.type === 'reading');
+      const dynamicWriting = dynamic.filter((l) => l.type === 'writing');
+      const staticReading  = STATIC_LESSONS.filter((l) => l.type === 'reading');
+      const staticWriting  = STATIC_LESSONS.filter((l) => l.type === 'writing');
+
+      setAllLessons([
+        ...staticSds,
+        ...dynamicSds,
+        ...(dynamicReading.length > 0 ? dynamicReading : staticReading),
+        ...(dynamicWriting.length > 0 ? dynamicWriting : staticWriting),
+      ]);
     });
   }, []);
 
   useEffect(() => {
     setPage(1);
-  }, [typeFilter, levelFilter, topicFilter, statusFilter]);
+  }, [typeFilter, levelFilter, topicFilter, statusFilter, searchQuery]);
 
   const filtered = allLessons.filter((l) => {
     if (typeFilter !== 'all'  && l.type  !== typeFilter)  return false;
@@ -124,6 +184,14 @@ export default function LessonsContent() {
     if (topicFilter !== 'all' && l.topic !== topicFilter) return false;
     if (statusFilter === 'completed' && !completedIds.includes(l.id)) return false;
     if (statusFilter === 'new'       &&  completedIds.includes(l.id)) return false;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      const match = l.title.toLowerCase().includes(q)
+        || l.topic.toLowerCase().includes(q)
+        || l.type.toLowerCase().includes(q)
+        || (l.transcript ?? '').toLowerCase().includes(q);
+      if (!match) return false;
+    }
     return true;
   });
 
@@ -154,8 +222,24 @@ export default function LessonsContent() {
             <circle cx="6" cy="6" r="4" />
             <path d="M9 9 L12 12" />
           </svg>
-          <input placeholder="Search lessons…" aria-label="Search lessons" readOnly />
-          <kbd>⌘ K</kbd>
+          <input
+            ref={searchRef}
+            placeholder="Search lessons…"
+            aria-label="Search lessons"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          {searchQuery ? (
+            <button
+              onClick={() => setSearchQuery('')}
+              aria-label="Clear search"
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--muted)', lineHeight: 1 }}
+            >
+              ✕
+            </button>
+          ) : (
+            <kbd>⌘ K</kbd>
+          )}
         </div>
       </header>
 
