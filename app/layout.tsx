@@ -1,30 +1,21 @@
 import type { Metadata, Viewport } from 'next';
-import { Instrument_Serif, Inter_Tight, Fraunces, JetBrains_Mono } from 'next/font/google';
+import { Schibsted_Grotesk, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 
 /* ─── Google Fonts ──────────────────────────────────────────────────────────── */
-const instrumentSerif = Instrument_Serif({
-  weight: '400',
-  style: ['normal', 'italic'],
+const schibstedGrotesk = Schibsted_Grotesk({
+  weight: ['400', '500', '600', '700', '800'],
   subsets: ['latin'],
-  variable: '--font-instrument-serif',
+  variable: '--font-schibsted',
   display: 'swap',
 });
 
-const interTight = Inter_Tight({
-  weight: ['300', '400', '500', '600', '700'],
+const plusJakarta = Plus_Jakarta_Sans({
+  weight: ['400', '500', '600', '700', '800'],
   subsets: ['latin'],
-  variable: '--font-inter-tight',
-  display: 'swap',
-});
-
-const fraunces = Fraunces({
-  weight: ['400', '500', '600'],
-  style: ['normal', 'italic'],
-  subsets: ['latin'],
-  variable: '--font-fraunces',
+  variable: '--font-plus-jakarta',
   display: 'swap',
 });
 
@@ -39,13 +30,13 @@ const jetbrainsMono = JetBrains_Mono({
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  themeColor: '#1a1410',
+  themeColor: '#ee5e3f',
 };
 
 export const metadata: Metadata = {
   title: {
-    default: 'ShadowSpeak — English Practice',
-    template: '%s | ShadowSpeak',
+    default: 'Cadence — English Speaking Studio',
+    template: '%s | Cadence',
   },
   description:
     'Improve your English with shadowing, dictation, reading and writing practice. Perfect for IELTS, TOEIC and everyday fluency.',
@@ -70,7 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html
       lang="en"
-      className={`${instrumentSerif.variable} ${interTight.variable} ${fraunces.variable} ${jetbrainsMono.variable}`}
+      className={`${schibstedGrotesk.variable} ${plusJakarta.variable} ${jetbrainsMono.variable}`}
     >
       <body className="min-h-screen">
         <Navbar />
