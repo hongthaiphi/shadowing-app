@@ -45,24 +45,44 @@ type MobileTab  = 'prompt'  | 'write';
 
 // ─── Draft storage ────────────────────────────────────────────────────────────
 
-const DRAFT_KEY = (id: string) => `writing_draft_${id}`;
+const DRAFT_CACHE_KEY = (id: string) => `writing_draft_${id}`;
 
-function loadDraft(id: string): string {
-  if (typeof window === 'undefined') return '';
+function draftFromCache(id: string): string {
+  try { return localStorage.getItem(DRAFT_CACHE_KEY(id)) ?? ''; } catch { return ''; }
+}
+
+async function loadDraft(id: string): Promise<string> {
   try {
-    return localStorage.getItem(DRAFT_KEY(id)) ?? '';
+    const supabase = getSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return draftFromCache(id);
+    const { data } = await supabase
+      .from('writing_drafts')
+      .select('draft_text')
+      .eq('user_id', user.id)
+      .eq('lesson_id', id)
+      .single();
+    const text = (data?.draft_text as string) ?? '';
+    try { localStorage.setItem(DRAFT_CACHE_KEY(id), text); } catch { /* quota */ }
+    return text;
   } catch {
-    return '';
+    return draftFromCache(id);
   }
 }
 
 function persistDraft(id: string, text: string): void {
-  if (typeof window === 'undefined') return;
-  try {
-    localStorage.setItem(DRAFT_KEY(id), text);
-  } catch {
-    // Storage quota exceeded — silently fail
-  }
+  // Write to cache immediately (used by beforeunload which must be synchronous)
+  try { localStorage.setItem(DRAFT_CACHE_KEY(id), text); } catch { /* quota */ }
+  // Async persist to Supabase
+  const supabase = getSupabase();
+  supabase.auth.getUser().then(({ data }) => {
+    if (!data.user) return;
+    supabase.from('writing_drafts').upsert({
+      user_id: data.user.id,
+      lesson_id: id,
+      draft_text: text,
+    }).then();
+  });
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -539,8 +559,7 @@ export default function WritingLessonPage() {
       return;
     }
     if (lesson) {
-      const saved = loadDraft(lesson.id);
-      setDraftText(saved);
+      loadDraft(lesson.id).then(setDraftText);
     }
     setAlreadyCompleted(getCompletedIds().includes(id));
   // eslint-disable-next-line react-hooks/exhaustive-deps

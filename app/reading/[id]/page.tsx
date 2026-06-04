@@ -6,6 +6,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { getUser } from '@/lib/auth';
 import { markComplete, getCompletedIds } from '@/lib/progress';
+import { getSupabase } from '@/lib/supabase';
 import readingLessons from '@/data/reading-lessons.json';
 
 // ─── Types ──────────────────────────────────────────────────────────────────
@@ -94,19 +95,47 @@ type FontSizeIndex = 0 | 1 | 2 | 3;
 
 // ─── Utility: annotation storage ─────────────────────────────────────────────
 
-function loadAnnotations(lessonId: string): Annotation[] {
-  if (typeof window === 'undefined') return [];
+const annCacheKey = (id: string) => `reading_ann_${id}`;
+
+function annFromCache(lessonId: string): Annotation[] {
   try {
-    const raw = localStorage.getItem(`reading_ann_${lessonId}`);
+    const raw = localStorage.getItem(annCacheKey(lessonId));
     return raw ? (JSON.parse(raw) as Annotation[]) : [];
+  } catch { return []; }
+}
+
+async function loadAnnotations(lessonId: string): Promise<Annotation[]> {
+  try {
+    const supabase = getSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return annFromCache(lessonId);
+    const { data } = await supabase
+      .from('reading_annotations')
+      .select('annotations')
+      .eq('user_id', user.id)
+      .eq('lesson_id', lessonId)
+      .single();
+    const annotations = (data?.annotations as Annotation[]) ?? [];
+    localStorage.setItem(annCacheKey(lessonId), JSON.stringify(annotations));
+    return annotations;
   } catch {
-    return [];
+    return annFromCache(lessonId);
   }
 }
 
 function saveAnnotations(lessonId: string, annotations: Annotation[]): void {
-  if (typeof window === 'undefined') return;
-  localStorage.setItem(`reading_ann_${lessonId}`, JSON.stringify(annotations));
+  // Write to cache immediately for instant UI
+  localStorage.setItem(annCacheKey(lessonId), JSON.stringify(annotations));
+  // Async persist to Supabase
+  const supabase = getSupabase();
+  supabase.auth.getUser().then(({ data }) => {
+    if (!data.user) return;
+    supabase.from('reading_annotations').upsert({
+      user_id: data.user.id,
+      lesson_id: lessonId,
+      annotations,
+    }).then();
+  });
 }
 
 // ─── Utility: compute char offset of a DOM node inside the passage ───────────
@@ -638,7 +667,7 @@ export default function ReadingLessonPage() {
       return;
     }
     if (lesson) {
-      setAnnotations(loadAnnotations(lesson.id));
+      loadAnnotations(lesson.id).then(setAnnotations);
     }
     setAlreadyCompleted(getCompletedIds().includes(id));
     // eslint-disable-next-line react-hooks/exhaustive-deps

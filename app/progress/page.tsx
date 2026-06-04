@@ -5,9 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { getUser } from '@/lib/auth';
 import {
-  getProgress,
-  getTotalMinutes,
-  getStreak,
+  fetchProgressFromDB,
   LessonProgress,
 } from '@/lib/progress';
 import ActivityCalendar from '@/components/ActivityCalendar';
@@ -109,11 +107,33 @@ export default function ProgressPage() {
       router.push('/login');
       return;
     }
-    const p = getProgress();
-    setProgress(p);
-    setTotalMinutes(getTotalMinutes());
-    setStreak(getStreak());
-    setLoading(false);
+    fetchProgressFromDB().then((p) => {
+      setProgress(p);
+      // Compute derived stats from fetched data
+      const totalSecs = p.reduce((sum, e) => sum + e.timeSpent, 0);
+      setTotalMinutes(Math.round(totalSecs / 60));
+
+      // Streak calculation
+      if (p.length === 0) { setStreak(0); setLoading(false); return; }
+      const dates = p.map((e) => {
+        const d = new Date(e.completedAt);
+        return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+      });
+      const unique = Array.from(new Set(dates)).sort().reverse();
+      const today = new Date();
+      const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+      const yesterday = new Date(today);
+      yesterday.setDate(yesterday.getDate() - 1);
+      const yStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, '0')}-${String(yesterday.getDate()).padStart(2, '0')}`;
+      if (unique[0] !== todayStr && unique[0] !== yStr) { setStreak(0); setLoading(false); return; }
+      let s = 1;
+      for (let i = 1; i < unique.length; i++) {
+        const diff = Math.round((new Date(unique[i - 1]).getTime() - new Date(unique[i]).getTime()) / 86400000);
+        if (diff === 1) s++; else break;
+      }
+      setStreak(s);
+      setLoading(false);
+    });
   }, [router]);
 
   if (loading) {

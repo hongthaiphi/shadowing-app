@@ -1,3 +1,5 @@
+import { getSupabase } from './supabase';
+
 export interface LessonProgress {
   lessonId: string;
   completedAt: string; // ISO string
@@ -48,19 +50,17 @@ export function markComplete(
 
   // Background sync to Supabase (fire and forget)
   if (typeof window !== 'undefined') {
-    import('./supabase').then(({ getSupabase }) => {
-      const supabase = getSupabase();
-      supabase.auth.getUser().then(({ data }) => {
-        if (!data.user) return;
-        supabase.from('progress').upsert({
-          user_id: data.user.id,
-          lesson_id: lessonId,
-          lesson_type: type ?? null,
-          time_spent: timeSpent,
-          score: score ?? null,
-          completed_at: entry.completedAt,
-        }).then();
-      });
+    const supabase = getSupabase();
+    supabase.auth.getUser().then(({ data }) => {
+      if (!data.user) return;
+      supabase.from('progress').upsert({
+        user_id: data.user.id,
+        lesson_id: lessonId,
+        lesson_type: type ?? null,
+        time_spent: timeSpent,
+        score: score ?? null,
+        completed_at: entry.completedAt,
+      }).then();
     });
   }
 }
@@ -122,4 +122,31 @@ export function getDictationAccuracy(): number {
   if (all.length === 0) return 0;
   const total = all.reduce((sum, p) => sum + (p.score ?? 0), 0);
   return Math.round(total / all.length);
+}
+
+// Fetch all progress for the current user from Supabase (DB is the source of truth)
+export async function fetchProgressFromDB(): Promise<LessonProgress[]> {
+  try {
+    const supabase = getSupabase();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return getAll();
+    const { data, error } = await supabase
+      .from('progress')
+      .select('lesson_id, lesson_type, completed_at, time_spent, score')
+      .eq('user_id', user.id)
+      .order('completed_at', { ascending: false });
+    if (error || !data) return getAll();
+    const progress: LessonProgress[] = data.map((p) => ({
+      lessonId: p.lesson_id as string,
+      completedAt: p.completed_at as string,
+      timeSpent: p.time_spent as number,
+      score: p.score != null ? (p.score as number) : undefined,
+      type: p.lesson_type as LessonProgress['type'] ?? undefined,
+    }));
+    // Update localStorage cache so offline helpers stay in sync
+    saveAll(progress);
+    return progress;
+  } catch {
+    return getAll();
+  }
 }
