@@ -1,3 +1,5 @@
+import { getSupabase } from '@/lib/supabase';
+
 export interface Level {
   id: string;
   label: string;
@@ -27,6 +29,7 @@ const COLOR_OPTIONS: { label: string; value: string }[] = [
   { label: 'Red', value: 'bg-red-100 text-red-700' },
 ];
 
+// Sync read from localStorage cache (used by non-async helpers)
 export function loadLevels(): Level[] {
   if (typeof window === 'undefined') return DEFAULT_LEVELS;
   try {
@@ -40,8 +43,42 @@ export function loadLevels(): Level[] {
   }
 }
 
-export function saveLevels(levels: Level[]): void {
+function cacheLevels(levels: Level[]): void {
+  if (typeof window === 'undefined') return;
   localStorage.setItem(STORAGE_KEY, JSON.stringify(levels));
+}
+
+// Fetch levels from Supabase, update local cache, return list
+export async function fetchLevels(): Promise<Level[]> {
+  try {
+    const supabase = getSupabase();
+    const { data, error } = await supabase
+      .from('app_levels')
+      .select('id, label, color')
+      .order('sort_order', { ascending: true });
+    if (error || !data || data.length === 0) return loadLevels();
+    const levels = data as Level[];
+    cacheLevels(levels);
+    return levels;
+  } catch {
+    return loadLevels();
+  }
+}
+
+// Save levels to Supabase and update local cache
+export async function persistLevels(levels: Level[]): Promise<void> {
+  cacheLevels(levels);
+  try {
+    const supabase = getSupabase();
+    await supabase.from('app_levels').delete().neq('id', '__never__');
+    if (levels.length > 0) {
+      await supabase.from('app_levels').insert(
+        levels.map((l, i) => ({ id: l.id, label: l.label, color: l.color, sort_order: i }))
+      );
+    }
+  } catch {
+    // Cache already updated; DB will sync next reload
+  }
 }
 
 export function getLevelColor(id: string): string {

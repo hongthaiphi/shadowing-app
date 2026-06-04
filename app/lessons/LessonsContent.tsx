@@ -4,8 +4,8 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { getCompletedIds } from '@/lib/progress';
-import { getTopicLabel, loadTopics } from '@/lib/topics';
-import { loadLevels } from '@/lib/levels';
+import { getTopicLabel, fetchTopics, loadTopics, type Topic } from '@/lib/topics';
+import { fetchLevels, loadLevels, type Level } from '@/lib/levels';
 import { getSupabase } from '@/lib/supabase';
 import shadowingLessons from '@/data/shadowing-lessons.json';
 import dictationLessons from '@/data/dictation-lessons.json';
@@ -134,6 +134,8 @@ export default function LessonsContent() {
   const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [allLessons, setAllLessons] = useState<Lesson[]>(STATIC_LESSONS);
+  const [levels, setLevels] = useState<Level[]>(loadLevels());
+  const [topics, setTopics] = useState<Topic[]>(loadTopics());
   const searchRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -149,6 +151,8 @@ export default function LessonsContent() {
 
   useEffect(() => {
     setCompletedIds(getCompletedIds());
+    fetchTopics().then(setTopics);
+    fetchLevels().then(setLevels);
     fetchDynamicLessons().then((dynamic) => {
       // Shadowing/dictation/speaking: static JSON + Supabase extras (no duplicates)
       const staticSds = STATIC_LESSONS.filter((l) => ['shadowing', 'dictation', 'speaking'].includes(l.type));
@@ -198,8 +202,8 @@ export default function LessonsContent() {
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
   const typeFilters  = ['all', 'shadowing', 'dictation', 'speaking', 'reading', 'writing'];
-  const levelFilters = ['all', ...loadLevels().map((l) => l.id)];
-  const topicFilters = ['all', ...loadTopics().map((t) => t.id)];
+  const levelFilters = ['all', ...levels.map((l) => l.id)];
+  const topicFilters = ['all', ...topics.map((t) => t.id)];
 
   return (
     <div className="ss-lessons">
