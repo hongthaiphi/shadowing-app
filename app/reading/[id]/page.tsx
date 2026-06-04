@@ -9,6 +9,34 @@ import { markComplete, fetchCompletedIds } from '@/lib/progress';
 import { getSupabase } from '@/lib/supabase';
 import readingLessons from '@/data/reading-lessons.json';
 
+// ─── Supabase fetch ───────────────────────────────────────────────────────────
+
+async function fetchReadingLesson(id: string): Promise<ReadingLesson | null> {
+  try {
+    const supabase = getSupabase();
+    const { data } = await supabase
+      .from('reading_lessons')
+      .select('id, title, level, topic, image_url, word_count, duration_minutes, paragraphs, questions')
+      .eq('id', id)
+      .single();
+    if (!data) return null;
+    return {
+      id: String(data.id),
+      title: String(data.title),
+      level: String(data.level),
+      topic: String(data.topic),
+      type: 'reading',
+      image: data.image_url ? String(data.image_url) : undefined,
+      wordCount: data.word_count ? Number(data.word_count) : undefined,
+      durationMinutes: Number(data.duration_minutes) || 10,
+      paragraphs: Array.isArray(data.paragraphs) ? (data.paragraphs as string[]) : [],
+      questions: Array.isArray(data.questions) ? (data.questions as ReadingQuestion[]) : [],
+    };
+  } catch {
+    return null;
+  }
+}
+
 // ─── Types ──────────────────────────────────────────────────────────────────
 
 interface MultipleChoiceQuestion {
@@ -634,8 +662,20 @@ export default function ReadingLessonPage() {
   const router  = useRouter();
   const id      = params.id as string;
 
-  // Lesson data
-  const lesson = (readingLessons as ReadingLesson[]).find((l) => l.id === id);
+  // Lesson data — try static JSON first, fall back to Supabase
+  const jsonLesson = (readingLessons as ReadingLesson[]).find((l) => l.id === id) ?? null;
+  const [lesson, setLesson]           = useState<ReadingLesson | null>(jsonLesson);
+  const [lessonLoaded, setLessonLoaded] = useState(!!jsonLesson);
+
+  useEffect(() => {
+    if (!jsonLesson) {
+      fetchReadingLesson(id).then((data) => {
+        if (data) setLesson(data);
+        setLessonLoaded(true);
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   // Auth & completion
   const [alreadyCompleted, setAlreadyCompleted] = useState(false);
@@ -784,6 +824,14 @@ export default function ReadingLessonPage() {
   };
 
   // ─── Guard ───────────────────────────────────────────────────────────────
+
+  if (!lessonLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-6 h-6 border-2 border-green-200 border-t-green-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!lesson) {
     return (
