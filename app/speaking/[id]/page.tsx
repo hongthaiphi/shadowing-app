@@ -6,7 +6,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import AudioPlayer from '@/components/AudioPlayer';
 import Recorder from '@/components/Recorder';
-import { markComplete, getCompletedIds } from '@/lib/progress';
+import { markComplete, fetchCompletedIds } from '@/lib/progress';
 import { getSupabase } from '@/lib/supabase';
 import speakingLessons from '@/data/speaking-lessons.json';
 import { getTopicLabel } from '@/lib/topics';
@@ -71,8 +71,9 @@ export default function SpeakingPage({ params }: { params: { id: string } }) {
   }, [id, jsonLesson]);
 
   useEffect(() => {
-    const ids = getCompletedIds();
-    if (ids.includes(id)) setCompleted(true);
+    fetchCompletedIds().then((ids) => {
+      if (ids.includes(id)) setCompleted(true);
+    });
   }, [id]);
 
   useEffect(() => {

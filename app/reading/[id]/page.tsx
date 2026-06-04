@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
 import { getUser } from '@/lib/auth';
-import { markComplete, getCompletedIds } from '@/lib/progress';
+import { markComplete, fetchCompletedIds } from '@/lib/progress';
 import { getSupabase } from '@/lib/supabase';
 import readingLessons from '@/data/reading-lessons.json';
 
@@ -669,7 +669,7 @@ export default function ReadingLessonPage() {
     if (lesson) {
       loadAnnotations(lesson.id).then(setAnnotations);
     }
-    setAlreadyCompleted(getCompletedIds().includes(id));
+    fetchCompletedIds().then((ids) => setAlreadyCompleted(ids.includes(id)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 

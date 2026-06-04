@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { notFound } from 'next/navigation';
 import CadenceStudyPlayer from '@/components/CadenceStudyPlayer';
-import { markComplete, getCompletedIds } from '@/lib/progress';
+import { markComplete, fetchCompletedIds } from '@/lib/progress';
 import { getSupabase } from '@/lib/supabase';
 import shadowingLessons from '@/data/shadowing-lessons.json';
 import { getTopicLabel } from '@/lib/topics';
@@ -75,8 +75,8 @@ export default function ShadowingPage({ params }: { params: { id: string } }) {
   }, [id, jsonLesson]);
 
   useEffect(() => {
-    // Pre-check completion for future UI use
-    getCompletedIds();
+    // Warm the localStorage cache from DB so markComplete reflects cross-device state
+    fetchCompletedIds().then();
   }, [id]);
 
   useEffect(() => {

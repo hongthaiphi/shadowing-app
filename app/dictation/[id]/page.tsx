@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import DictationInput from '@/components/DictationInput';
-import { markComplete, getCompletedIds } from '@/lib/progress';
+import { markComplete, fetchCompletedIds } from '@/lib/progress';
 import { getSupabase } from '@/lib/supabase';
 import dictationLessons from '@/data/dictation-lessons.json';
 import { getTopicLabel } from '@/lib/topics';
@@ -70,8 +70,9 @@ export default function DictationPage({ params }: { params: { id: string } }) {
   }, [id, jsonLesson]);
 
   useEffect(() => {
-    const ids = getCompletedIds();
-    if (ids.includes(id)) setCompleted(true);
+    fetchCompletedIds().then((ids) => {
+      if (ids.includes(id)) setCompleted(true);
+    });
   }, [id]);
 
   useEffect(() => {

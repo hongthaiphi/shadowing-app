@@ -71,8 +71,17 @@ export function getProgress(): LessonProgress[] {
   );
 }
 
+// Sync read from localStorage cache — used only immediately after markComplete()
+// for instant UI feedback within the same session.
 export function getCompletedIds(): string[] {
   return getAll().map((p) => p.lessonId);
+}
+
+// Async version — DB is source of truth, updates localStorage cache.
+// Use this on page mount so cross-device progress is always accurate.
+export async function fetchCompletedIds(): Promise<string[]> {
+  const progress = await fetchProgressFromDB();
+  return progress.map((p) => p.lessonId);
 }
 
 export function getStreak(): number {

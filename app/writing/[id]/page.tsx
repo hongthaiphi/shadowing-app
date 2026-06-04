@@ -10,7 +10,7 @@ import {
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { getUser } from '@/lib/auth';
-import { markComplete, getCompletedIds } from '@/lib/progress';
+import { markComplete, fetchCompletedIds } from '@/lib/progress';
 import { getSupabase } from '@/lib/supabase';
 import writingLessons from '@/data/writing-lessons.json';
 
@@ -561,7 +561,7 @@ export default function WritingLessonPage() {
     if (lesson) {
       loadDraft(lesson.id).then(setDraftText);
     }
-    setAlreadyCompleted(getCompletedIds().includes(id));
+    fetchCompletedIds().then((ids) => setAlreadyCompleted(ids.includes(id)));
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [id]);
 

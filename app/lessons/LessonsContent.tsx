@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
-import { getCompletedIds } from '@/lib/progress';
+import { fetchCompletedIds } from '@/lib/progress';
 import { getTopicLabel, fetchTopics, loadTopics, type Topic } from '@/lib/topics';
 import { fetchLevels, loadLevels, type Level } from '@/lib/levels';
 import { getSupabase } from '@/lib/supabase';
@@ -150,7 +150,7 @@ export default function LessonsContent() {
   }, []);
 
   useEffect(() => {
-    setCompletedIds(getCompletedIds());
+    fetchCompletedIds().then(setCompletedIds);
     fetchTopics().then(setTopics);
     fetchLevels().then(setLevels);
     fetchDynamicLessons().then((dynamic) => {
