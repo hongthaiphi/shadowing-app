@@ -1,9 +1,9 @@
 'use client';
 
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { getSupabase } from '@/lib/supabase';
-import { loadTopics } from '@/lib/topics';
-import { loadLevels, getLevelColor } from '@/lib/levels';
+import { fetchTopics, type Topic } from '@/lib/topics';
+import { fetchLevels, getLevelColor, type Level } from '@/lib/levels';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -123,9 +123,8 @@ export default function ReadingAdmin() {
   const [saveError, setSaveError]     = useState('');
   const [saveOk, setSaveOk]           = useState(false);
 
-  // Fix #4: memoize localStorage reads — not called on every render
-  const topics = useMemo(() => loadTopics(), []);
-  const levels = useMemo(() => loadLevels(), []);
+  const [topics, setTopics] = useState<Topic[]>([]);
+  const [levels, setLevels] = useState<Level[]>([]);
 
   // ── Load ─────────────────────────────────────────────────────────────────────
   const loadLessons = useCallback(async () => {
@@ -146,7 +145,11 @@ export default function ReadingAdmin() {
     }
   }, []);
 
-  useEffect(() => { loadLessons(); }, [loadLessons]);
+  useEffect(() => {
+    loadLessons();
+    fetchTopics().then(setTopics);
+    fetchLevels().then(setLevels);
+  }, [loadLessons]);
 
   // Fix #11: close modal on Escape key
   useEffect(() => {

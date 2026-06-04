@@ -4,8 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { getUser } from '@/lib/auth';
 import { getSupabase } from '@/lib/supabase';
-import { loadTopics, saveTopics, type Topic } from '@/lib/topics';
-import { loadLevels, saveLevels, getColorOptions, getLevelColor, type Level } from '@/lib/levels';
+import { fetchTopics, persistTopics, type Topic } from '@/lib/topics';
+import { fetchLevels, persistLevels, getColorOptions, getLevelColor, type Level } from '@/lib/levels';
 import shadowingLessonsRaw from '@/data/shadowing-lessons.json';
 import dictationLessonsRaw from '@/data/dictation-lessons.json';
 import speakingLessonsRaw from '@/data/speaking-lessons.json';
@@ -294,11 +294,14 @@ export default function AdminPage() {
       return;
     }
     setCurrentUserRole(user.role);
-    setTopics(loadTopics());
-    setLevels(loadLevels());
 
     // Load custom lessons from Supabase
     const supabase = getSupabase();
+
+    // Load topics and levels from DB (falls back to localStorage cache if DB unreachable)
+    fetchTopics().then(setTopics);
+    fetchLevels().then(setLevels);
+
     migrateLegacyLessons(supabase).then(() => {
       supabase.from('lessons').select('*').order('created_at', { ascending: false }).then(({ data }) => {
         setCustomLessons((data ?? []).map((r) => rowToLesson(r as Record<string, unknown>)));
@@ -433,9 +436,7 @@ export default function AdminPage() {
 
   // ── Add/Edit modal ──────────────────────────────────
   function openAdd() {
-    const currentTopics = loadTopics();
-    const currentLevels = loadLevels();
-    setForm({ ...emptyForm, topic: currentTopics[0]?.id || '', level: currentLevels[0]?.id || '' });
+    setForm({ ...emptyForm, topic: topics[0]?.id || '', level: levels[0]?.id || '' });
     setChunksText('');
     setHintsText('');
     setAudioFile(null);
@@ -578,14 +579,14 @@ export default function AdminPage() {
       updated = [...topics, entry];
     }
     setTopics(updated);
-    saveTopics(updated);
+    persistTopics(updated);
     setTopicFormOpen(false);
   }
 
   function handleTopicDelete(id: string) {
     const updated = topics.filter((t) => t.id !== id);
     setTopics(updated);
-    saveTopics(updated);
+    persistTopics(updated);
     setDeleteTopicId(null);
   }
 
@@ -630,14 +631,14 @@ export default function AdminPage() {
       updated = [...levels, entry];
     }
     setLevels(updated);
-    saveLevels(updated);
+    persistLevels(updated);
     setLevelFormOpen(false);
   }
 
   function handleLevelDelete(id: string) {
     const updated = levels.filter((l) => l.id !== id);
     setLevels(updated);
-    saveLevels(updated);
+    persistLevels(updated);
     setDeleteLevelId(null);
   }
 
