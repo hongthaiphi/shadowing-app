@@ -14,6 +14,37 @@ import { markComplete, fetchCompletedIds } from '@/lib/progress';
 import { getSupabase } from '@/lib/supabase';
 import writingLessons from '@/data/writing-lessons.json';
 
+// ─── Supabase fetch ───────────────────────────────────────────────────────────
+
+async function fetchWritingLesson(id: string): Promise<WritingLesson | null> {
+  try {
+    const supabase = getSupabase();
+    const { data } = await supabase
+      .from('writing_lessons')
+      .select('id, title, level, topic, task_type, duration_minutes, word_target, prompt, requirements, suggested_ideas, suggested_vocabulary, suggested_structure')
+      .eq('id', id)
+      .single();
+    if (!data) return null;
+    return {
+      id: String(data.id),
+      title: String(data.title),
+      level: String(data.level),
+      topic: String(data.topic),
+      type: 'writing',
+      taskType: String(data.task_type) as TaskType,
+      durationMinutes: Number(data.duration_minutes) || 10,
+      wordTarget: Number(data.word_target) || 100,
+      prompt: String(data.prompt || ''),
+      requirements: Array.isArray(data.requirements) ? (data.requirements as string[]) : [],
+      suggestedIdeas: Array.isArray(data.suggested_ideas) ? (data.suggested_ideas as string[]) : [],
+      suggestedVocabulary: Array.isArray(data.suggested_vocabulary) ? (data.suggested_vocabulary as string[]) : [],
+      suggestedStructure: (data.suggested_structure as SuggestedStructure) ?? { introduction: '', body: [], conclusion: '' },
+    };
+  } catch {
+    return null;
+  }
+}
+
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 type TaskType = 'descriptive' | 'opinion' | 'narrative' | 'compare-contrast';
@@ -525,7 +556,10 @@ export default function WritingLessonPage() {
   const router = useRouter();
   const id     = params.id as string;
 
-  const lesson = (writingLessons as WritingLesson[]).find((l) => l.id === id);
+  // Lesson data — try static JSON first, fall back to Supabase
+  const jsonLesson = (writingLessons as WritingLesson[]).find((l) => l.id === id) ?? null;
+  const [lesson,       setLesson]       = useState<WritingLesson | null>(jsonLesson);
+  const [lessonLoaded, setLessonLoaded] = useState(!!jsonLesson);
 
   // ─── State ──────────────────────────────────────────────────────────────
 
@@ -543,14 +577,25 @@ export default function WritingLessonPage() {
   const saveTimerRef     = useRef<ReturnType<typeof setTimeout> | null>(null);
   const clearTimerRef    = useRef<ReturnType<typeof setTimeout> | null>(null);
   const startTimeRef     = useRef(Date.now());
-  // For restoring cursor after vocabulary chip insert
   const pendingCursorRef = useRef<number | null>(null);
-  // Mirror of latest state values — used by the unmount cleanup so it can
-  // flush a pending save without being re-created on every render.
   const draftTextRef     = useRef(draftText);
   const lessonRef        = useRef(lesson);
 
   // ─── Init ────────────────────────────────────────────────────────────────
+
+  // Fetch from Supabase if not in static JSON
+  useEffect(() => {
+    if (!jsonLesson) {
+      fetchWritingLesson(id).then((data) => {
+        if (data) {
+          setLesson(data);
+          loadDraft(data.id).then(setDraftText);
+        }
+        setLessonLoaded(true);
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [id]);
 
   useEffect(() => {
     const user = getUser();
@@ -705,6 +750,14 @@ export default function WritingLessonPage() {
   }, [lesson, completed, alreadyCompleted, draftText]);
 
   // ─── Guard ───────────────────────────────────────────────────────────────
+
+  if (!lessonLoaded) {
+    return (
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="w-6 h-6 border-2 border-amber-200 border-t-amber-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
 
   if (!lesson) {
     return (
