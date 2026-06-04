@@ -65,6 +65,37 @@ function formatDate(iso: string): string {
   });
 }
 
+const SAMPLE_QUESTIONS_JSON = JSON.stringify([
+  {
+    id: 'q1',
+    type: 'multiple-choice',
+    question: 'What is the main topic of the passage?',
+    options: ['A. Option A', 'B. Option B', 'C. Option C', 'D. Option D'],
+    answer: 'A',
+    explanation: 'The passage focuses on…',
+  },
+  {
+    id: 'q2',
+    type: 'true-false-not-given',
+    question: 'Write a statement that can be verified from the passage.',
+    answer: 'True',
+    explanation: 'The passage states that…',
+  },
+  {
+    id: 'q3',
+    type: 'fill-blank',
+    question: 'Complete the sentence: The author believes that ________ is important.',
+    answer: 'keyword|Keyword',
+    explanation: 'See paragraph 2: "…keyword is important…"',
+  },
+  {
+    id: 'q4',
+    type: 'short-answer',
+    question: 'In your own words, explain why… (2–3 sentences)',
+    answer: 'Model answer: The author argues that…',
+  },
+], null, 2);
+
 function validateQuestionsJson(
   raw: string,
 ): { ok: true; questions: Question[] } | { ok: false; error: string } {
@@ -555,16 +586,28 @@ export default function ReadingAdmin() {
                     Questions (JSON)
                     <span className="text-gray-400 font-normal ml-1">— leave empty for passage-only lesson</span>
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const r = validateQuestionsJson(questionsJson || '[]');
-                      setQuestionsError(r.ok ? '' : r.error);
-                    }}
-                    className="text-xs font-semibold text-blue-600 px-3 py-1.5 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
-                  >
-                    Validate JSON
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setQuestionsJson(SAMPLE_QUESTIONS_JSON);
+                        setQuestionsError('');
+                      }}
+                      className="text-xs font-semibold text-emerald-600 px-3 py-1.5 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors"
+                    >
+                      Generate Sample
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const r = validateQuestionsJson(questionsJson || '[]');
+                        setQuestionsError(r.ok ? '' : r.error);
+                      }}
+                      className="text-xs font-semibold text-blue-600 px-3 py-1.5 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors"
+                    >
+                      Validate JSON
+                    </button>
+                  </div>
                 </div>
                 <textarea
                   value={questionsJson}
