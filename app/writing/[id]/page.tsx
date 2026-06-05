@@ -372,7 +372,7 @@ function WritingArea({
           onChange={(e) => onTextChange(e.target.value)}
           placeholder={`Start writing here…\n\n${lesson.suggestedStructure.introduction}`}
           disabled={isDone}
-          className={`w-full h-full resize-none outline-none px-6 py-5 text-base leading-relaxed text-gray-800 placeholder-gray-300 font-['Georgia',serif] transition-colors ${
+          className={`w-full h-full resize-none outline-none px-8 py-6 text-[17px] leading-relaxed text-gray-800 placeholder-gray-300 font-['Georgia',serif] transition-colors ${
             isDone ? 'bg-gray-50 cursor-default' : 'bg-white focus:bg-white'
           }`}
           spellCheck
@@ -902,18 +902,18 @@ export default function WritingLessonPage() {
 
         {/* ── DESKTOP: split-screen ── */}
         <div className="hidden md:flex items-start max-w-screen-xl mx-auto">
-          {/* Left 40%: prompt panel — sticky */}
+          {/* Left 33%: prompt panel — sticky */}
           <div
-            className="w-2/5 sticky border-r border-gray-200 bg-white overflow-hidden"
+            className="w-1/3 sticky border-r border-gray-200 bg-white overflow-hidden"
             style={{ top: 'calc(4rem + 57px)', height: 'calc(100vh - 4rem - 57px)' }}
           >
             <PromptPanel lesson={lesson} onInsertWord={handleInsertWord} />
           </div>
 
-          {/* Right 60%: writing area */}
+          {/* Right 67%: writing area */}
           <div
-            className="w-3/5 bg-white"
-            style={{ minHeight: 'calc(100vh - 4rem - 57px)' }}
+            className="w-2/3 bg-white"
+            style={{ height: 'calc(100vh - 4rem - 57px)', position: 'sticky', top: 'calc(4rem + 57px)' }}
           >
             <WritingArea
               lesson={lesson}
