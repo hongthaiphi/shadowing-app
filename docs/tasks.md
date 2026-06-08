@@ -250,7 +250,8 @@
 | 13 | Content | 8 | 10 | 🔴 |
 | 14 | Testing & Polish | 9 | 9 | ✅ |
 | 15 | Deploy Production | 2 | 5 | 🔴 |
-| **Tổng** | | **134** | **149** | **90%** |
+| 16 | Student UX Improvements | 11 | 15 | 🔴 |
+| **Tổng** | | **145** | **164** | **88%** |
 
 ---
 
@@ -332,4 +333,66 @@
                                 ✅ Sprint F (Testing & Polish)
                                                   ↓
                           ✅ Sprint G (Supabase Storage Upload)
+                                                  ↓
+                          ✅ Sprint H (Student UX — Learning Flow)
 ```
+
+---
+
+## PHASE 16 — Student UX Improvements *(từ feedback học sinh lớp 5–7)*
+
+> **Nguồn:** Nhận xét từ reviewer (phân tích dưới góc độ học sinh lớp 5–7 và phụ huynh lần đầu dùng app).
+> **Đánh giá hiện tại:** UI 7.5/10 · UX cho học sinh 5.5–6/10
+> **Mục tiêu:** Lên 8.5/10 chỉ bằng cách chỉnh learning flow, không cần đổi màu hay visual design.
+
+### Điều reviewer khen (giữ nguyên)
+- ✅ Màu cam thân thiện
+- ✅ Bo góc đẹp
+- ✅ Font dễ đọc
+- ✅ Có phân loại kỹ năng
+- ✅ Giao diện hiện đại
+
+---
+
+### 🔴 SPRINT H — Student UX / Learning Flow
+
+#### H-01 Gộp Level và Lớp thành 1 hệ thống duy nhất
+> **Vấn đề:** Hiện có 2 bộ filter song song — "Level" (Starter / Level 1 / Level 2) và "Lớp" (3 / 6). Học sinh lớp 6 không biết chọn "Level 2" hay "Lớp 6". Đây là lỗi UX nghiêm trọng gây confusion ngay từ đầu.
+> **Đề xuất:** Chỉ giữ 1 hệ thống — dùng "Lớp" (Lớp 3 / Lớp 4 / Lớp 5 / Lớp 6 / Lớp 7) vì học sinh và phụ huynh hiểu ngay.
+
+- [x] H-01-1 🔴 Xoá filter "Level" (Starter / Level 1 / Level 2) khỏi trang `/lessons` — *thay bằng "Lớp" row*
+- [x] H-01-2 🔴 Đổi filter thành "Lớp" — label hiển thị "Lớp 3–4 / Lớp 5–6 / Lớp 7"
+- [x] H-01-3 🔴 Map lại label trong `lib/levels.ts`: Starter → "Lớp 3–4", Level 1 → "Lớp 5–6", Level 2 → "Lớp 7" (giữ nguyên ID để không break data)
+- [x] H-01-4 🟡 Cập nhật hiển thị tag trên lesson card dùng `getLevelLabel()` — hiện "Lớp 5–6" thay "Level 1"
+
+#### H-02 Đổi thứ tự ưu tiên trên trang Lessons — Kỹ năng trước, Topic sau
+> **Vấn đề:** Hiện tại Topic (School / Hobbies / Family / Food / Daily Routine) hiển thị nổi bật, chiếm gần nửa màn hình. Nhưng học sinh nghĩ theo kỹ năng ("Em muốn học Speaking"), không nghĩ theo topic ("Em muốn học Daily Routine"). Topic là thứ yếu.
+> **Luồng đúng:** Bước 1: Chọn kỹ năng → Bước 2: Hiển thị lesson ngay → Bước 3 (optional): Lọc thêm Topic nếu muốn.
+
+- [x] H-02-1 🔴 Skill tabs (📚 Tất cả / 🎧 Shadowing / ✏️ Dictation / 🗣️ Speaking / 📖 Reading / ✍️ Writing) làm filter **chính** — card lớn, nổi bật, hiển thị ngay đầu trang với emoji + label + count
+- [x] H-02-2 🔴 Khi chọn skill tab → filter lesson list ngay lập tức, không cần thêm bước
+- [x] H-02-3 🔴 Topic filter ẩn mặc định, chỉ hiện trong panel "Bộ lọc nâng cao"
+- [x] H-02-4 🟡 Default: vào `/lessons` → hiển thị tất cả bài (skill tab "Tất cả" active)
+
+#### H-03 Thu gọn bộ lọc — Ẩn filter phức tạp, chỉ show khi cần
+> **Vấn đề:** Hiện có ~6 loại filter xuất hiện cùng lúc → gần 20 nút. Gây "Decision Fatigue".
+> **Mục tiêu:** Mở app → học ngay trong 5 giây.
+
+- [x] H-03-1 🔴 Status filter ("Chưa học" / "Đã xong") ẩn vào panel "Bộ lọc nâng cao"
+- [x] H-03-2 🔴 Topic filter ẩn vào panel "Bộ lọc nâng cao"
+- [x] H-03-3 🔴 Màn hình mặc định chỉ hiện: Search + Skill tabs + Lớp — 3 loại filter tối đa
+- [x] H-03-4 🟡 Nút "Bộ lọc nâng cao" dạng dashed pill — click mở/đóng panel; hiện badge đỏ khi có filter đang active
+
+#### H-04 Sửa empty state sau khi chọn filter
+> **Vấn đề:** "Nothing here yet" → tâm lý tiêu cực, cảm giác app trống rỗng.
+
+- [x] H-04-1 🔴 Khi chọn skill tab → lesson list hiển thị ngay, không để empty trừ khi thực sự không có bài
+- [x] H-04-2 🟡 Empty state mới: icon 🔍 + "Không tìm thấy bài học" + gợi ý "Thử bỏ bớt bộ lọc" + nút "↺ Xem tất cả bài học" reset toàn bộ filter
+- [x] H-04-3 🟡 Default view (chưa filter gì) → hiển thị tất cả bài, không để trống
+
+#### H-05 Dashboard — Giảm cognitive load, hướng dẫn rõ bước tiếp theo
+> **Vấn đề tổng quát:** Quá nhiều lựa chọn xuất hiện cùng lúc. Học sinh cần biết ngay "Bây giờ mình phải làm gì?".
+
+- [ ] H-05-1 🟡 Nút CTA lớn, rõ ràng trên dashboard: "Tiếp tục học → [tên bài]" thay vì để học sinh tự tìm
+- [ ] H-05-2 🟡 Thứ tự sections dashboard: CTA tiếp tục → Streak/Stats → Courses (thu gọn) — ít scroll hơn để tới hành động chính
+- [ ] H-05-3 🟢 Onboarding flow lần đầu đăng nhập: "Em đang học lớp mấy?" → chọn Lớp → app pre-filter lessons phù hợp

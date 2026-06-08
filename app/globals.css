@@ -636,7 +636,29 @@ body {
 .ss-lessons-search input { flex: 1; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 14px; font-family: var(--ff-body); }
 .ss-lessons-search input::placeholder { color: var(--muted); }
 .ss-lessons-search kbd { font-family: var(--ff-mono); font-size: 11px; padding: 3px 7px; border-radius: 5px; background: color-mix(in oklab, var(--ink), transparent 92%); color: var(--muted); }
-.ss-filters { display: grid; gap: 12px; margin-bottom: 28px; }
+/* ── Skill tabs (primary filter) ── */
+.ss-skill-tabs { display: flex; gap: 8px; margin-bottom: 20px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.ss-skill-tabs::-webkit-scrollbar { display: none; }
+.ss-skill-tab { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 14px 20px; min-width: 90px; border-radius: var(--r-md); border: 1.5px solid color-mix(in oklab, var(--ink), transparent 88%); background: var(--card); color: var(--muted); font-family: var(--ff-body); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .2s var(--ease); flex-shrink: 0; }
+.ss-skill-tab:hover { border-color: var(--accent); color: var(--accent); background: color-mix(in oklab, var(--accent), transparent 94%); }
+.ss-skill-tab.on { border-color: var(--accent); background: var(--accent); color: #fff; }
+.ss-skill-tab-emoji { font-size: 22px; line-height: 1; }
+.ss-skill-tab-label { font-size: 12px; font-weight: 700; }
+.ss-skill-tab-count { font-size: 11px; font-family: var(--ff-mono); opacity: 0.7; }
+.ss-skill-tab.on .ss-skill-tab-count { opacity: 0.85; }
+
+/* ── Lớp row ── */
+.ss-lop-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-bottom: 14px; }
+
+/* ── Advanced filter toggle ── */
+.ss-advanced-row { margin-bottom: 24px; }
+.ss-advanced-toggle { display: flex; align-items: center; gap: 8px; padding: 8px 14px; border-radius: 999px; border: 1px dashed color-mix(in oklab, var(--ink), transparent 78%); background: transparent; color: var(--muted); font-size: 13px; font-family: var(--ff-body); font-weight: 500; cursor: pointer; transition: all .2s var(--ease); width: 100%; }
+.ss-advanced-toggle:hover { border-color: var(--ink); color: var(--ink); }
+.ss-advanced-toggle.open { border-color: var(--accent); color: var(--accent); border-style: solid; }
+.ss-adv-badge { display: inline-flex; align-items: center; justify-content: center; width: 18px; height: 18px; border-radius: 50%; background: var(--accent); color: #fff; font-size: 10px; font-weight: 700; }
+.ss-advanced-panel { display: grid; gap: 12px; padding: 16px; margin-top: 10px; background: var(--surface); border: 1px solid color-mix(in oklab, var(--ink), transparent 90%); border-radius: var(--r-md); }
+
+/* ── Shared filter row + chips ── */
 .ss-filter-row { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
 .ss-filter-label { font-family: var(--ff-mono); font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.06em; margin-right: 8px; min-width: 50px; }
 .ss-chip-btn { padding: 7px 14px; border-radius: 999px; font-size: 13px; border: 1px solid color-mix(in oklab, var(--ink), transparent 88%); color: var(--ink); transition: all .2s var(--ease); font-family: var(--ff-body); }
@@ -770,4 +792,6 @@ input[type='range']::-webkit-slider-thumb { -webkit-appearance: none; appearance
   .ss-stats { grid-template-columns: 1fr 1fr; }
   .ss-lessons-grid { grid-template-columns: 1fr; }
   .ss-footer-cols { grid-template-columns: 1fr; }
+  .ss-skill-tab { min-width: 72px; padding: 10px 12px; }
+  .ss-skill-tab-emoji { font-size: 18px; }
 }
