@@ -9,9 +9,9 @@ export interface Level {
 const STORAGE_KEY = 'shadowspeak_levels';
 
 const DEFAULT_LEVELS: Level[] = [
-  { id: 'Starter', label: 'Starter', color: 'bg-emerald-100 text-emerald-700' },
-  { id: 'Level 1', label: 'Level 1', color: 'bg-blue-100 text-blue-700' },
-  { id: 'Level 2', label: 'Level 2', color: 'bg-indigo-100 text-indigo-700' },
+  { id: 'Starter', label: 'Lớp 3–4', color: 'bg-emerald-100 text-emerald-700' },
+  { id: 'Level 1', label: 'Lớp 5–6', color: 'bg-blue-100 text-blue-700' },
+  { id: 'Level 2', label: 'Lớp 7',   color: 'bg-indigo-100 text-indigo-700' },
 ];
 
 const COLOR_OPTIONS: { label: string; value: string }[] = [

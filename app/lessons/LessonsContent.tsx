@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { fetchCompletedIds } from '@/lib/progress';
 import { getTopicLabel, fetchTopics, loadTopics, type Topic } from '@/lib/topics';
-import { fetchLevels, loadLevels, type Level } from '@/lib/levels';
+import { fetchLevels, loadLevels, getLevelLabel, type Level } from '@/lib/levels';
 import { getSupabase } from '@/lib/supabase';
 import shadowingLessons from '@/data/shadowing-lessons.json';
 import dictationLessons from '@/data/dictation-lessons.json';
@@ -84,7 +84,17 @@ async function fetchDynamicLessons(): Promise<Lesson[]> {
   return [...shadowing, ...reading, ...writing];
 }
 
-/* Deterministic decorative mini-wave (seed-based, SSR-safe) */
+/* ─── Skill tab config ───────────────────────────────────────────────────── */
+const SKILL_TABS = [
+  { id: 'all',       label: 'Tất cả',   emoji: '📚' },
+  { id: 'shadowing', label: 'Shadowing', emoji: '🎧' },
+  { id: 'dictation', label: 'Dictation', emoji: '✏️' },
+  { id: 'speaking',  label: 'Speaking',  emoji: '🗣️' },
+  { id: 'reading',   label: 'Reading',   emoji: '📖' },
+  { id: 'writing',   label: 'Writing',   emoji: '✍️' },
+];
+
+/* ─── Deterministic decorative mini-wave ────────────────────────────────── */
 function MiniWave({ seed = 0 }: { seed?: number }) {
   const bars = useMemo(() =>
     Array.from({ length: 42 }, (_, i) => {
@@ -102,14 +112,6 @@ function MiniWave({ seed = 0 }: { seed?: number }) {
   );
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  shadowing: 'Shadowing',
-  dictation: 'Dictation',
-  speaking:  'Speaking',
-  reading:   'Reading',
-  writing:   'Writing',
-};
-
 const PAGE_SIZE = 12;
 
 function lessonHref(lesson: Lesson): string {
@@ -126,11 +128,12 @@ export default function LessonsContent() {
   const searchParams = useSearchParams();
   const initialType = searchParams.get('type') || 'all';
 
-  const [typeFilter,   setTypeFilter]   = useState(initialType);
+  const [skillFilter,  setSkillFilter]  = useState(initialType);
   const [levelFilter,  setLevelFilter]  = useState('all');
-  const [topicFilter,  setTopicFilter]  = useState('all');
+  const [topicFilter,  setTopicFilter]  = useState(searchParams.get('topic') || 'all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [searchQuery,  setSearchQuery]  = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [completedIds, setCompletedIds] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [allLessons, setAllLessons] = useState<Lesson[]>(STATIC_LESSONS);
@@ -154,15 +157,12 @@ export default function LessonsContent() {
     fetchTopics().then(setTopics);
     fetchLevels().then(setLevels);
     fetchDynamicLessons().then((dynamic) => {
-      // Shadowing/dictation/speaking: static JSON + Supabase extras (no duplicates)
       const staticSds = STATIC_LESSONS.filter((l) => ['shadowing', 'dictation', 'speaking'].includes(l.type));
       const staticSdsIds = new Set(staticSds.map((l) => l.id));
       const dynamicSds = dynamic
         .filter((l) => ['shadowing', 'dictation', 'speaking'].includes(l.type))
         .filter((l) => !staticSdsIds.has(l.id));
 
-      // Reading/writing: Supabase is the source of truth.
-      // Fall back to static JSON only if Supabase returns nothing (table may not exist yet).
       const dynamicReading = dynamic.filter((l) => l.type === 'reading');
       const dynamicWriting = dynamic.filter((l) => l.type === 'writing');
       const staticReading  = STATIC_LESSONS.filter((l) => l.type === 'reading');
@@ -179,10 +179,10 @@ export default function LessonsContent() {
 
   useEffect(() => {
     setPage(1);
-  }, [typeFilter, levelFilter, topicFilter, statusFilter, searchQuery]);
+  }, [skillFilter, levelFilter, topicFilter, statusFilter, searchQuery]);
 
-  const filtered = allLessons.filter((l) => {
-    if (typeFilter !== 'all'  && l.type  !== typeFilter)  return false;
+  const filtered = useMemo(() => allLessons.filter((l) => {
+    if (skillFilter !== 'all'  && l.type  !== skillFilter)  return false;
     if (levelFilter !== 'all' && l.level !== levelFilter) return false;
     if (topicFilter !== 'all' && l.topic !== topicFilter) return false;
     if (statusFilter === 'completed' && !completedIds.includes(l.id)) return false;
@@ -196,27 +196,37 @@ export default function LessonsContent() {
       if (!match) return false;
     }
     return true;
-  });
+  }), [allLessons, skillFilter, levelFilter, topicFilter, statusFilter, completedIds, searchQuery]);
 
   const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
   const paginated  = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE);
 
-  const typeFilters  = ['all', 'shadowing', 'dictation', 'speaking', 'reading', 'writing'];
-  const levelFilters = ['all', ...levels.map((l) => l.id)];
-  const topicFilters = ['all', ...topics.map((t) => t.id)];
+  const activeFilterCount = [
+    levelFilter !== 'all',
+    topicFilter !== 'all',
+    statusFilter !== 'all',
+  ].filter(Boolean).length;
+
+  function resetAllFilters() {
+    setSkillFilter('all');
+    setLevelFilter('all');
+    setTopicFilter('all');
+    setStatusFilter('all');
+    setSearchQuery('');
+  }
 
   return (
     <div className="ss-lessons">
       {/* ── Header ─────────────────────────────────────────────────────────── */}
       <header className="ss-lessons-head">
         <div>
-          <span className="ss-section-num">§ Library</span>
+          <span className="ss-section-num">§ Thư viện bài học</span>
           <h1 className="ss-h1 sm">
-            Pick your <em>five minutes.</em>
+            Hôm nay học <em>kỹ năng gì?</em>
           </h1>
           <p className="ss-section-sub">
-            {allLessons.length} lessons available
-            {completedIds.length > 0 && ` · ${completedIds.length} completed`}
+            {allLessons.length} bài học
+            {completedIds.length > 0 && ` · ${completedIds.length} đã hoàn thành`}
           </p>
         </div>
 
@@ -227,15 +237,15 @@ export default function LessonsContent() {
           </svg>
           <input
             ref={searchRef}
-            placeholder="Search lessons…"
-            aria-label="Search lessons"
+            placeholder="Tìm bài học…"
+            aria-label="Tìm bài học"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
           />
           {searchQuery ? (
             <button
               onClick={() => setSearchQuery('')}
-              aria-label="Clear search"
+              aria-label="Xoá tìm kiếm"
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, color: 'var(--muted)', lineHeight: 1 }}
             >
               ✕
@@ -246,78 +256,140 @@ export default function LessonsContent() {
         </div>
       </header>
 
-      {/* ── Filters ────────────────────────────────────────────────────────── */}
-      <div className="ss-filters">
-        <div className="ss-filter-row">
-          <span className="ss-filter-label">Type</span>
-          {typeFilters.map((f) => (
+      {/* ── Skill Tabs (Primary Filter) ─────────────────────────────────────── */}
+      <div className="ss-skill-tabs" role="tablist" aria-label="Chọn kỹ năng">
+        {SKILL_TABS.map((tab) => {
+          const count = tab.id === 'all'
+            ? allLessons.length
+            : allLessons.filter((l) => l.type === tab.id).length;
+          return (
             <button
-              key={f}
-              className={'ss-chip-btn' + (typeFilter === f ? ' on' : '')}
-              onClick={() => setTypeFilter(f)}
+              key={tab.id}
+              role="tab"
+              aria-selected={skillFilter === tab.id}
+              className={'ss-skill-tab' + (skillFilter === tab.id ? ' on' : '')}
+              onClick={() => setSkillFilter(tab.id)}
             >
-              {f === 'all' ? 'All' : TYPE_LABELS[f] ?? f}
+              <span className="ss-skill-tab-emoji" aria-hidden="true">{tab.emoji}</span>
+              <span className="ss-skill-tab-label">{tab.label}</span>
+              <span className="ss-skill-tab-count">{count}</span>
             </button>
-          ))}
-        </div>
-
-        <div className="ss-filter-row">
-          <span className="ss-filter-label">Level</span>
-          {levelFilters.map((f) => (
-            <button
-              key={f}
-              className={'ss-chip-btn' + (levelFilter === f ? ' on' : '')}
-              onClick={() => setLevelFilter(f)}
-            >
-              {f === 'all' ? 'All' : f}
-            </button>
-          ))}
-        </div>
-
-        <div className="ss-filter-row">
-          <span className="ss-filter-label">Topic</span>
-          {topicFilters.map((f) => (
-            <button
-              key={f}
-              className={'ss-chip-btn' + (topicFilter === f ? ' on' : '')}
-              onClick={() => setTopicFilter(f)}
-            >
-              {f === 'all' ? 'All' : getTopicLabel(f)}
-            </button>
-          ))}
-        </div>
-
-        <div className="ss-filter-row">
-          <span className="ss-filter-label">Status</span>
-          {(['all', 'new', 'completed'] as const).map((f) => (
-            <button
-              key={f}
-              className={'ss-chip-btn' + (statusFilter === f ? ' on' : '')}
-              onClick={() => setStatusFilter(f)}
-            >
-              {f === 'all' ? 'All' : f === 'new' ? 'Not started' : 'Completed'}
-            </button>
-          ))}
-        </div>
+          );
+        })}
       </div>
 
-      {/* ── Results ────────────────────────────────────────────────────────── */}
+      {/* ── Lớp Filter ─────────────────────────────────────────────────────── */}
+      <div className="ss-lop-row">
+        <span className="ss-filter-label">Lớp</span>
+        <button
+          className={'ss-chip-btn' + (levelFilter === 'all' ? ' on' : '')}
+          onClick={() => setLevelFilter('all')}
+        >
+          Tất cả
+        </button>
+        {levels.map((lv) => (
+          <button
+            key={lv.id}
+            className={'ss-chip-btn' + (levelFilter === lv.id ? ' on' : '')}
+            onClick={() => setLevelFilter(lv.id)}
+          >
+            {lv.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Advanced Filter Toggle ──────────────────────────────────────────── */}
+      <div className="ss-advanced-row">
+        <button
+          className={'ss-advanced-toggle' + (showAdvanced ? ' open' : '')}
+          onClick={() => setShowAdvanced((v) => !v)}
+          aria-expanded={showAdvanced}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" aria-hidden="true">
+            <circle cx="3" cy="4" r="1.2" /><line x1="3" y1="4" x2="3" y2="1" /><line x1="3" y1="5.2" x2="3" y2="13" />
+            <circle cx="7" cy="8" r="1.2" /><line x1="7" y1="8" x2="7" y2="1" /><line x1="7" y1="9.2" x2="7" y2="13" />
+            <circle cx="11" cy="5" r="1.2" /><line x1="11" y1="5" x2="11" y2="1" /><line x1="11" y1="6.2" x2="11" y2="13" />
+          </svg>
+          Bộ lọc nâng cao
+          {activeFilterCount > 0 && (
+            <span className="ss-adv-badge">{activeFilterCount}</span>
+          )}
+          <svg
+            width="10" height="10" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round"
+            style={{ marginLeft: 'auto', transition: 'transform 0.2s', transform: showAdvanced ? 'rotate(180deg)' : 'none' }}
+            aria-hidden="true"
+          >
+            <path d="M2 3.5 L5 6.5 L8 3.5" />
+          </svg>
+        </button>
+
+        {showAdvanced && (
+          <div className="ss-advanced-panel">
+            {/* Topic */}
+            <div className="ss-filter-row">
+              <span className="ss-filter-label">Chủ đề</span>
+              <button
+                className={'ss-chip-btn' + (topicFilter === 'all' ? ' on' : '')}
+                onClick={() => setTopicFilter('all')}
+              >
+                Tất cả
+              </button>
+              {topics.map((t) => (
+                <button
+                  key={t.id}
+                  className={'ss-chip-btn' + (topicFilter === t.id ? ' on' : '')}
+                  onClick={() => setTopicFilter(t.id)}
+                >
+                  {t.emoji} {t.label}
+                </button>
+              ))}
+            </div>
+
+            {/* Status */}
+            <div className="ss-filter-row">
+              <span className="ss-filter-label">Trạng thái</span>
+              {(['all', 'new', 'completed'] as const).map((f) => (
+                <button
+                  key={f}
+                  className={'ss-chip-btn' + (statusFilter === f ? ' on' : '')}
+                  onClick={() => setStatusFilter(f)}
+                >
+                  {f === 'all' ? 'Tất cả' : f === 'new' ? 'Chưa học' : '✓ Đã xong'}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ── Results count ───────────────────────────────────────────────────── */}
       <p style={{ fontSize: 12, color: 'var(--muted)', marginBottom: 16, fontFamily: 'var(--ff-mono)' }}>
-        {filtered.length} lesson{filtered.length !== 1 ? 's' : ''}
-        {totalPages > 1 && ` — page ${page} of ${totalPages}`}
+        {filtered.length} bài{filtered.length !== 1 ? '' : ''}
+        {totalPages > 1 && ` — trang ${page}/${totalPages}`}
       </p>
 
+      {/* ── Lesson Grid ─────────────────────────────────────────────────────── */}
       {filtered.length === 0 ? (
         <div style={{
-          textAlign: 'center', padding: '80px var(--pad)',
+          textAlign: 'center', padding: '64px var(--pad)',
           background: 'var(--surface)',
           border: '1px solid color-mix(in oklab, var(--ink), transparent 90%)',
           borderRadius: 'var(--r-lg)',
         }}>
-          <p style={{ fontFamily: 'var(--ff-display)', fontStyle: 'var(--display-style)', fontSize: 28, margin: '0 0 8px' }}>
-            Nothing here yet
+          <div style={{ fontSize: 40, marginBottom: 12 }}>🔍</div>
+          <p style={{ fontFamily: 'var(--ff-display)', fontStyle: 'var(--display-style)', fontSize: 22, margin: '0 0 8px', color: 'var(--ink)' }}>
+            Không tìm thấy bài học
           </p>
-          <p style={{ color: 'var(--muted)', fontSize: 15 }}>Try widening your filters.</p>
+          <p style={{ color: 'var(--muted)', fontSize: 14, marginBottom: 24 }}>
+            Thử bỏ bớt bộ lọc để xem thêm bài.
+          </p>
+          <button
+            onClick={resetAllFilters}
+            className="ss-btn-ghost"
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 6 }}
+          >
+            ↺ Xem tất cả bài học
+          </button>
         </div>
       ) : (
         <div className="ss-lessons-grid">
@@ -332,8 +404,8 @@ export default function LessonsContent() {
                 <div className="ss-lesson-top">
                   <span className="ss-lesson-num">{String(globalIdx + 1).padStart(2, '0')}</span>
                   {done
-                    ? <span className="ss-lesson-badge done">✓ Done</span>
-                    : globalIdx < 3 && <span className="ss-lesson-badge new">NEW</span>
+                    ? <span className="ss-lesson-badge done">✓ Xong</span>
+                    : globalIdx < 3 && <span className="ss-lesson-badge new">MỚI</span>
                   }
                 </div>
 
@@ -345,15 +417,15 @@ export default function LessonsContent() {
 
                 {/* Foot meta */}
                 <div className="ss-lesson-foot">
-                  <span><b>{lesson.level}</b></span>
-                  <span>{lesson.durationMinutes} min</span>
+                  <span><b>{getLevelLabel(lesson.level)}</b></span>
+                  <span>{lesson.durationMinutes} phút</span>
                   <span style={{ textTransform: 'capitalize' }}>{lesson.type}</span>
                   <span>{getTopicLabel(lesson.topic)}</span>
                 </div>
 
                 {/* CTA row */}
                 <div className="ss-lesson-cta">
-                  <span>Open lesson</span>
+                  <span>Vào học</span>
                   <svg width="16" height="10" viewBox="0 0 16 10" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                     <path d="M1 5 H14 M10 1 L14 5 L10 9" />
                   </svg>
@@ -373,7 +445,7 @@ export default function LessonsContent() {
             className="ss-btn-ghost"
             style={{ opacity: page === 1 ? 0.4 : 1 }}
           >
-            ← Prev
+            ← Trước
           </button>
 
           <div style={{ display: 'flex', gap: 4 }}>
@@ -409,7 +481,7 @@ export default function LessonsContent() {
             className="ss-btn-ghost"
             style={{ opacity: page === totalPages ? 0.4 : 1 }}
           >
-            Next →
+            Sau →
           </button>
         </div>
       )}
