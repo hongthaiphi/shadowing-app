@@ -21,7 +21,7 @@ export default function ResetPasswordPage() {
     // onAuthStateChange fires with type=PASSWORD_RECOVERY once the SDK
     // processes the hash and establishes a recovery session.
     const supabase = getSupabase();
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event: string) => {
       if (event === 'PASSWORD_RECOVERY') {
         setReady(true);
       }

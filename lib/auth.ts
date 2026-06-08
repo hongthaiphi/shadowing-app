@@ -24,7 +24,7 @@ async function syncProgressFromSupabase(userId: string) {
     .select('*')
     .eq('user_id', userId);
   if (data && data.length > 0) {
-    const local = data.map((p) => ({
+    const local = data.map((p: Record<string, unknown>) => ({
       lessonId: p.lesson_id,
       completedAt: p.completed_at,
       timeSpent: p.time_spent,

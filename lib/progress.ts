@@ -51,7 +51,7 @@ export function markComplete(
   // Background sync to Supabase (fire and forget)
   if (typeof window !== 'undefined') {
     const supabase = getSupabase();
-    supabase.auth.getUser().then(({ data }) => {
+    supabase.auth.getUser().then(({ data }: { data: { user: { id: string } | null } }) => {
       if (!data.user) return;
       supabase.from('progress').upsert({
         user_id: data.user.id,
@@ -145,7 +145,7 @@ export async function fetchProgressFromDB(): Promise<LessonProgress[]> {
       .eq('user_id', user.id)
       .order('completed_at', { ascending: false });
     if (error || !data) return getAll();
-    const progress: LessonProgress[] = data.map((p) => ({
+    const progress: LessonProgress[] = (data as Record<string, unknown>[]).map((p) => ({
       lessonId: p.lesson_id as string,
       completedAt: p.completed_at as string,
       timeSpent: p.time_spent as number,

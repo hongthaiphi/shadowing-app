@@ -156,7 +156,7 @@ function saveAnnotations(lessonId: string, annotations: Annotation[]): void {
   localStorage.setItem(annCacheKey(lessonId), JSON.stringify(annotations));
   // Async persist to Supabase
   const supabase = getSupabase();
-  supabase.auth.getUser().then(({ data }) => {
+  supabase.auth.getUser().then(({ data }: { data: { user: { id: string } | null } }) => {
     if (!data.user) return;
     supabase.from('reading_annotations').upsert({
       user_id: data.user.id,

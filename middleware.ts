@@ -35,7 +35,12 @@ export async function middleware(request: NextRequest) {
   if (!user) {
     const loginUrl = new URL('/login', request.url);
     loginUrl.searchParams.set('redirect', pathname);
-    return NextResponse.redirect(loginUrl);
+    const redirectResponse = NextResponse.redirect(loginUrl);
+    // Forward any refreshed session cookies so they aren't lost on the next request
+    supabaseResponse.cookies.getAll().forEach(({ name, value }) => {
+      redirectResponse.cookies.set(name, value);
+    });
+    return redirectResponse;
   }
 
   if (pathname.startsWith('/admin')) {
