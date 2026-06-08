@@ -3,6 +3,7 @@ import { Schibsted_Grotesk, Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/
 import './globals.css';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { Analytics } from '@vercel/analytics/next';
 
 /* ─── Google Fonts ──────────────────────────────────────────────────────────── */
 const schibstedGrotesk = Schibsted_Grotesk({
@@ -67,6 +68,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <Navbar />
         <main>{children}</main>
         <Footer />
+        <Analytics />
       </body>
     </html>
   );
