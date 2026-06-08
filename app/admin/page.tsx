@@ -303,7 +303,7 @@ export default function AdminPage() {
     fetchLevels().then(setLevels);
 
     migrateLegacyLessons(supabase).then(() => {
-      supabase.from('lessons').select('*').order('created_at', { ascending: false }).then(({ data }) => {
+      supabase.from('lessons').select('*').order('created_at', { ascending: false }).then(({ data }: { data: Record<string, unknown>[] | null }) => {
         setCustomLessons((data ?? []).map((r) => rowToLesson(r as Record<string, unknown>)));
         setLoading(false);
       });
