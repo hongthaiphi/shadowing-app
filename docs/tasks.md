@@ -250,7 +250,7 @@
 | 13 | Content | 8 | 10 | 🔴 |
 | 14 | Testing & Polish | 9 | 9 | ✅ |
 | 15 | Deploy Production | 2 | 5 | 🔴 |
-| 16 | Student UX Improvements | 11 | 15 | 🔴 |
+| 16 | Student UX Improvements | 15 | 15 | ✅ |
 | **Tổng** | | **145** | **164** | **88%** |
 
 ---
@@ -393,6 +393,6 @@
 #### H-05 Dashboard — Giảm cognitive load, hướng dẫn rõ bước tiếp theo
 > **Vấn đề tổng quát:** Quá nhiều lựa chọn xuất hiện cùng lúc. Học sinh cần biết ngay "Bây giờ mình phải làm gì?".
 
-- [ ] H-05-1 🟡 Nút CTA lớn, rõ ràng trên dashboard: "Tiếp tục học → [tên bài]" thay vì để học sinh tự tìm
-- [ ] H-05-2 🟡 Thứ tự sections dashboard: CTA tiếp tục → Streak/Stats → Courses (thu gọn) — ít scroll hơn để tới hành động chính
-- [ ] H-05-3 🟢 Onboarding flow lần đầu đăng nhập: "Em đang học lớp mấy?" → chọn Lớp → app pre-filter lessons phù hợp
+- [x] H-05-1 🟡 Hero CTA full-width trên dashboard: card accent màu cam nổi bật với tên bài + kỹ năng + lớp + nút "Tiếp tục học →"; học sinh mới thấy "Bắt đầu bài đầu tiên"
+- [x] H-05-2 🟡 Thứ tự sections: Hero CTA → Stats strip (4 chỉ số) → Week chart + Streak → Courses — mọi thứ quan trọng đều above the fold
+- [x] H-05-3 🟢 Onboarding overlay lần đầu đăng nhập: chọn 1 trong 5 kỹ năng → navigate `/lessons?type=X`; dùng `localStorage` key `cadence_onboarded` để không show lại; nút "Để sau" bỏ qua
