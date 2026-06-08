@@ -106,7 +106,7 @@ function persistDraft(id: string, text: string): void {
   try { localStorage.setItem(DRAFT_CACHE_KEY(id), text); } catch { /* quota */ }
   // Async persist to Supabase
   const supabase = getSupabase();
-  supabase.auth.getUser().then(({ data }) => {
+  supabase.auth.getUser().then(({ data }: { data: { user: { id: string } | null } }) => {
     if (!data.user) return;
     supabase.from('writing_drafts').upsert({
       user_id: data.user.id,

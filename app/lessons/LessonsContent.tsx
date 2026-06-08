@@ -50,7 +50,7 @@ async function fetchDynamicLessons(): Promise<Lesson[]> {
       .order('created_at', { ascending: true }),
   ]);
 
-  const shadowing = (lessonData ?? []).map((r) => ({
+  const shadowing = ((lessonData ?? []) as Record<string, unknown>[]).map((r) => ({
     id: String(r.id),
     title: String(r.title),
     level: String(r.level),
@@ -62,7 +62,7 @@ async function fetchDynamicLessons(): Promise<Lesson[]> {
     subtype: r.subtype ? String(r.subtype) : undefined,
   }));
 
-  const reading = (readingData ?? []).map((r) => ({
+  const reading = ((readingData ?? []) as Record<string, unknown>[]).map((r) => ({
     id: String(r.id),
     title: String(r.title),
     level: String(r.level),
@@ -72,7 +72,7 @@ async function fetchDynamicLessons(): Promise<Lesson[]> {
     durationMinutes: Number(r.duration_minutes) || 10,
   }));
 
-  const writing = (writingData ?? []).map((r) => ({
+  const writing = ((writingData ?? []) as Record<string, unknown>[]).map((r) => ({
     id: String(r.id),
     title: String(r.title),
     level: String(r.level),
