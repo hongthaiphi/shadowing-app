@@ -313,7 +313,7 @@ export default function AdminPage() {
   async function loadCustomLessonsFromSupabase() {
     const supabase = getSupabase();
     const { data } = await supabase.from('lessons').select('*').order('created_at', { ascending: false });
-    setCustomLessons((data ?? []).map((r) => rowToLesson(r as Record<string, unknown>)));
+    setCustomLessons(((data as Record<string, unknown>[]) ?? []).map((r) => rowToLesson(r)));
   }
 
   async function loadStats(force = false) {
